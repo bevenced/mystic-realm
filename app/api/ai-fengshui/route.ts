@@ -1,0 +1,92 @@
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import OpenAI from "openai";
+import { FENGSHUI_SYSTEM_PROMPT, buildFengShuiUserPrompt, buildFengShuiPreviewPrompt } from "@/lib/ai-prompts-fengshui";
+
+function getDeepSeek() {
+  if (!process.env.DEEPSEEK_API_KEY) return null;
+  return new OpenAI({
+    apiKey: process.env.DEEPSEEK_API_KEY,
+    baseURL: "https://api.deepseek.com",
+  });
+}
+
+const requestSchema = z.object({
+  homeType: z.enum(["apartment", "house", "studio", "office"]),
+  roomDescription: z.string().min(10).max(1000),
+  concerns: z.string().max(500).default(""),
+  isPaid: z.boolean().default(false),
+});
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const parsed = requestSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { homeType, roomDescription, concerns, isPaid } = parsed.data;
+
+    const deepseek = getDeepSeek();
+    if (!deepseek) {
+      return NextResponse.json(
+        { error: "AI service is not configured." },
+        { status: 503 }
+      );
+    }
+
+    const prompt = isPaid
+      ? buildFengShuiUserPrompt({ homeType, roomDescription, concerns })
+      : buildFengShuiPreviewPrompt({ homeType, roomDescription, concerns });
+
+    const completion = await deepseek.chat.completions.create({
+      model: "deepseek-chat",
+      messages: [
+        { role: "system", content: FENGSHUI_SYSTEM_PROMPT },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: isPaid ? 1800 : 150,
+      temperature: 0.7,
+    });
+
+    const content = completion.choices[0]?.message?.content || "";
+
+    let reading;
+    if (isPaid) {
+      try {
+        const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        reading = JSON.parse(jsonStr);
+      } catch {
+        reading = {
+          overallScore: 7,
+          overview: content,
+          areas: [{ name: "General", rating: "Good", analysis: content.slice(0, 300), suggestions: ["See full analysis for detailed suggestions"] }],
+          elements: { dominant: "Earth", recommendation: "Consider element balance." },
+          topImprovements: ["Clear clutter", "Add plants", "Improve lighting"],
+          colors: { recommended: ["Green", "Gold"], avoid: ["Red"] },
+          summary: content.slice(0, 200),
+        };
+      }
+    } else {
+      reading = { preview: content };
+    }
+
+    return NextResponse.json({
+      reading,
+      homeType,
+      isPaid,
+      tokensUsed: completion.usage?.total_tokens || 0,
+    });
+  } catch (error) {
+    console.error("Feng Shui error:", error);
+    return NextResponse.json(
+      { error: "Failed to generate Feng Shui analysis." },
+      { status: 500 }
+    );
+  }
+}
