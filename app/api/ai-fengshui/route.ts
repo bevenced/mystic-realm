@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import OpenAI from "openai";
 import { FENGSHUI_SYSTEM_PROMPT, buildFengShuiUserPrompt, buildFengShuiPreviewPrompt } from "@/lib/ai-prompts-fengshui";
+import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 
 function getDeepSeek() {
   if (!process.env.DEEPSEEK_API_KEY) return null;
@@ -15,7 +16,7 @@ const requestSchema = z.object({
   homeType: z.enum(["apartment", "house", "studio", "office"]),
   roomDescription: z.string().min(10).max(1000),
   concerns: z.string().max(500).default(""),
-  isPaid: z.boolean().default(false),
+  orderId: z.string().optional(), // PayPal order ID for paid readings
 });
 
 export async function POST(req: NextRequest) {
@@ -30,7 +31,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { homeType, roomDescription, concerns, isPaid } = parsed.data;
+    const { homeType, roomDescription, concerns, orderId } = parsed.data;
+
+    // Verify payment if orderId is provided
+    let isPaid = false;
+    if (orderId) {
+      isPaid = await verifyPayPalOrder(orderId);
+    }
 
     const deepseek = getDeepSeek();
     if (!deepseek) {
@@ -79,7 +86,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       reading,
       homeType,
-      isPaid,
       tokensUsed: completion.usage?.total_tokens || 0,
     });
   } catch (error) {

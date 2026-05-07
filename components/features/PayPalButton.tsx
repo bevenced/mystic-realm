@@ -7,7 +7,7 @@ interface PayPalButtonProps {
   amount: number;
   spreadKey: string;
   readingId: string;
-  onSuccess: () => void;
+  onSuccess: (orderId: string) => void;
   onError: (msg: string) => void;
 }
 
@@ -95,7 +95,7 @@ export default function PayPalButton({
               });
               const result = await res.json();
               if (result.success) {
-                onSuccess();
+                onSuccess(data.orderID);
               } else {
                 onError(result.error || "Payment failed.");
               }

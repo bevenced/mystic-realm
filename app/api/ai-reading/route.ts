@@ -3,6 +3,7 @@ import { z } from "zod";
 import OpenAI from "openai";
 import { drawCards, getSpread } from "@/lib/tarot";
 import { SYSTEM_PROMPT, buildUserPrompt, buildPreviewPrompt } from "@/lib/ai-prompts";
+import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 
 // Lazy-init DeepSeek client (OpenAI-compatible API)
 function getDeepSeek() {
@@ -16,7 +17,7 @@ function getDeepSeek() {
 const requestSchema = z.object({
   spreadKey: z.enum(["three-card", "five-card", "celtic-cross"]),
   question: z.string().min(3).max(500),
-  isPaid: z.boolean().default(false),
+  orderId: z.string().optional(), // PayPal order ID for paid readings
 });
 
 export async function POST(req: NextRequest) {
@@ -31,8 +32,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { spreadKey, question, isPaid } = parsed.data;
+    const { spreadKey, question, orderId } = parsed.data;
     const spread = getSpread(spreadKey);
+
+    // Verify payment if orderId is provided
+    let isPaid = false;
+    if (orderId) {
+      isPaid = await verifyPayPalOrder(orderId);
+    }
 
     // Draw cards
     const drawn = drawCards(spread.cardCount);
@@ -99,7 +106,6 @@ export async function POST(req: NextRequest) {
       spreadKey,
       spreadName: spread.name,
       question,
-      isPaid,
       tokensUsed: completion.usage?.total_tokens || 0,
     });
   } catch (error) {

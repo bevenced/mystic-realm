@@ -58,8 +58,9 @@ export default function ToolsPageClient() {
   const activeTextColor = isDark ? c.bg : "#FFFFFF";
 
   // Generic submit handler
-  const handleSubmit = async (isPaid: boolean) => {
+  const handleSubmit = async (orderId?: string) => {
     if (!activeService) return;
+    const isPaid = !!orderId;
     setLoading(true);
     setError("");
     const id = uuidv4();
@@ -72,26 +73,26 @@ export default function ToolsPageClient() {
       switch (activeService) {
         case "tarot":
           endpoint = "/api/ai-reading";
-          body = { spreadKey, question: "General reading", isPaid };
+          body = { spreadKey, question: "General reading", ...(orderId && { orderId }) };
           break;
         case "bazi":
           if (!baziDate) { setError("Please enter your birth date."); setLoading(false); return; }
           endpoint = "/api/ai-bazi";
-          body = { birthDate: baziDate, birthHour: baziHour, gender: baziGender, isPaid };
+          body = { birthDate: baziDate, birthHour: baziHour, gender: baziGender, ...(orderId && { orderId }) };
           break;
         case "fengshui":
           if (roomDesc.length < 10) { setError("Please describe your space (at least 10 characters)."); setLoading(false); return; }
           endpoint = "/api/ai-fengshui";
-          body = { homeType, roomDescription: roomDesc, concerns: fengShuiConcerns, isPaid };
+          body = { homeType, roomDescription: roomDesc, concerns: fengShuiConcerns, ...(orderId && { orderId }) };
           break;
         case "astrology":
           if (!astroDate) { setError("Please enter your birth date."); setLoading(false); return; }
           endpoint = "/api/ai-astrology";
-          body = { birthDate: astroDate, birthHour: astroHour, isPaid };
+          body = { birthDate: astroDate, birthHour: astroHour, ...(orderId && { orderId }) };
           break;
         case "meditation":
           endpoint = "/api/ai-meditation";
-          body = { type: meditationType, duration: meditationDuration, mood: meditationMood, isPaid };
+          body = { type: meditationType, duration: meditationDuration, mood: meditationMood, ...(orderId && { orderId }) };
           break;
       }
 
@@ -134,8 +135,8 @@ export default function ToolsPageClient() {
     }
   };
 
-  const handlePaymentSuccess = () => {
-    handleSubmit(true);
+  const handlePaymentSuccess = (orderId: string) => {
+    handleSubmit(orderId);
   };
 
   const handleBack = () => {
@@ -534,7 +535,7 @@ export default function ToolsPageClient() {
                   Back
                 </button>
                 <button
-                  onClick={() => handleSubmit(false)}
+                  onClick={() => handleSubmit()}
                   disabled={loading}
                   className="inline-flex items-center gap-2 px-8 py-3 rounded-full text-base font-semibold transition-all"
                   style={{

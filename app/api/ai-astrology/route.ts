@@ -3,6 +3,7 @@ import { z } from "zod";
 import OpenAI from "openai";
 import { calculateZodiac } from "@/lib/astrology";
 import { ASTROLOGY_SYSTEM_PROMPT, buildAstrologyUserPrompt, buildAstrologyPreviewPrompt } from "@/lib/ai-prompts-astrology";
+import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 
 function getDeepSeek() {
   if (!process.env.DEEPSEEK_API_KEY) return null;
@@ -15,7 +16,7 @@ function getDeepSeek() {
 const requestSchema = z.object({
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   birthHour: z.number().int().min(0).max(23),
-  isPaid: z.boolean().default(false),
+  orderId: z.string().optional(), // PayPal order ID for paid readings
 });
 
 export async function POST(req: NextRequest) {
@@ -30,7 +31,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { birthDate, birthHour, isPaid } = parsed.data;
+    const { birthDate, birthHour, orderId } = parsed.data;
+
+    // Verify payment if orderId is provided
+    let isPaid = false;
+    if (orderId) {
+      isPaid = await verifyPayPalOrder(orderId);
+    }
 
     // Calculate zodiac
     const [year, month, day] = birthDate.split("-").map(Number);
@@ -91,7 +98,6 @@ export async function POST(req: NextRequest) {
       reading,
       birthDate,
       birthHour,
-      isPaid,
       tokensUsed: completion.usage?.total_tokens || 0,
     });
   } catch (error) {

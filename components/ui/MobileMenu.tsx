@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
+import { useUser, SignInButton, SignUpButton, UserButton, SignOutButton } from "@clerk/nextjs";
 
 const navLinks = [
   { href: "/shop", label: "Shop" },
@@ -13,6 +14,7 @@ const navLinks = [
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
+  const { isSignedIn } = useUser();
 
   return (
     <div className="md:hidden">
@@ -65,6 +67,36 @@ export default function MobileMenu() {
                 Switch Realm
               </p>
               <ThemeSwitcher />
+            </div>
+
+            {/* 用户菜单 */}
+            <div className="mt-8 animate-slide-up delay-300 flex flex-col items-center gap-4">
+              {isSignedIn ? (
+                <>
+                  <UserButton />
+                  <SignOutButton>
+                    <button
+                      className="text-sm px-6 py-2 rounded-full"
+                      style={{ color: "var(--color-text-muted)", border: "1px solid var(--color-border-tertiary)" }}
+                    >
+                      Sign Out
+                    </button>
+                  </SignOutButton>
+                </>
+              ) : (
+                <div className="flex gap-3">
+                  <SignInButton mode="modal">
+                    <button className="text-sm px-6 py-2 rounded-full" style={{ color: "var(--color-text-muted)", border: "1px solid var(--color-border-tertiary)" }}>
+                      Sign In
+                    </button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <button className="text-sm px-6 py-2 rounded-full" style={{ backgroundColor: "var(--color-primary)", color: "var(--color-bg)" }}>
+                      Sign Up
+                    </button>
+                  </SignUpButton>
+                </div>
+              )}
             </div>
           </div>
         </div>

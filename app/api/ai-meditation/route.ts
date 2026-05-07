@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import OpenAI from "openai";
 import { MEDITATION_SYSTEM_PROMPT, buildMeditationUserPrompt, buildMeditationPreviewPrompt } from "@/lib/ai-prompts-meditation";
+import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 
 function getDeepSeek() {
   if (!process.env.DEEPSEEK_API_KEY) return null;
@@ -15,7 +16,7 @@ const requestSchema = z.object({
   type: z.enum(["stress", "sleep", "focus", "self-healing", "gratitude"]),
   duration: z.enum(["5", "10", "15"]).default("10"),
   mood: z.string().max(500).default(""),
-  isPaid: z.boolean().default(false),
+  orderId: z.string().optional(), // PayPal order ID for paid readings
 });
 
 export async function POST(req: NextRequest) {
@@ -30,7 +31,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { type, duration, mood, isPaid } = parsed.data;
+    const { type, duration, mood, orderId } = parsed.data;
+
+    // Verify payment if orderId is provided
+    let isPaid = false;
+    if (orderId) {
+      isPaid = await verifyPayPalOrder(orderId);
+    }
 
     const deepseek = getDeepSeek();
     if (!deepseek) {
@@ -79,7 +86,6 @@ export async function POST(req: NextRequest) {
       reading,
       type,
       duration,
-      isPaid,
       tokensUsed: completion.usage?.total_tokens || 0,
     });
   } catch (error) {

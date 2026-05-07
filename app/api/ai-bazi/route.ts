@@ -3,6 +3,7 @@ import { z } from "zod";
 import OpenAI from "openai";
 import { calculateBaZi } from "@/lib/bazi";
 import { BAZI_SYSTEM_PROMPT, buildBaZiUserPrompt, buildBaZiPreviewPrompt } from "@/lib/ai-prompts-bazi";
+import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 
 function getDeepSeek() {
   if (!process.env.DEEPSEEK_API_KEY) return null;
@@ -16,7 +17,7 @@ const requestSchema = z.object({
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   birthHour: z.number().int().min(0).max(23),
   gender: z.enum(["male", "female"]),
-  isPaid: z.boolean().default(false),
+  orderId: z.string().optional(), // PayPal order ID for paid readings
 });
 
 export async function POST(req: NextRequest) {
@@ -31,7 +32,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { birthDate, birthHour, gender, isPaid } = parsed.data;
+    const { birthDate, birthHour, gender, orderId } = parsed.data;
+
+    // Verify payment if orderId is provided
+    let isPaid = false;
+    if (orderId) {
+      isPaid = await verifyPayPalOrder(orderId);
+    }
 
     // Calculate BaZi
     const [year, month, day] = birthDate.split("-").map(Number);
@@ -93,7 +100,6 @@ export async function POST(req: NextRequest) {
       birthDate,
       birthHour,
       gender,
-      isPaid,
       tokensUsed: completion.usage?.total_tokens || 0,
     });
   } catch (error) {

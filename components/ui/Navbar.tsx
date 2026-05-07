@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import MobileMenu from "@/components/ui/MobileMenu";
+import { useUser, UserButton, SignInButton, SignUpButton } from "@clerk/nextjs";
 
 export default function Navbar() {
+  const { isSignedIn } = useUser();
+
   return (
     <nav
       className="sticky top-0 z-50 backdrop-blur-md"
@@ -39,6 +42,25 @@ export default function Navbar() {
           <Link href="/blog" className="nav-link theme-transition hover:text-[var(--color-primary)]">
             Blog
           </Link>
+        </div>
+
+        {/* 用户菜单 */}
+        <div className="hidden md:flex items-center ml-6">
+          {!isSignedIn && (
+            <>
+              <SignInButton mode="modal">
+                <button className="text-sm px-4 py-2 rounded-full theme-transition" style={{ color: "var(--color-text-muted)", border: "1px solid var(--color-border-tertiary)" }}>
+                  Sign In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className="text-sm px-4 py-2 rounded-full ml-2 theme-transition" style={{ backgroundColor: "var(--color-primary)", color: "var(--color-bg)", border: "none" }}>
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </>
+          )}
+          {isSignedIn && <UserButton />}
         </div>
 
         {/* 移动端菜单按钮 */}
