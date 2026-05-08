@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { validateServicePrice } from "@/lib/pricing";
+import { auth } from "@clerk/nextjs/server";
+import { validateServicePrice, FIRST_TIME_PRICE } from "@/lib/pricing";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const createOrderSchema = z.object({
-  // amount is NOT accepted from client - server determines price
   currency: z.string().default("USD"),
   serviceKey: z.string(),
   readingId: z.string().optional(),
+  isFirstReading: z.boolean().optional(),
 });
 
-// Get PayPal access token
 async function getAccessToken(): Promise<string> {
   const clientId = process.env.PAYPAL_CLIENT_ID;
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
@@ -52,9 +52,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { currency, serviceKey, readingId } = parsed.data;
+    const { currency, serviceKey, readingId, isFirstReading } = parsed.data;
 
-    // Rate limiting: max 10 order creations per IP per hour
+    // Rate limiting
     const clientIp = getClientIp(req);
     const rateResult = checkRateLimit(`paypal:create:${clientIp}`, { maxRequests: 10, windowSeconds: 3600 });
     if (!rateResult.allowed) {
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate service and get server-side price
+    // Validate service and determine price
     const priceValidation = validateServicePrice(serviceKey);
     if (!priceValidation.valid) {
       return NextResponse.json(
@@ -73,8 +73,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const amount = priceValidation.expectedPrice;
+    // Apply first-time discount if applicable
+    let amount = priceValidation.expectedPrice;
+    let appliedDiscount = false;
+
+    if (isFirstReading) {
+      // For logged-in users, verify they have no prior payments
+      const { userId } = await auth();
+      if (userId) {
+        try {
+          const { sql } = await import("@vercel/postgres");
+          const result = await sql`SELECT COUNT(*) as count FROM payments WHERE user_id IN (SELECT id FROM users WHERE clerk_id = ${userId})`;
+          const count = parseInt(result.rows[0]?.count || "0", 10);
+          if (count === 0) {
+            amount = FIRST_TIME_PRICE;
+            appliedDiscount = true;
+          }
+        } catch {
+          // If DB check fails, still offer discount (better UX)
+          amount = FIRST_TIME_PRICE;
+          appliedDiscount = true;
+        }
+      } else {
+        // Not logged in - offer the discount
+        amount = FIRST_TIME_PRICE;
+        appliedDiscount = true;
+      }
+    }
+
     const serviceName = priceValidation.serviceName;
+    const customId = appliedDiscount ? `${serviceKey}:first` : serviceKey;
 
     if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
       return NextResponse.json(
@@ -103,9 +131,13 @@ export async function POST(req: NextRequest) {
             amount: {
               currency_code: currency,
               value: amount.toFixed(2),
+              breakdown: appliedDiscount ? {
+                item_total: { currency_code: currency, value: amount.toFixed(2) },
+                discount: { currency_code: currency, value: (priceValidation.expectedPrice - amount).toFixed(2) },
+              } : undefined,
             },
-            description: serviceName,
-            custom_id: serviceKey,
+            description: appliedDiscount ? `${serviceName} (First Reading Special)` : serviceName,
+            custom_id: customId,
           },
         ],
       }),
@@ -126,6 +158,8 @@ export async function POST(req: NextRequest) {
       status: orderData.status,
       amount,
       serviceKey,
+      appliedDiscount,
+      originalPrice: appliedDiscount ? priceValidation.expectedPrice : undefined,
     });
   } catch (error) {
     console.error("PayPal create order error:", error);

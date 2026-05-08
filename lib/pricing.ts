@@ -16,6 +16,9 @@ export const SERVICE_PRICES: Record<string, number> = {
   "meditation": 6.99,
 } as const;
 
+/** First-time user pricing (flat discount ~70% off) */
+export const FIRST_TIME_PRICE = 1.99 as const;
+
 export const SERVICE_NAMES: Record<string, string> = {
   "three-card": "3-Card Tarot Reading",
   "five-card": "5-Card Week Ahead Reading",

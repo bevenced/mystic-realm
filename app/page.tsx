@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import HeroSection from "@/components/ui/HeroSection";
+import TrustBadges from "@/components/ui/TrustBadges";
 import ThemeCard from "@/components/ui/ThemeCard";
 import FeatureSection from "@/components/ui/FeatureSection";
 import Footer from "@/components/ui/Footer";
@@ -16,6 +17,9 @@ export default function HomePage() {
     <main>
       {/* Section 1: 沉浸式首屏 */}
       <HeroSection />
+
+      {/* Section 2: 信任徽章 */}
+      <TrustBadges />
 
       {/* Section 2: 选择你的领域 */}
       <section id="realms" className="py-20 px-6">

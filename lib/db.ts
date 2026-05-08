@@ -76,6 +76,19 @@ export async function initDatabase() {
     );
   `;
 
+  // User reviews
+  await sql`
+    CREATE TABLE IF NOT EXISTS reviews (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      service VARCHAR(50) NOT NULL,
+      rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      comment TEXT DEFAULT '',
+      display_name VARCHAR(100) DEFAULT 'Anonymous',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `;
+
   // Insert default plans
   await sql`
     INSERT INTO subscription_plans (id, name, price_monthly, price_yearly, features, ai_credits_per_month)
@@ -190,6 +203,70 @@ export async function recordPayment(userId: string, data: {
     return result.rows[0];
   } catch (error) {
     console.error("recordPayment error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Submit a review after a reading
+ */
+export async function submitReview(data: {
+  userId: string;
+  service: string;
+  rating: number;
+  comment?: string;
+  displayName?: string;
+}) {
+  if (!data.userId) throw new Error("userId is required");
+  if (!data.service) throw new Error("service is required");
+  if (!data.rating || data.rating < 1 || data.rating > 5) throw new Error("Rating must be 1-5");
+  try {
+    const result = await sql`
+      INSERT INTO reviews (user_id, service, rating, comment, display_name)
+      VALUES (${data.userId}, ${data.service}, ${data.rating}, ${data.comment || ''}, ${data.displayName || 'Anonymous'})
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error("submitReview error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get reviews for a specific service (public)
+ */
+export async function getServiceReviews(service: string, limit = 10) {
+  if (!service) throw new Error("service is required");
+  try {
+    const result = await sql`
+      SELECT rating, comment, display_name, created_at
+      FROM reviews
+      WHERE service = ${service}
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error("getServiceReviews error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get average rating for a service
+ */
+export async function getServiceAverageRating(service: string) {
+  if (!service) throw new Error("service is required");
+  try {
+    const result = await sql`
+      SELECT AVG(rating)::float as average, COUNT(*) as count
+      FROM reviews
+      WHERE service = ${service}
+    `;
+    return result.rows[0] || { average: 0, count: 0 };
+  } catch (error) {
+    console.error("getServiceAverageRating error:", error);
     throw error;
   }
 }

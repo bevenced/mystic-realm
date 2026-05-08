@@ -7,6 +7,7 @@ interface PayPalButtonProps {
   amount: number;
   spreadKey: string;
   readingId: string;
+  isFirstReading?: boolean;
   onSuccess: (orderId: string) => void;
   onError: (msg: string) => void;
 }
@@ -15,13 +16,16 @@ export default function PayPalButton({
   amount,
   spreadKey,
   readingId,
+  isFirstReading = false,
   onSuccess,
   onError,
 }: PayPalButtonProps) {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
+  const isDark = currentTheme.isDark;
 
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+  const discountPrice = isFirstReading ? 1.99 : amount;
 
   if (!clientId) {
     return (
@@ -47,17 +51,48 @@ export default function PayPalButton({
       <div
         className="rounded-xl p-6 mt-6"
         style={{
-          background: c.surface,
-          border: `1px solid ${c.primary}33`,
+          background: `linear-gradient(135deg, ${c.primary}12 0%, ${c.surface} 100%)`,
+          border: isFirstReading ? `2px solid ${c.primary}44` : `1px solid ${c.primary}33`,
         }}
       >
+        {isFirstReading && (
+          <div
+            className="text-center mb-2"
+          >
+            <span
+              className="inline-block text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-full mb-2"
+              style={{
+                background: c.primary,
+                color: isDark ? c.bg : "#FFFFFF",
+              }}
+            >
+              🎉 First Reading Special
+            </span>
+          </div>
+        )}
+
         <div className="text-center mb-4">
           <p className="text-xs tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>
-            Unlock Full Reading
+            {isFirstReading ? "Your first full reading — just" : "Unlock Full Reading"}
           </p>
-          <p className="text-2xl font-bold" style={{ color: c.primary }}>
-            ${amount.toFixed(2)}
-          </p>
+          <div className="flex items-center justify-center gap-2">
+            {isFirstReading && (
+              <span
+                className="text-lg line-through"
+                style={{ color: c.textMuted }}
+              >
+                ${amount.toFixed(2)}
+              </span>
+            )}
+            <p className="text-2xl font-bold" style={{ color: c.primary }}>
+              ${discountPrice.toFixed(2)}
+            </p>
+          </div>
+          {isFirstReading && (
+            <p className="text-[10px] mt-1" style={{ color: c.textMuted }}>
+              Limited to one first-time reading per user
+            </p>
+          )}
         </div>
 
         <PayPalButtons
@@ -73,7 +108,12 @@ export default function PayPalButton({
               const res = await fetch("/api/paypal/create-order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ currency: "USD", serviceKey: spreadKey, readingId }),
+                body: JSON.stringify({
+                  currency: "USD",
+                  serviceKey: spreadKey,
+                  readingId,
+                  isFirstReading,
+                }),
               });
               const data = await res.json();
               if (data.error) {

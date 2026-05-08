@@ -10,6 +10,8 @@ import PayPalButton from "@/components/features/PayPalButton";
 import { getSpread } from "@/lib/tarot";
 import { v4 as uuidv4 } from "uuid";
 import SafeHtml from "@/components/features/SafeHtml";
+import ServiceProductRecommendations from "@/components/features/ServiceProductRecommendations";
+import ReviewStars from "@/components/features/ReviewStars";
 
 type Step = 1 | 2 | 3;
 
@@ -31,6 +33,12 @@ export default function ToolsPageClient() {
   const [reading, setReading] = useState<Record<string, unknown>>({});
   const [extraData, setExtraData] = useState<Record<string, unknown>>({});
   const [isPaidResult, setIsPaidResult] = useState(false);
+  const [isFirstReading, setIsFirstReading] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !localStorage.getItem("mystic-has-read");
+    }
+    return true;
+  });
 
   // Tarot-specific state
   const [spreadKey, setSpreadKey] = useState("three-card");
@@ -118,6 +126,8 @@ export default function ToolsPageClient() {
 
       // Save paid readings to localStorage
       if (isPaid) {
+        localStorage.setItem("mystic-has-read", "true");
+        setIsFirstReading(false);
         const history = JSON.parse(localStorage.getItem("mystic-readings") || "[]");
         history.unshift({
           id: readingId || id,
@@ -261,7 +271,15 @@ export default function ToolsPageClient() {
                 {SERVICES.find((s) => s.key === activeService)?.name}
               </h2>
               <p className="text-sm text-center mb-6" style={{ color: c.textMuted }}>
-                Free preview included &middot; Full reading ${getPrice().toFixed(2)}
+                Free preview included &middot;
+                {isFirstReading ? (
+                  <>
+                    First reading <span className="line-through" style={{ color: c.textMuted }}>${getPrice().toFixed(2)}</span>
+                    {" "}<span className="font-bold" style={{ color: c.primary }}>$1.99</span>
+                  </>
+                ) : (
+                  <>Full reading ${getPrice().toFixed(2)}</>
+                )}
               </p>
 
               <div className="rounded-xl p-6" style={{ background: c.surface, border: `1px solid ${c.primary}22` }}>
@@ -598,6 +616,7 @@ export default function ToolsPageClient() {
                     amount={getPrice()}
                     spreadKey={activeService}
                     readingId={readingId}
+                    isFirstReading={isFirstReading}
                     onSuccess={handlePaymentSuccess}
                     onError={setError}
                   />
@@ -611,6 +630,14 @@ export default function ToolsPageClient() {
                 >
                   {error}
                 </div>
+              )}
+
+              {/* Product recommendations after paid reading */}
+              {isPaidResult && (
+                <>
+                  <ServiceProductRecommendations service={activeService} />
+                  <ReviewStars service={activeService} />
+                </>
               )}
             </div>
           )}
