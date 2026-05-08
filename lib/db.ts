@@ -93,53 +93,78 @@ export async function initDatabase() {
  * Get or create user from Clerk ID
  */
 export async function getOrCreateUser(clerkId: string, email?: string, name?: string) {
-  const existing = await sql`SELECT * FROM users WHERE clerk_id = ${clerkId}`;
-  if (existing.rows.length > 0) return existing.rows[0];
+  if (!clerkId) throw new Error("clerkId is required");
+  try {
+    const existing = await sql`SELECT * FROM users WHERE clerk_id = ${clerkId}`;
+    if (existing.rows.length > 0) return existing.rows[0];
 
-  const result = await sql`
-    INSERT INTO users (clerk_id, email, name)
-    VALUES (${clerkId}, ${email || null}, ${name || null})
-    RETURNING *
-  `;
-  return result.rows[0];
+    const result = await sql`
+      INSERT INTO users (clerk_id, email, name)
+      VALUES (${clerkId}, ${email || null}, ${name || null})
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error("getOrCreateUser error:", error);
+    throw error;
+  }
 }
 
 /**
  * Get user's current subscription
  */
 export async function getUserSubscription(userId: string) {
-  const result = await sql`
-    SELECT s.*, p.name as plan_name, p.price_monthly, p.price_yearly, p.features, p.ai_credits_per_month
-    FROM subscriptions s
-    JOIN subscription_plans p ON s.plan_id = p.id
-    WHERE s.user_id = ${userId} AND s.status = 'active'
-    ORDER BY s.created_at DESC
-    LIMIT 1
-  `;
-  return result.rows[0] || null;
+  if (!userId) throw new Error("userId is required");
+  try {
+    const result = await sql`
+      SELECT s.*, p.name as plan_name, p.price_monthly, p.price_yearly, p.features, p.ai_credits_per_month
+      FROM subscriptions s
+      JOIN subscription_plans p ON s.plan_id = p.id
+      WHERE s.user_id = ${userId} AND s.status = 'active'
+      ORDER BY s.created_at DESC
+      LIMIT 1
+    `;
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error("getUserSubscription error:", error);
+    throw error;
+  }
 }
 
 /**
  * Get user's AI usage this month
  */
 export async function getUserMonthlyUsage(userId: string) {
-  const result = await sql`
-    SELECT COALESCE(SUM(tokens_used), 0) as total_tokens, COUNT(*) as readings
-    FROM ai_usage
-    WHERE user_id = ${userId}
-    AND created_at >= date_trunc('month', NOW())
-  `;
-  return result.rows[0];
+  if (!userId) throw new Error("userId is required");
+  try {
+    const result = await sql`
+      SELECT COALESCE(SUM(tokens_used), 0) as total_tokens, COUNT(*) as readings
+      FROM ai_usage
+      WHERE user_id = ${userId}
+      AND created_at >= date_trunc('month', NOW())
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error("getUserMonthlyUsage error:", error);
+    throw error;
+  }
 }
 
 /**
  * Record AI usage
  */
 export async function recordAiUsage(userId: string, service: string, tokensUsed: number) {
-  await sql`
-    INSERT INTO ai_usage (user_id, service, tokens_used)
-    VALUES (${userId}, ${service}, ${tokensUsed})
-  `;
+  if (!userId) throw new Error("userId is required");
+  if (!service) throw new Error("service is required");
+  try {
+    await sql`
+      INSERT INTO ai_usage (user_id, service, tokens_used)
+      VALUES (${userId}, ${service}, ${tokensUsed})
+    `;
+  } catch (error) {
+    console.error("recordAiUsage error:", error);
+    throw error;
+  }
 }
 
 /**
@@ -153,10 +178,18 @@ export async function recordPayment(userId: string, data: {
   service: string;
   status?: string;
 }) {
-  const result = await sql`
-    INSERT INTO payments (user_id, paypal_order_id, stripe_payment_intent_id, amount, currency, service, status)
-    VALUES (${userId}, ${data.paypalOrderId || null}, ${data.stripePaymentIntentId || null}, ${data.amount}, ${data.currency || 'USD'}, ${data.service}, ${data.status || 'completed'})
-    RETURNING *
-  `;
-  return result.rows[0];
+  if (!userId) throw new Error("userId is required");
+  if (!data.amount || data.amount <= 0) throw new Error("Valid amount is required");
+  if (!data.service) throw new Error("service is required");
+  try {
+    const result = await sql`
+      INSERT INTO payments (user_id, paypal_order_id, stripe_payment_intent_id, amount, currency, service, status)
+      VALUES (${userId}, ${data.paypalOrderId || null}, ${data.stripePaymentIntentId || null}, ${data.amount}, ${data.currency || 'USD'}, ${data.service}, ${data.status || 'completed'})
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error("recordPayment error:", error);
+    throw error;
+  }
 }

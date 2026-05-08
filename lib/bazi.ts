@@ -105,7 +105,7 @@ export function calculateBaZi(
   // Hour Pillar (based on the day stem)
   // Hour branches: 23-1=子, 1-3=丑, etc.
   const hourBranchIdx = Math.floor(((hour + 1) % 24) / 2);
-  const hourStemIdx = (dayStemIdx % 5) * 2 + hourBranchIdx % 10;
+  const hourStemIdx = ((dayStemIdx % 5) * 2 + hourBranchIdx) % 10;
 
   const makePillar = (sIdx: number, bIdx: number): BaZiPillar => ({
     stem: HEAVENLY_STEMS[sIdx],
