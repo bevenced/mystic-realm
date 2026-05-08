@@ -666,9 +666,10 @@ function ResultDisplay({
 
   // Free preview
   if (!isPaid && reading.preview) {
+    const previewText = typeof reading.preview === "string" ? reading.preview : renderContent(reading.preview);
     return (
       <div className="rounded-xl p-6 animate-fade-in" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}22` }}>
-        <p className="text-sm leading-relaxed" style={{ color: c.text }}>{reading.preview as string}</p>
+        <SafeHtml className="text-sm leading-relaxed whitespace-pre-line" style={{ color: c.text }} html={previewText.replace(/\n/g, "<br/>")} />
       </div>
     );
   }
@@ -751,53 +752,141 @@ function ResultDisplay({
   );
 }
 
+// ===== Render a single content value as readable text =====
+function renderContent(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value.map((v) => (typeof v === "string" ? v : JSON.stringify(v))).join("\n");
+  if (typeof value === "object" && value !== null) {
+    const obj = value as Record<string, unknown>;
+    return Object.entries(obj)
+      .map(([k, v]) => {
+        const label = k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
+        if (typeof v === "string") return `**${label}:** ${v}`;
+        if (Array.isArray(v)) return `**${label}:** ${v.join(", ")}`;
+        return `**${label}:** ${JSON.stringify(v)}`;
+      })
+      .join("\n");
+  }
+  return String(value);
+}
+
 // ===== Full Reading Sections =====
 function FullReadingSections({ reading }: { reading: Record<string, unknown> }) {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
 
-  if (!reading || typeof reading !== "object") return null;
+  if (!reading) return null;
 
-  const sections: Array<{ title: string; content: string | unknown }> = [];
+  // Fallback: if reading is a plain string (not an object), render it directly
+  if (typeof reading === "string") {
+    const text = reading as unknown as string;
+    return (
+      <div className="rounded-xl p-5 animate-fade-in" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}15` }}>
+        <SafeHtml className="text-sm leading-relaxed whitespace-pre-line" style={{ color: c.text }} html={text.replace(/\n/g, "<br/>")} />
+      </div>
+    );
+  }
+
+  if (typeof reading !== "object") return null;
+
+  const sections: Array<{ title: string; content: string | unknown; isHighlight?: boolean }> = [];
 
   // Overview
-  if (reading.overview) sections.push({ title: "Overview", content: reading.overview });
+  if (reading.overview) sections.push({ title: "Overview", content: renderContent(reading.overview), isHighlight: true });
+
+  // Title (Meditation)
+  if (reading.title && typeof reading.title === "string") {
+    sections.push({ title: "✨ " + reading.title, content: reading.introduction ? renderContent(reading.introduction) : "", isHighlight: true });
+  } else if (reading.introduction) {
+    sections.push({ title: "Introduction", content: renderContent(reading.introduction) });
+  }
 
   // Day Master (BaZi)
-  if (reading.dayMaster) sections.push({ title: "Day Master", content: reading.dayMaster });
+  if (reading.dayMaster) sections.push({ title: "Day Master", content: renderContent(reading.dayMaster) });
 
-  // Element Analysis (BaZi)
+  // Element Analysis (BaZi) — structured instead of JSON
   if (reading.elementAnalysis) {
     const ea = reading.elementAnalysis as Record<string, unknown>;
-    if (typeof ea === "object") sections.push({ title: "Element Analysis", content: JSON.stringify(ea) });
+    if (typeof ea === "object") {
+      const parts = Object.entries(ea)
+        .map(([k, v]) => {
+          const label = k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
+          return `**${label}:** ${typeof v === "string" ? v : Array.isArray(v) ? v.join(", ") : JSON.stringify(v)}`;
+        })
+        .join("\n");
+      sections.push({ title: "Element Analysis", content: parts });
+    }
   }
 
   // Big Three (Astrology)
   if (reading.bigThree) {
     const bt = reading.bigThree as Record<string, unknown>;
     if (typeof bt === "object") {
-      if (bt.sun) sections.push({ title: "☀ Sun Sign", content: bt.sun });
-      if (bt.moon) sections.push({ title: "☽ Moon Sign", content: bt.moon });
-      if (bt.rising) sections.push({ title: "⬆ Rising Sign", content: bt.rising });
+      if (bt.sun) sections.push({ title: "☀ Sun Sign", content: renderContent(bt.sun) });
+      if (bt.moon) sections.push({ title: "☽ Moon Sign", content: renderContent(bt.moon) });
+      if (bt.rising) sections.push({ title: "⬆ Rising Sign", content: renderContent(bt.rising) });
     }
+  }
+
+  // Planetary Influences (Astrology)
+  if (reading.planetaryInfluences && Array.isArray(reading.planetaryInfluences)) {
+    const pi = reading.planetaryInfluences as Array<{ planet?: string; influence?: string }>;
+    const parts = pi.map((p) => `**${p.planet || "Planet"}:** ${p.influence || ""}`).join("\n\n");
+    if (parts) sections.push({ title: "🪐 Planetary Influences", content: parts });
+  }
+
+  // Current Transits (Astrology)
+  if (reading.currentTransits) {
+    sections.push({ title: "🌌 Current Transits", content: renderContent(reading.currentTransits) });
   }
 
   // Life Aspects
   if (reading.lifeAspects) {
     const la = reading.lifeAspects as Record<string, unknown>;
     if (typeof la === "object") {
-      if (la.personality) sections.push({ title: "Personality", content: la.personality });
-      if (la.career) sections.push({ title: "Career", content: la.career });
-      if (la.relationships) sections.push({ title: "Relationships", content: la.relationships });
-      if (la.health) sections.push({ title: "Health", content: la.health });
-      if (la.love) sections.push({ title: "Love", content: la.love });
-      if (la.growth) sections.push({ title: "Growth", content: la.growth });
+      const aspectLabels: Record<string, string> = {
+        personality: "👤 Personality",
+        career: "💼 Career",
+        relationships: "💕 Relationships",
+        health: "🏥 Health",
+        love: "❤️ Love",
+        growth: "🌱 Growth",
+      };
+      Object.entries(la).forEach(([key, value]) => {
+        if (value) {
+          sections.push({ title: aspectLabels[key] || key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()), content: renderContent(value) });
+        }
+      });
     }
   }
 
-  // Pillars (BaZi)
+  // Pillars (BaZi) — structured instead of JSON
   if (Array.isArray(reading.pillars)) {
-    sections.push({ title: "Pillar Analysis", content: JSON.stringify(reading.pillars) });
+    const pillars = reading.pillars as Array<Record<string, unknown>>;
+    const parts = pillars
+      .map((p) => {
+        const name = p.name || p.pillar || "Pillar";
+        const meaning = p.meaning || p.interpretation || "";
+        const stem = p.stem || "";
+        const branch = p.branch || "";
+        let line = `**${name}**`;
+        if (stem && branch) line += ` — ${stem}${branch}`;
+        if (meaning) line += `\n${meaning}`;
+        return line;
+      })
+      .join("\n\n");
+    sections.push({ title: "Pillar Analysis", content: parts });
+  }
+
+  // Lucky Elements (BaZi)
+  if (Array.isArray(reading.luckyElements)) {
+    const le = reading.luckyElements as string[];
+    sections.push({ title: "🍀 Lucky Elements", content: le.map((e) => `• ${e}`).join("\n") });
+  }
+
+  // Overall Score (Feng Shui)
+  if (reading.overallScore) {
+    sections.push({ title: "📊 Overall Score", content: `${reading.overallScore} / 10`, isHighlight: true });
   }
 
   // Areas (Feng Shui)
@@ -807,10 +896,21 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
       if (area.analysis) {
         let content = area.analysis;
         if (area.suggestions && area.suggestions.length > 0) {
-          content += "\n\nSuggestions:\n" + area.suggestions.map((s) => `• ${s}`).join("\n");
+          content += "\n\n**Suggestions:**\n" + area.suggestions.map((s) => `• ${s}`).join("\n");
         }
         sections.push({ title: `${area.name}${area.rating ? ` (${area.rating})` : ""}`, content });
       }
+    }
+  }
+
+  // Elements (Feng Shui)
+  if (reading.elements) {
+    const el = reading.elements as Record<string, unknown>;
+    if (typeof el === "object") {
+      const parts = Object.entries(el)
+        .map(([k, v]) => `**${k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())}:** ${typeof v === "string" ? v : Array.isArray(v) ? v.join(", ") : JSON.stringify(v)}`)
+        .join("\n");
+      sections.push({ title: "🔮 Elements", content: parts });
     }
   }
 
@@ -818,7 +918,10 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
   if (reading.colors) {
     const cols = reading.colors as Record<string, unknown>;
     if (Array.isArray(cols.recommended)) {
-      sections.push({ title: "🎨 Recommended Colors", content: cols.recommended.join(", ") });
+      sections.push({ title: "🎨 Recommended Colors", content: (cols.recommended as string[]).join(", ") });
+    }
+    if (Array.isArray(cols.avoid)) {
+      sections.push({ title: "⚠️ Colors to Avoid", content: (cols.avoid as string[]).join(", ") });
     }
   }
 
@@ -838,10 +941,12 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
   // Breathing Pattern (Meditation)
   if (reading.breathingPattern) {
     const bp = reading.breathingPattern as Record<string, unknown>;
-    sections.push({
-      title: "🌬 Breathing Pattern",
-      content: `${bp.name}: Inhale ${bp.inhale}, Hold ${bp.hold || 0}, Exhale ${bp.exhale}`,
-    });
+    const hold = bp.hold ? `Hold ${bp.hold}` : null;
+    const parts = [`**${bp.name}**`, `Inhale ${bp.inhale}`];
+    if (hold) parts.push(hold);
+    parts.push(`Exhale ${bp.exhale}`);
+    if (bp.description) parts.push(`\n${bp.description}`);
+    sections.push({ title: "🌬 Breathing Pattern", content: parts.join(", ") });
   }
 
   // Affirmations
@@ -854,14 +959,46 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
 
   // Single affirmation
   if (reading.affirmation && !Array.isArray(reading.affirmations)) {
-    sections.push({ title: "Your Affirmation", content: reading.affirmation as string });
+    sections.push({ title: "Your Affirmation", content: reading.affirmation as string, isHighlight: true });
+  }
+
+  // Tips (Meditation)
+  if (Array.isArray(reading.tips)) {
+    sections.push({
+      title: "💡 Tips",
+      content: (reading.tips as string[]).map((t) => `• ${t}`).join("\n"),
+    });
   }
 
   // Advice
-  if (reading.advice) sections.push({ title: "Advice", content: reading.advice });
+  if (reading.advice) sections.push({ title: "Advice", content: renderContent(reading.advice) });
 
   // Summary
-  if (reading.summary) sections.push({ title: "Summary", content: reading.summary });
+  if (reading.summary) sections.push({ title: "Summary", content: renderContent(reading.summary) });
+
+  // ===== CATCH-ALL: if no sections were extracted, display the whole reading =====
+  if (sections.length === 0) {
+    // reading might have unknown keys — render them all
+    const unknownSections = Object.entries(reading)
+      .filter(([, v]) => v !== null && v !== undefined)
+      .map(([key, value]) => ({
+        title: key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
+        content: renderContent(value),
+      }));
+    if (unknownSections.length > 0) {
+      return (
+        <div className="space-y-4">
+          {unknownSections.map((section, i) => (
+            <div key={i} className="rounded-xl p-5 animate-fade-in" style={{ background: i === 0 ? `${c.primary}08` : c.surface, border: `1px solid ${c.primary}15` }}>
+              <h3 className="text-sm font-semibold tracking-wider uppercase mb-3" style={{ color: c.primary }}>{section.title}</h3>
+              <SafeHtml className="text-sm leading-relaxed whitespace-pre-line" style={{ color: c.text }} html={(section.content as string).replace(/\n/g, "<br/>")} />
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  }
 
   return (
     <div className="space-y-4">
@@ -870,11 +1007,9 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
           key={i}
           className="rounded-xl p-5 animate-fade-in"
           style={{
-            background: i === sections.length - 1 && section.title === "Your Affirmation"
+            background: section.isHighlight
               ? `${c.primary}08`
-              : i === 0
-                ? `${c.primary}08`
-                : c.surface,
+              : c.surface,
             border: `1px solid ${c.primary}15`,
           }}
         >
@@ -884,10 +1019,10 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
           <SafeHtml
             className="text-sm leading-relaxed whitespace-pre-line"
             style={{ color: c.text }}
-            html={typeof section.content === "string"
-              ? section.content.replace(/\n/g, "<br/>")
+            html={(typeof section.content === "string"
+              ? section.content
               : JSON.stringify(section.content, null, 2)
-            }
+            ).replace(/\n/g, "<br/>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}
           />
         </div>
       ))}
