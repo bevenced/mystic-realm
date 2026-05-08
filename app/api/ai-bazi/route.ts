@@ -6,6 +6,7 @@ import { calculateBaZi } from "@/lib/bazi";
 import { BAZI_SYSTEM_PROMPT, buildBaZiUserPrompt, buildBaZiPreviewPrompt } from "@/lib/ai-prompts-bazi";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
 
 function getDeepSeek() {
   if (!process.env.DEEPSEEK_API_KEY) return null;
@@ -119,16 +120,7 @@ export async function POST(req: NextRequest) {
         };
       }
     } else {
-      try {
-        const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-        const parsed = JSON.parse(jsonStr);
-        const previewText = parsed.overview || parsed.dayMaster || parsed.summary
-          || (parsed.lifeAspects && typeof parsed.lifeAspects === "object" && (parsed.lifeAspects as Record<string, string>).personality)
-          || JSON.stringify(parsed);
-        reading = { preview: typeof previewText === "string" ? previewText : JSON.stringify(previewText) };
-      } catch {
-        reading = { preview: content };
-      }
+      reading = { preview: extractPreviewText(content, [...PREVIEW_FIELDS.bazi]) };
     }
 
     return NextResponse.json({

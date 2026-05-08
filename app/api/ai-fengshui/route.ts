@@ -5,6 +5,7 @@ import OpenAI from "openai";
 import { FENGSHUI_SYSTEM_PROMPT, buildFengShuiUserPrompt, buildFengShuiPreviewPrompt } from "@/lib/ai-prompts-fengshui";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
 
 function getDeepSeek() {
   if (!process.env.DEEPSEEK_API_KEY) return null;
@@ -108,16 +109,7 @@ export async function POST(req: NextRequest) {
         };
       }
     } else {
-      try {
-        const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-        const parsed = JSON.parse(jsonStr);
-        const previewText = parsed.overview || parsed.summary
-          || (Array.isArray(parsed.topImprovements) && parsed.topImprovements[0])
-          || JSON.stringify(parsed);
-        reading = { preview: typeof previewText === "string" ? previewText : JSON.stringify(previewText) };
-      } catch {
-        reading = { preview: content };
-      }
+      reading = { preview: extractPreviewText(content, [...PREVIEW_FIELDS.fengshui]) };
     }
 
     return NextResponse.json({

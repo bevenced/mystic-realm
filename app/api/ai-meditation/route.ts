@@ -5,6 +5,7 @@ import OpenAI from "openai";
 import { MEDITATION_SYSTEM_PROMPT, buildMeditationUserPrompt, buildMeditationPreviewPrompt } from "@/lib/ai-prompts-meditation";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
 
 function getDeepSeek() {
   if (!process.env.DEEPSEEK_API_KEY) return null;
@@ -107,16 +108,7 @@ export async function POST(req: NextRequest) {
         };
       }
     } else {
-      try {
-        const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-        const parsed = JSON.parse(jsonStr);
-        const previewText = parsed.introduction || parsed.title || parsed.overview
-          || (Array.isArray(parsed.affirmations) && parsed.affirmations[0])
-          || JSON.stringify(parsed);
-        reading = { preview: typeof previewText === "string" ? previewText : JSON.stringify(previewText) };
-      } catch {
-        reading = { preview: content };
-      }
+      reading = { preview: extractPreviewText(content, [...PREVIEW_FIELDS.meditation]) };
     }
 
     return NextResponse.json({

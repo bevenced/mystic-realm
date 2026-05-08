@@ -6,6 +6,7 @@ import { drawCards, getSpread } from "@/lib/tarot";
 import { SYSTEM_PROMPT, buildUserPrompt, buildPreviewPrompt } from "@/lib/ai-prompts";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
 
 // Lazy-init DeepSeek client (OpenAI-compatible API)
 function getDeepSeek() {
@@ -124,20 +125,7 @@ export async function POST(req: NextRequest) {
         };
       }
     } else {
-      // Free preview: try to extract readable text from AI response
-      // The system prompt asks for JSON, so the AI may return JSON even for previews
-      try {
-        const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-        const parsed = JSON.parse(jsonStr);
-        // Extract the most useful preview text from parsed JSON
-        const previewText = parsed.overview || parsed.summary || parsed.introduction
-          || (Array.isArray(parsed.affirmations) && parsed.affirmations[0])
-          || parsed.affirmation || JSON.stringify(parsed);
-        reading = { preview: typeof previewText === "string" ? previewText : JSON.stringify(previewText) };
-      } catch {
-        // AI returned plain text — use it directly
-        reading = { preview: content };
-      }
+      reading = { preview: extractPreviewText(content, [...PREVIEW_FIELDS.reading]) };
     }
 
     return NextResponse.json({
