@@ -284,7 +284,7 @@ footer,
   border-left: 3px solid var(--color-primary);
   padding: 1rem 1.5rem;
   margin: 2rem 0;
-  background: var(--color-primary) 05;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   border-radius: 0 8px 8px 0;
 }
 .prose-mystic blockquote p {

@@ -109,7 +109,7 @@ export default function ShopPageClient() {
 
       // Step 2: Redirect to PayPal for approval
       setCheckoutStatus("paypal");
-      const paypalUrl = process.env.PAYPAL_MODE === "live"
+      const paypalUrl = data.isLive
         ? `https://www.paypal.com/checkoutnow?token=${data.orderId}`
         : `https://www.sandbox.paypal.com/checkoutnow?token=${data.orderId}`;
       window.location.href = paypalUrl;

@@ -49,7 +49,7 @@ export default function Navbar() {
           {!isSignedIn && (
             <>
               <SignInButton mode="modal">
-                <button className="px-5 py-2.5 rounded-full theme-transition" style={{ color: "var(--color-text-muted)", border: "1px solid var(--color-border-tertiary)" }}>
+                <button className="px-5 py-2.5 rounded-full theme-transition" style={{ color: "var(--color-text-muted)", border: "1px solid var(--color-text-muted)33" }}>
                   Sign In
                 </button>
               </SignInButton>

@@ -138,6 +138,7 @@ export async function POST(req: NextRequest) {
       orderId: orderData.id,
       status: orderData.status,
       amount: total,
+      isLive: process.env.PAYPAL_MODE === "live",
     });
   } catch (error) {
     console.error("PayPal shop order error:", error);

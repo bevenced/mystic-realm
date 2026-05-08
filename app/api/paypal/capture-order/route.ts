@@ -94,10 +94,22 @@ export async function POST(req: NextRequest) {
     const payment = captureData.purchase_units?.[0];
     const capturedAmount = parseFloat(payment?.amount?.value || "0");
     const currency = payment?.amount?.currency_code;
-    const serviceKey = payment?.custom_id || "";
+    const serviceKey = (payment?.custom_id || "").replace(/:first$/, "").replace(/:discount$/, "");
 
     // Verify amount matches server-side price (log mismatch but still complete)
-    const expectedPrice = SERVICE_PRICES[serviceKey];
+    let expectedPrice: number | undefined;
+    // Try the exact key first
+    expectedPrice = SERVICE_PRICES[serviceKey];
+    if (!expectedPrice) {
+      // Fuzzy match: e.g. "tarot:three-card" -> try "tarot" then "three-card"
+      const parts = serviceKey.split(":");
+      for (const part of parts) {
+        if (SERVICE_PRICES[part]) {
+          expectedPrice = SERVICE_PRICES[part];
+          break;
+        }
+      }
+    }
     let serviceVerified = false;
     if (expectedPrice) {
       serviceVerified = Math.abs(capturedAmount - expectedPrice) < 0.01;
