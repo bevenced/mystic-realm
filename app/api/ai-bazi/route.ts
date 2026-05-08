@@ -119,7 +119,16 @@ export async function POST(req: NextRequest) {
         };
       }
     } else {
-      reading = { preview: content };
+      try {
+        const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        const parsed = JSON.parse(jsonStr);
+        const previewText = parsed.overview || parsed.dayMaster || parsed.summary
+          || (parsed.lifeAspects && typeof parsed.lifeAspects === "object" && (parsed.lifeAspects as Record<string, string>).personality)
+          || JSON.stringify(parsed);
+        reading = { preview: typeof previewText === "string" ? previewText : JSON.stringify(previewText) };
+      } catch {
+        reading = { preview: content };
+      }
     }
 
     return NextResponse.json({

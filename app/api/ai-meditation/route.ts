@@ -107,7 +107,16 @@ export async function POST(req: NextRequest) {
         };
       }
     } else {
-      reading = { preview: content };
+      try {
+        const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        const parsed = JSON.parse(jsonStr);
+        const previewText = parsed.introduction || parsed.title || parsed.overview
+          || (Array.isArray(parsed.affirmations) && parsed.affirmations[0])
+          || JSON.stringify(parsed);
+        reading = { preview: typeof previewText === "string" ? previewText : JSON.stringify(previewText) };
+      } catch {
+        reading = { preview: content };
+      }
     }
 
     return NextResponse.json({
