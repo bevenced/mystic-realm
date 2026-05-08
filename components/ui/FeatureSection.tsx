@@ -60,7 +60,7 @@ export default function FeatureSection() {
                 {f.title}
               </h3>
               <p
-                className="text-sm leading-relaxed max-w-xs mx-auto"
+                className="text-base leading-relaxed max-w-xs mx-auto"
                 style={{ color: "var(--color-text-muted)" }}
               >
                 {f.desc}

@@ -79,7 +79,7 @@ export default function BlogCard({
 
         {/* Excerpt */}
         <p
-          className="text-sm leading-relaxed mb-3"
+          className="text-base leading-relaxed mb-3"
           style={{
             color: c.textMuted,
             display: "-webkit-box",

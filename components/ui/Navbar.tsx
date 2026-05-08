@@ -30,7 +30,7 @@ export default function Navbar() {
 
         {/* 桌面端导航链接 */}
         <div
-          className="hidden md:flex items-center gap-8 text-sm"
+          className="hidden md:flex items-center gap-8"
           style={{ color: "var(--color-text-muted)" }}
         >
           <Link href="/shop" className="nav-link theme-transition hover:text-[var(--color-primary)]">
@@ -49,12 +49,12 @@ export default function Navbar() {
           {!isSignedIn && (
             <>
               <SignInButton mode="modal">
-                <button className="text-sm px-4 py-2 rounded-full theme-transition" style={{ color: "var(--color-text-muted)", border: "1px solid var(--color-border-tertiary)" }}>
+                <button className="px-5 py-2.5 rounded-full theme-transition" style={{ color: "var(--color-text-muted)", border: "1px solid var(--color-border-tertiary)" }}>
                   Sign In
                 </button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <button className="text-sm px-4 py-2 rounded-full ml-2 theme-transition" style={{ backgroundColor: "var(--color-primary)", color: "var(--color-bg)", border: "none" }}>
+                <button className="px-5 py-2.5 rounded-full ml-2 theme-transition" style={{ backgroundColor: "var(--color-primary)", color: "var(--color-bg)", border: "none" }}>
                   Sign Up
                 </button>
               </SignUpButton>

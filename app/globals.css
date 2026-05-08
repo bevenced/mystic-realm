@@ -93,6 +93,28 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-theme);
+  font-size: 17px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 所有默认段落和文本 */
+p, li, label, input, textarea, select, button {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* 所有链接默认稍大 */
+a {
+  font-size: inherit;
+}
+
+/* Tailwind text-xs/sm 在小屏上也不小于 14px */
+@media (max-width: 640px) {
+  body {
+    font-size: 16px;
+  }
 }
 
 /* 只给 body 和关键容器做主题切换过渡，不影响所有元素 */
@@ -218,8 +240,12 @@ footer,
 }
 
 /* ===== 博客文章内容样式 ===== */
+.prose-mystic {
+  font-size: 17px;
+  line-height: 1.8;
+}
 .prose-mystic h2 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--color-primary);
   margin-top: 2.5rem;
