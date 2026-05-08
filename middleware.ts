@@ -10,6 +10,7 @@ const isPublicRoute = createRouteMatcher([
   "/theme(.*)",
   "/api/paypal(.*)",
   "/api/ai-(.*)",
+  "/api/db(.*)",
 ]);
 
 // Define ignored routes (no auth check at all)
