@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
 import { calculateBaZi } from "@/lib/bazi";
 import { BAZI_SYSTEM_PROMPT, buildBaZiUserPrompt, buildBaZiPreviewPrompt } from "@/lib/ai-prompts-bazi";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 function getDeepSeek() {
   if (!process.env.DEEPSEEK_API_KEY) return null;
@@ -17,7 +19,7 @@ const requestSchema = z.object({
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   birthHour: z.number().int().min(0).max(23),
   gender: z.enum(["male", "female"]),
-  orderId: z.string().optional(), // PayPal order ID for paid readings
+  orderId: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -33,11 +35,37 @@ export async function POST(req: NextRequest) {
     }
 
     const { birthDate, birthHour, gender, orderId } = parsed.data;
+    const { userId } = await auth();
 
-    // Verify payment if orderId is provided
+    // Verify payment if orderId is provided (requires sign-in)
     let isPaid = false;
     if (orderId) {
-      isPaid = await verifyPayPalOrder(orderId);
+      if (!userId) {
+        return NextResponse.json(
+          { error: "Please sign in to use paid readings." },
+          { status: 401 }
+        );
+      }
+      isPaid = await verifyPayPalOrder(orderId, "bazi");
+    }
+
+    // Rate limiting
+    const clientIp = getClientIp(req);
+    const rateKey = userId ? `ai:${userId}` : `ai:anon:${clientIp}`;
+    const maxRequests = isPaid ? 20 : (userId ? 5 : 3);
+    const rateResult = checkRateLimit(rateKey, { maxRequests, windowSeconds: 60 });
+
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a moment before trying again." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(Math.ceil((rateResult.resetAt - Date.now()) / 1000)),
+            "X-RateLimit-Remaining": "0",
+          },
+        }
+      );
     }
 
     // Calculate BaZi

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
 import { MEDITATION_SYSTEM_PROMPT, buildMeditationUserPrompt, buildMeditationPreviewPrompt } from "@/lib/ai-prompts-meditation";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 function getDeepSeek() {
   if (!process.env.DEEPSEEK_API_KEY) return null;
@@ -16,7 +18,7 @@ const requestSchema = z.object({
   type: z.enum(["stress", "sleep", "focus", "self-healing", "gratitude"]),
   duration: z.enum(["5", "10", "15"]).default("10"),
   mood: z.string().max(500).default(""),
-  orderId: z.string().optional(), // PayPal order ID for paid readings
+  orderId: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -32,11 +34,37 @@ export async function POST(req: NextRequest) {
     }
 
     const { type, duration, mood, orderId } = parsed.data;
+    const { userId } = await auth();
 
-    // Verify payment if orderId is provided
+    // Verify payment if orderId is provided (requires sign-in)
     let isPaid = false;
     if (orderId) {
-      isPaid = await verifyPayPalOrder(orderId);
+      if (!userId) {
+        return NextResponse.json(
+          { error: "Please sign in to use paid readings." },
+          { status: 401 }
+        );
+      }
+      isPaid = await verifyPayPalOrder(orderId, "meditation");
+    }
+
+    // Rate limiting
+    const clientIp = getClientIp(req);
+    const rateKey = userId ? `ai:${userId}` : `ai:anon:${clientIp}`;
+    const maxRequests = isPaid ? 20 : (userId ? 5 : 3);
+    const rateResult = checkRateLimit(rateKey, { maxRequests, windowSeconds: 60 });
+
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a moment before trying again." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(Math.ceil((rateResult.resetAt - Date.now()) / 1000)),
+            "X-RateLimit-Remaining": "0",
+          },
+        }
+      );
     }
 
     const deepseek = getDeepSeek();

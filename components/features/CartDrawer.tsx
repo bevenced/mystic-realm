@@ -16,7 +16,8 @@ interface CartDrawerProps {
   cart: CartItem[];
   onUpdateQuantity: (productId: string, delta: number) => void;
   onRemove: (productId: string) => void;
-  onCheckout: () => void;
+  onCheckout: () => void | Promise<void>;
+  checkoutLoading?: boolean;
 }
 
 export default function CartDrawer({
@@ -26,6 +27,7 @@ export default function CartDrawer({
   onUpdateQuantity,
   onRemove,
   onCheckout,
+  checkoutLoading = false,
 }: CartDrawerProps) {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
@@ -199,14 +201,23 @@ export default function CartDrawer({
             </div>
             <button
               onClick={onCheckout}
-              className="w-full py-3 rounded-full text-sm font-semibold transition-all"
+              disabled={checkoutLoading}
+              className="w-full py-3 rounded-full text-sm font-semibold transition-all flex items-center justify-center gap-2"
               style={{
                 backgroundColor: c.primary,
                 color: isDark ? c.bg : "#FFFFFF",
                 boxShadow: `0 0 20px ${currentTheme.glow}`,
+                opacity: checkoutLoading ? 0.7 : 1,
               }}
             >
-              Proceed to Checkout
+              {checkoutLoading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Proceed to Checkout"
+              )}
             </button>
             <p className="text-xs text-center mt-2" style={{ color: c.textMuted }}>
               Secure payment via PayPal

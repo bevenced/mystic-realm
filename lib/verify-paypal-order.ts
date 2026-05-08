@@ -1,9 +1,40 @@
 /**
  * Verify PayPal order status
- * Returns true if order is COMPLETED, false otherwise
+ * Returns true if order is COMPLETED and not already consumed for a different service
  */
-export async function verifyPayPalOrder(orderId: string): Promise<boolean> {
+
+// Track which orders have been consumed and for which service
+// In production, this should use a database (e.g., Vercel Postgres)
+// Memory-based tracking works within a single serverless instance
+const consumedOrders = new Map<string, string>();
+
+/**
+ * Check if an orderId has already been used
+ */
+export function isOrderConsumed(orderId: string): boolean {
+  return consumedOrders.has(orderId);
+}
+
+/**
+ * Get the service that consumed an orderId
+ */
+export function getConsumedService(orderId: string): string | undefined {
+  return consumedOrders.get(orderId);
+}
+
+export async function verifyPayPalOrder(orderId: string, service: string = "unknown"): Promise<boolean> {
   try {
+    // Check if already consumed for a different service
+    const consumedService = consumedOrders.get(orderId);
+    if (consumedService) {
+      if (consumedService !== service) {
+        console.warn(`Order ${orderId} already used for ${consumedService}, cannot reuse for ${service}`);
+        return false;
+      }
+      // Same service re-requesting (e.g., page refresh) - allow but don't re-verify
+      return true;
+    }
+
     const clientId = process.env.PAYPAL_CLIENT_ID;
     const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
     const baseUrl =
@@ -52,9 +83,11 @@ export async function verifyPayPalOrder(orderId: string): Promise<boolean> {
     }
 
     const orderData = await orderRes.json();
-    
+
     // Check if order is completed
     if (orderData.status === "COMPLETED") {
+      // Mark as consumed for this service
+      consumedOrders.set(orderId, service);
       return true;
     }
 

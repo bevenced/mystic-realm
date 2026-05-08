@@ -9,6 +9,7 @@ import TarotSpreadSelector from "@/components/features/TarotSpreadSelector";
 import PayPalButton from "@/components/features/PayPalButton";
 import { getSpread } from "@/lib/tarot";
 import { v4 as uuidv4 } from "uuid";
+import SafeHtml from "@/components/features/SafeHtml";
 
 type Step = 1 | 2 | 3;
 
@@ -853,14 +854,13 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
           <h3 className="text-sm font-semibold tracking-wider uppercase mb-3" style={{ color: c.primary }}>
             {section.title}
           </h3>
-          <div
+          <SafeHtml
             className="text-sm leading-relaxed whitespace-pre-line"
             style={{ color: c.text }}
-            dangerouslySetInnerHTML={{
-              __html: typeof section.content === "string"
-                ? section.content.replace(/\n/g, "<br/>")
-                : JSON.stringify(section.content, null, 2),
-            }}
+            html={typeof section.content === "string"
+              ? section.content.replace(/\n/g, "<br/>")
+              : JSON.stringify(section.content, null, 2)
+            }
           />
         </div>
       ))}

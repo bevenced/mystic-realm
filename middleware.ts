@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // Define public routes that don't require authentication
+// AI routes are public to allow anonymous preview, but auth is checked inside routes for paid features
 const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
@@ -11,17 +12,11 @@ const isPublicRoute = createRouteMatcher([
   "/theme(.*)",
   "/api/paypal(.*)",
   "/api/ai-(.*)",
-  "/api/db(.*)",
+  // NOTE: /api/db is NOT public - requires auth for init
 ]);
 
-// Define ignored routes (no auth check at all)
-const isIgnoredRoute = createRouteMatcher(["/api/ai-(.*)"]);
-
 export default clerkMiddleware(async (auth, request) => {
-  // Skip auth for ignored routes (AI APIs use orderId verification)
-  if (isIgnoredRoute(request)) return;
-
-  // Protect non-public routes
+  // Protect non-public routes (e.g., /api/db/init, /dashboard, etc.)
   if (!isPublicRoute(request)) {
     await auth.protect();
   }

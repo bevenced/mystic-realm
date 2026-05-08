@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { ShoppingBag, Home, ChevronRight } from "lucide-react";
+import { ShoppingBag, Home, ChevronRight, Loader2, CheckCircle, X } from "lucide-react";
 import Link from "next/link";
 import { getProductsByTheme, getProductCategories, type Product } from "@/lib/products";
 import ProductCard from "@/components/features/ProductCard";
@@ -21,6 +21,8 @@ export default function ShopPageClient() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [addedToast, setAddedToast] = useState("");
+  const [checkoutStatus, setCheckoutStatus] = useState<"idle" | "creating" | "paypal" | "success" | "error">("idle");
+  const [checkoutError, setCheckoutError] = useState("");
 
   // Load cart from localStorage
   useEffect(() => {
@@ -74,10 +76,47 @@ export default function ShopPageClient() {
     saveCart(cart.filter((i) => i.product.id !== productId));
   };
 
-  const handleCheckout = () => {
-    // In a real app, this would redirect to PayPal checkout
-    alert("PayPal checkout coming soon! Your cart total: $" +
-      cart.reduce((s, i) => s + i.product.price * i.quantity, 0).toFixed(2));
+  const handleCheckout = async () => {
+    if (cart.length === 0) return;
+
+    setCheckoutStatus("creating");
+    setCheckoutError("");
+
+    try {
+      const total = cart.reduce((s, i) => s + i.product.price * i.quantity, 0);
+
+      // Step 1: Create PayPal order via our server
+      const res = await fetch("/api/paypal/create-shop-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cart.map(i => ({
+            productId: i.product.id,
+            name: i.product.name,
+            price: i.product.price,
+            quantity: i.quantity,
+          })),
+          currency: "USD",
+        }),
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        setCheckoutStatus("error");
+        setCheckoutError(data.error);
+        return;
+      }
+
+      // Step 2: Redirect to PayPal for approval
+      setCheckoutStatus("paypal");
+      const paypalUrl = process.env.PAYPAL_MODE === "live"
+        ? `https://www.paypal.com/checkoutnow?token=${data.orderId}`
+        : `https://www.sandbox.paypal.com/checkoutnow?token=${data.orderId}`;
+      window.location.href = paypalUrl;
+    } catch {
+      setCheckoutStatus("error");
+      setCheckoutError("Failed to create payment. Please try again.");
+    }
   };
 
   return (
@@ -193,6 +232,7 @@ export default function ShopPageClient() {
         onUpdateQuantity={handleUpdateQuantity}
         onRemove={handleRemove}
         onCheckout={handleCheckout}
+        checkoutLoading={checkoutStatus === "creating"}
       />
 
       {/* Added to cart toast */}

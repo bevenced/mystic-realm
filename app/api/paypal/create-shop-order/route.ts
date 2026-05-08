@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { validateServicePrice } from "@/lib/pricing";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
-const createOrderSchema = z.object({
-  // amount is NOT accepted from client - server determines price
+const shopOrderSchema = z.object({
+  items: z.array(z.object({
+    productId: z.string(),
+    name: z.string(),
+    price: z.number().positive(),
+    quantity: z.number().int().min(1),
+  })).min(1).max(20),
   currency: z.string().default("USD"),
-  serviceKey: z.string(),
-  readingId: z.string().optional(),
 });
 
-// Get PayPal access token
 async function getAccessToken(): Promise<string> {
   const clientId = process.env.PAYPAL_CLIENT_ID;
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
@@ -43,7 +44,7 @@ async function getAccessToken(): Promise<string> {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const parsed = createOrderSchema.safeParse(body);
+    const parsed = shopOrderSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -52,11 +53,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { currency, serviceKey, readingId } = parsed.data;
+    const { items, currency } = parsed.data;
 
-    // Rate limiting: max 10 order creations per IP per hour
+    // Rate limiting
     const clientIp = getClientIp(req);
-    const rateResult = checkRateLimit(`paypal:create:${clientIp}`, { maxRequests: 10, windowSeconds: 3600 });
+    const rateResult = checkRateLimit(`paypal:shop:${clientIp}`, { maxRequests: 10, windowSeconds: 3600 });
     if (!rateResult.allowed) {
       return NextResponse.json(
         { error: "Too many payment attempts. Please wait before trying again." },
@@ -64,24 +65,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate service and get server-side price
-    const priceValidation = validateServicePrice(serviceKey);
-    if (!priceValidation.valid) {
-      return NextResponse.json(
-        { error: "Invalid service type." },
-        { status: 400 }
-      );
-    }
-
-    const amount = priceValidation.expectedPrice;
-    const serviceName = priceValidation.serviceName;
-
     if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
       return NextResponse.json(
         { error: "Payment service is not configured." },
         { status: 503 }
       );
     }
+
+    // Calculate total
+    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    // Build item descriptions
+    const itemDescriptions = items.map(i => `${i.quantity}x ${i.name}`).join(", ");
+    const description = itemDescriptions.length > 127
+      ? itemDescriptions.slice(0, 124) + "..."
+      : itemDescriptions;
 
     const accessToken = await getAccessToken();
 
@@ -102,10 +100,25 @@ export async function POST(req: NextRequest) {
           {
             amount: {
               currency_code: currency,
-              value: amount.toFixed(2),
+              value: total.toFixed(2),
+              breakdown: {
+                item_total: {
+                  currency_code: currency,
+                  value: total.toFixed(2),
+                },
+              },
             },
-            description: serviceName,
-            custom_id: serviceKey,
+            description: `Mystic Realm Shop: ${description}`,
+            custom_id: "shop-order",
+            items: items.map(item => ({
+              name: item.name,
+              unit_amount: {
+                currency_code: currency,
+                value: item.price.toFixed(2),
+              },
+              quantity: String(item.quantity),
+              category: "PHYSICAL_GOODS",
+            })),
           },
         ],
       }),
@@ -114,7 +127,7 @@ export async function POST(req: NextRequest) {
     const orderData = await orderRes.json();
 
     if (!orderData.id) {
-      console.error("PayPal order creation failed:", orderData);
+      console.error("PayPal shop order creation failed:", orderData);
       return NextResponse.json(
         { error: "Failed to create payment order." },
         { status: 500 }
@@ -124,11 +137,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       orderId: orderData.id,
       status: orderData.status,
-      amount,
-      serviceKey,
+      amount: total,
     });
   } catch (error) {
-    console.error("PayPal create order error:", error);
+    console.error("PayPal shop order error:", error);
     return NextResponse.json(
       { error: "Failed to create payment. Please try again." },
       { status: 500 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Home, ChevronRight, Clock, ArrowLeft } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import type { BlogPost } from "@/lib/blog-posts";
+import SafeHtml from "@/components/features/SafeHtml";
 
 interface Props {
   post: BlogPost;
@@ -94,8 +95,9 @@ export default function BlogDetailClient({ post, relatedPosts }: Props) {
           <article
             className="prose-mystic animate-fade-in"
             style={{ color: c.text }}
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
+          >
+            <SafeHtml html={post.content} />
+          </article>
 
           {/* Tags */}
           <div className="flex flex-wrap gap-2 mt-10 animate-fade-in">

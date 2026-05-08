@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
 import { drawCards, getSpread } from "@/lib/tarot";
 import { SYSTEM_PROMPT, buildUserPrompt, buildPreviewPrompt } from "@/lib/ai-prompts";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 // Lazy-init DeepSeek client (OpenAI-compatible API)
 function getDeepSeek() {
@@ -33,15 +35,40 @@ export async function POST(req: NextRequest) {
     }
 
     const { spreadKey, question, orderId } = parsed.data;
-    const spread = getSpread(spreadKey);
+    const { userId } = await auth();
 
-    // Verify payment if orderId is provided
+    // Verify payment if orderId is provided (requires sign-in)
     let isPaid = false;
     if (orderId) {
-      isPaid = await verifyPayPalOrder(orderId);
+      if (!userId) {
+        return NextResponse.json(
+          { error: "Please sign in to use paid readings." },
+          { status: 401 }
+        );
+      }
+      isPaid = await verifyPayPalOrder(orderId, "tarot");
+    }
+    const spread = getSpread(spreadKey);
+
+    // Rate limiting
+    const clientIp = getClientIp(req);
+    const rateKey = userId ? `ai:${userId}` : `ai:anon:${clientIp}`;
+    const maxRequests = isPaid ? 20 : (userId ? 5 : 3);
+    const rateResult = checkRateLimit(rateKey, { maxRequests, windowSeconds: 60 });
+
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a moment before trying again." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(Math.ceil((rateResult.resetAt - Date.now()) / 1000)),
+            "X-RateLimit-Remaining": "0",
+          },
+        }
+      );
     }
 
-    // Draw cards
     const drawn = drawCards(spread.cardCount);
     const cardData = drawn.map((d, i) => ({
       name: d.card.name,
