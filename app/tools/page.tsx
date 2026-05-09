@@ -3,7 +3,7 @@ import ToolsPageClient from "./ToolsPageClient";
 import Footer from "@/components/ui/Footer";
 
 export const metadata = {
-  title: "AI Mystical Tools — Mystic Realm",
+  title: "AI Mystical Tools",
   description:
     "Get personalized AI-powered tarot readings, BaZi analysis, Feng Shui consultations, natal chart readings, and guided meditations.",
 };

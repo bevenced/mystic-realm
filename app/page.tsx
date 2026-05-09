@@ -7,7 +7,7 @@ import Footer from "@/components/ui/Footer";
 import { themeList } from "@/lib/themes";
 
 export const metadata: Metadata = {
-  title: "Mystic Realm — Ancient Wisdom, Modern Magic",
+  title: "Ancient Wisdom, Modern Magic",
   description:
     "Explore six mystical realms: meditation, healing, feng shui, BaZi divination, tarot, and astrology. AI-powered readings, curated products, and guided wisdom.",
 };

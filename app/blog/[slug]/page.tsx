@@ -16,7 +16,7 @@ export function generateMetadata({
   const post = getPostBySlug(params.slug);
   if (!post) return { title: "Not Found" };
   return {
-    title: `${post.title} — Mystic Realm`,
+    title: post.title,
     description: post.excerpt,
   };
 }
