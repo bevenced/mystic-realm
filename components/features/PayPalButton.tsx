@@ -31,10 +31,13 @@ export default function PayPalButton({
     return (
       <div
         className="rounded-xl p-4 text-center"
-        style={{ background: `${c.primary}10`, border: `1px solid ${c.primary}33` }}
+        style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}22` }}
       >
+        <p className="text-xs tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>
+          Full Reading
+        </p>
         <p className="text-sm" style={{ color: c.textMuted }}>
-          Payment is not configured yet. Please set NEXT_PUBLIC_PAYPAL_CLIENT_ID.
+          ${discountPrice.toFixed(2)} — coming soon
         </p>
       </div>
     );

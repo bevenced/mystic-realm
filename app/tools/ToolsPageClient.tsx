@@ -663,12 +663,68 @@ function ResultDisplay({
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
 
-  // Free preview
+  // Free preview — show service-specific data + preview text
   if (!isPaid && reading.preview) {
     const previewText = typeof reading.preview === "string" ? reading.preview : renderContent(reading.preview);
     return (
-      <div className="rounded-xl p-6 animate-fade-in" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}22` }}>
-        <SafeHtml className="text-sm leading-relaxed whitespace-pre-line" style={{ color: c.text }} html={previewText.replace(/\n/g, "<br/>")} />
+      <div className="space-y-4 animate-fade-in">
+        {/* Tarot cards */}
+        {tarotCards.length > 0 && (
+          <div className="grid gap-4" style={{
+            gridTemplateColumns: tarotCards.length <= 3 ? "repeat(auto-fit, minmax(140px, 1fr))" : "repeat(auto-fit, minmax(120px, 1fr))",
+          }}>
+            {tarotCards.map((card, i) => (
+              <div key={i} className="rounded-xl p-4 text-center" style={{ background: c.surface, border: `1px solid ${c.primary}22` }}>
+                <p className="text-xs mb-1 uppercase tracking-wider" style={{ color: c.textMuted }}>{card.position}</p>
+                <span className="text-3xl">{card.emoji}</span>
+                <p className="text-xs font-semibold mt-1" style={{ color: c.primary }}>{card.name}</p>
+                <p className="text-xs mt-0.5" style={{ color: card.isReversed ? "#E74C3C" : c.textMuted }}>
+                  {card.isReversed ? "Reversed" : "Upright"}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* BaZi four pillars */}
+        {service === "bazi" && "year" in extraData && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {(["year", "month", "day", "hour"] as const).map((pillar) => {
+              const p = (extraData as Record<string, Record<string, string>>)[pillar];
+              if (!p) return null;
+              return (
+                <div key={pillar} className="rounded-xl p-4 text-center" style={{ background: c.surface, border: `1px solid ${c.primary}22` }}>
+                  <p className="text-xs uppercase tracking-wider mb-2" style={{ color: c.textMuted }}>{pillar} Pillar</p>
+                  <p className="text-2xl font-bold" style={{ color: c.primary }}>{p.stem}{p.branch}</p>
+                  <p className="text-xs mt-1" style={{ color: c.textMuted }}>{p.stemEn} / {p.branchEn}</p>
+                  <p className="text-xs mt-0.5" style={{ color: c.textMuted }}>{p.stemElement} / {p.branchElement}</p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Astrology big three */}
+        {service === "astrology" && "sunSign" in extraData && (
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: "☀ Sun", value: `${(extraData as Record<string, string>).sunSign} ${(extraData as Record<string, string>).sunSymbol}`, sub: (extraData as Record<string, string>).element },
+              { label: "☽ Moon", value: `${(extraData as Record<string, string>).moonSign} ${(extraData as Record<string, string>).moonSymbol}`, sub: "Emotions" },
+              { label: "⬆ Rising", value: `${(extraData as Record<string, string>).risingSign} ${(extraData as Record<string, string>).risingSymbol}`, sub: (extraData as Record<string, string>).modality },
+            ].map((item) => (
+              <div key={item.label} className="rounded-xl p-4 text-center" style={{ background: c.surface, border: `1px solid ${c.primary}22` }}>
+                <p className="text-xs" style={{ color: c.textMuted }}>{item.label}</p>
+                <p className="text-xl font-bold mt-1" style={{ color: c.primary }}>{item.value}</p>
+                <p className="text-xs mt-1" style={{ color: c.textMuted }}>{item.sub}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="rounded-xl p-6" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}22` }}>
+          <p className="text-xs tracking-wider uppercase mb-2" style={{ color: c.textMuted }}>Preview</p>
+          <SafeHtml className="text-sm leading-relaxed whitespace-pre-line" style={{ color: c.text }} html={previewText.replace(/\n/g, "<br/>")} />
+        </div>
       </div>
     );
   }
