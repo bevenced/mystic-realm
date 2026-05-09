@@ -47,7 +47,7 @@ export default function FeatureSection() {
               <div
                 className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
                 style={{
-                  backgroundColor: "var(--color-primary)15",
+                  backgroundColor: "color-mix(in srgb, var(--color-primary) 8%, transparent)",
                   color: "var(--color-primary)",
                 }}
               >

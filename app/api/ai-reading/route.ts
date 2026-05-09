@@ -1,26 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@clerk/nextjs/server";
-import OpenAI from "openai";
+import { getDeepSeek } from "@/lib/deepseek";
+import { parseAiJsonResponse } from "@/lib/ai-response";
 import { drawCards, getSpread } from "@/lib/tarot";
 import { SYSTEM_PROMPT, buildUserPrompt, buildPreviewPrompt } from "@/lib/ai-prompts";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
 
-// Lazy-init DeepSeek client (OpenAI-compatible API)
-function getDeepSeek() {
-  if (!process.env.DEEPSEEK_API_KEY) return null;
-  return new OpenAI({
-    apiKey: process.env.DEEPSEEK_API_KEY,
-    baseURL: "https://api.deepseek.com",
-  });
-}
-
 const requestSchema = z.object({
   spreadKey: z.enum(["three-card", "five-card", "celtic-cross"]),
   question: z.string().min(3).max(500),
-  orderId: z.string().optional(), // PayPal order ID for paid readings
+  orderId: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -31,31 +23,28 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid request", details: parsed.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { spreadKey, question, orderId } = parsed.data;
     const { userId } = await auth();
 
-    // Verify payment if orderId is provided (requires sign-in)
     let isPaid = false;
     if (orderId) {
       if (!userId) {
         return NextResponse.json(
           { error: "Please sign in to use paid readings." },
-          { status: 401 }
+          { status: 401 },
         );
       }
       isPaid = await verifyPayPalOrder(orderId, "tarot");
     }
-    const spread = getSpread(spreadKey);
 
-    // Rate limiting
     const clientIp = getClientIp(req);
     const rateKey = userId ? `ai:${userId}` : `ai:anon:${clientIp}`;
     const maxRequests = isPaid ? 20 : (userId ? 5 : 3);
-    const rateResult = checkRateLimit(rateKey, { maxRequests, windowSeconds: 60 });
+    const rateResult = await checkRateLimit(rateKey, { maxRequests, windowSeconds: 60 });
 
     if (!rateResult.allowed) {
       return NextResponse.json(
@@ -66,10 +55,11 @@ export async function POST(req: NextRequest) {
             "Retry-After": String(Math.ceil((rateResult.resetAt - Date.now()) / 1000)),
             "X-RateLimit-Remaining": "0",
           },
-        }
+        },
       );
     }
 
+    const spread = getSpread(spreadKey);
     const drawn = drawCards(spread.cardCount);
     const cardData = drawn.map((d, i) => ({
       name: d.card.name,
@@ -83,11 +73,10 @@ export async function POST(req: NextRequest) {
     if (!deepseek) {
       return NextResponse.json(
         { error: "AI service is not configured. Please set DEEPSEEK_API_KEY." },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
-    // Generate AI reading
     const readingPrompt = isPaid
       ? buildUserPrompt({ spreadKey, question, cards: cardData })
       : buildPreviewPrompt({ spreadKey, question, cards: cardData });
@@ -103,30 +92,9 @@ export async function POST(req: NextRequest) {
     });
 
     const content = completion.choices[0]?.message?.content || "";
-
-    // Parse AI response
-    let reading;
-    if (isPaid) {
-      try {
-        // Try to parse JSON from response (strip markdown code blocks if present)
-        const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-        reading = JSON.parse(jsonStr);
-      } catch {
-        // If JSON parsing fails, create a structured response from plain text
-        reading = {
-          overview: content,
-          cards: cardData.map((c) => ({
-            position: c.position,
-            interpretation: `The ${c.name} in the ${c.position} position suggests a time of reflection.`,
-            advice: "Trust your intuition as you navigate this energy.",
-          })),
-          summary: content.slice(0, 200),
-          affirmation: "I trust in the wisdom of my journey.",
-        };
-      }
-    } else {
-      reading = { preview: extractPreviewText(content, [...PREVIEW_FIELDS.reading]) };
-    }
+    const reading = isPaid
+      ? parseAiJsonResponse(content) || buildReadingFallback(content, cardData)
+      : { preview: extractPreviewText(content, [...PREVIEW_FIELDS.reading]) };
 
     return NextResponse.json({
       cards: cardData,
@@ -140,7 +108,20 @@ export async function POST(req: NextRequest) {
     console.error("AI Reading error:", error);
     return NextResponse.json(
       { error: "Failed to generate reading. Please try again." },
-      { status: 500 }
+      { status: 500 },
     );
   }
+}
+
+function buildReadingFallback(content: string, cardData: Array<Record<string, unknown>>) {
+  return {
+    overview: content,
+    cards: cardData.map((c) => ({
+      position: c.position,
+      interpretation: `The ${c.name} in the ${c.position} position suggests a time of reflection.`,
+      advice: "Trust your intuition as you navigate this energy.",
+    })),
+    summary: content.slice(0, 200),
+    affirmation: "I trust in the wisdom of my journey.",
+  };
 }

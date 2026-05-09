@@ -57,7 +57,7 @@ export default function TarotSpreadSelector({ selected, onSelect }: TarotSpreadS
                 className="text-xs mb-2 theme-transition"
                 style={{ color: c.textMuted, opacity: 0.6 }}
               >
-                {spread.nameZh} &middot; {spread.cardCount} Cards
+                <span lang="zh">{spread.nameZh}</span> &middot; {spread.cardCount} Cards
               </p>
 
               {/* Positions preview */}

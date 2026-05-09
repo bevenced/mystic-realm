@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     // Rate limiting
     const clientIp = getClientIp(req);
-    const rateResult = checkRateLimit(`paypal:create:${clientIp}`, { maxRequests: 10, windowSeconds: 3600 });
+    const rateResult = await checkRateLimit(`paypal:create:${clientIp}`, { maxRequests: 10, windowSeconds: 3600 });
     if (!rateResult.allowed) {
       return NextResponse.json(
         { error: "Too many payment attempts. Please wait before trying again." },

@@ -13,8 +13,12 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
   const theme = themes[params.slug];
   if (!theme) return { title: "Not Found" };
   return {
-    title: `${theme.name} — Mystic Realm`,
-    description: theme.desc,
+    title: theme.name,
+    description: `${theme.desc} Explore ${theme.name.toLowerCase()} readings, products, and guides.`,
+    openGraph: {
+      title: `${theme.name} — Mystic Realm`,
+      description: theme.desc,
+    },
   };
 }
 
@@ -78,7 +82,7 @@ export default function ThemeChannelPage({
             className="mt-2 text-lg tracking-widest animate-slide-up delay-300"
             style={{ color: c.textMuted, opacity: 0.7 }}
           >
-            {theme.nameZh}
+            <span lang="zh">{theme.nameZh}</span>
           </p>
 
           {/* 描述 */}

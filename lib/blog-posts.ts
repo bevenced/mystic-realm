@@ -380,7 +380,7 @@ export const blogPosts: BlogPost[] = [
 
 <h2>Wood Type (甲/乙)</h2>
 <p><strong>Keywords:</strong> Growth, ambition, kindness, creativity</p>
-<p>Wood types are natural growers — they start projects, inspire others, and continuously seek personal development. Yang Wood (甲) is the tall oak tree: direct, competitive, and uncompromising. Yin Wood (乙) is the flexible vine: adaptable, diplomatic, and善于 social connections.</p>
+<p>Wood types are natural growers — they start projects, inspire others, and continuously seek personal development. Yang Wood (甲) is the tall oak tree: direct, competitive, and uncompromising. Yin Wood (乙) is the flexible vine: adaptable, diplomatic, andadept at social connections.</p>
 <p><strong>Ideal careers:</strong> Education, entrepreneurship, environmental work, creative arts</p>
 
 <h2>Fire Type (丙/丁)</h2>

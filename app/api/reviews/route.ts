@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Rate limiting: max 5 reviews per user per hour
-    const rateResult = checkRateLimit(`review:${userId}`, { maxRequests: 5, windowSeconds: 3600 });
+    const rateResult = await checkRateLimit(`review:${userId}`, { maxRequests: 5, windowSeconds: 3600 });
     if (!rateResult.allowed) {
       return NextResponse.json(
         { error: "Too many reviews. Please wait before submitting another." },

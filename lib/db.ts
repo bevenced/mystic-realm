@@ -76,6 +76,15 @@ export async function initDatabase() {
     );
   `;
 
+  // Rate limiting (persisted across serverless instances)
+  await sql`
+    CREATE TABLE IF NOT EXISTS rate_limits (
+      key TEXT PRIMARY KEY,
+      count INT NOT NULL DEFAULT 1,
+      reset_at TIMESTAMPTZ NOT NULL
+    );
+  `;
+
   // User reviews
   await sql`
     CREATE TABLE IF NOT EXISTS reviews (
@@ -268,5 +277,78 @@ export async function getServiceAverageRating(service: string) {
   } catch (error) {
     console.error("getServiceAverageRating error:", error);
     throw error;
+  }
+}
+
+// ===== Rate Limiting (persisted) =====
+
+export interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  resetAt: number; // epoch ms
+}
+
+/**
+ * Check rate limit using Postgres for persistence across serverless instances.
+ * Falls back to allowing the request if DB is unavailable.
+ */
+export async function checkRateLimitDb(
+  key: string,
+  maxRequests: number,
+  windowSeconds: number,
+): Promise<RateLimitResult> {
+  try {
+    const now = Date.now();
+    const resetAt = now + windowSeconds * 1000;
+    const resetAtDate = new Date(resetAt);
+
+    const result = await sql`
+      INSERT INTO rate_limits (key, count, reset_at)
+      VALUES (${key}, 1, ${resetAtDate.toISOString()})
+      ON CONFLICT (key) DO UPDATE
+      SET count = CASE
+            WHEN rate_limits.reset_at < NOW() THEN 1
+            ELSE rate_limits.count + 1
+          END,
+          reset_at = CASE
+            WHEN rate_limits.reset_at < NOW() THEN ${resetAtDate.toISOString()}
+            ELSE rate_limits.reset_at
+          END
+      RETURNING count, reset_at
+    `;
+
+    const row = result.rows[0];
+    const newCount: number = Number(row.count);
+    const newResetAt: Date = new Date(row.reset_at);
+    const remaining = Math.max(0, maxRequests - newCount);
+
+    return {
+      allowed: newCount <= maxRequests,
+      remaining,
+      resetAt: newResetAt.getTime(),
+    };
+  } catch (error) {
+    console.error("Rate limit DB error, allowing request:", error);
+    return { allowed: true, remaining: 1, resetAt: Date.now() + windowSeconds * 1000 };
+  }
+}
+
+// ===== Payment / Order Verification =====
+
+/**
+ * Check if a PayPal order has already been consumed.
+ * Returns the service it was consumed for, or null if not yet consumed.
+ */
+export async function getConsumedOrderService(orderId: string): Promise<string | null> {
+  try {
+    const result = await sql`
+      SELECT service FROM payments
+      WHERE paypal_order_id = ${orderId}
+      LIMIT 1
+    `;
+    return result.rows[0]?.service || null;
+  } catch (error) {
+    console.error("getConsumedOrderService error:", error);
+    return null;
   }
 }

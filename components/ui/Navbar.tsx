@@ -11,8 +11,8 @@ export default function Navbar() {
     <nav
       className="sticky top-0 z-50 backdrop-blur-md"
       style={{
-        backgroundColor: "var(--color-bg)cc",
-        borderBottom: "1px solid var(--color-primary)15",
+        backgroundColor: "color-mix(in srgb, var(--color-bg) 80%, transparent)",
+        borderBottom: "1px solid color-mix(in srgb, var(--color-primary) 8%, transparent)",
       }}
     >
       <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
@@ -49,7 +49,7 @@ export default function Navbar() {
           {!isSignedIn && (
             <>
               <SignInButton mode="modal">
-                <button className="px-5 py-2.5 rounded-full theme-transition" style={{ color: "var(--color-text-muted)", border: "1px solid var(--color-text-muted)33" }}>
+                <button className="px-5 py-2.5 rounded-full theme-transition" style={{ color: "var(--color-text-muted)", border: "1px solid color-mix(in srgb, var(--color-text-muted) 20%, transparent)" }}>
                   Sign In
                 </button>
               </SignInButton>

@@ -8,7 +8,6 @@ import ServiceCard, { SERVICES } from "@/components/features/ServiceCard";
 import TarotSpreadSelector from "@/components/features/TarotSpreadSelector";
 import PayPalButton from "@/components/features/PayPalButton";
 import { getSpread } from "@/lib/tarot";
-import { v4 as uuidv4 } from "uuid";
 import SafeHtml from "@/components/features/SafeHtml";
 import ServiceProductRecommendations from "@/components/features/ServiceProductRecommendations";
 import ReviewStars from "@/components/features/ReviewStars";
@@ -72,7 +71,7 @@ export default function ToolsPageClient() {
     const isPaid = !!orderId;
     setLoading(true);
     setError("");
-    const id = uuidv4();
+    const id = crypto.randomUUID();
     if (!isPaid) setReadingId(id);
 
     try {

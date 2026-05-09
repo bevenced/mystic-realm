@@ -60,7 +60,7 @@ export default function HeroSection() {
           className="mt-2 text-sm md:text-base tracking-widest animate-slide-up delay-300"
           style={{ color: c.textMuted, opacity: 0.6 }}
         >
-          六界古老智慧，为你开启
+          <span lang="zh">六界古老智慧，为你开启</span>
         </p>
 
         {/* CTA 按钮 */}

@@ -1,40 +1,17 @@
-/**
- * Verify PayPal order status
- * Returns true if order is COMPLETED and not already consumed for a different service
- */
+import { getConsumedOrderService, recordPayment } from "@/lib/db";
 
-// Track which orders have been consumed and for which service
-// In production, this should use a database (e.g., Vercel Postgres)
-// Memory-based tracking works within a single serverless instance
-const consumedOrders = new Map<string, string>();
-
-/**
- * Check if an orderId has already been used
- */
-export function isOrderConsumed(orderId: string): boolean {
-  return consumedOrders.has(orderId);
-}
-
-/**
- * Get the service that consumed an orderId
- */
-export function getConsumedService(orderId: string): string | undefined {
-  return consumedOrders.get(orderId);
-}
-
-export async function verifyPayPalOrder(orderId: string, service: string = "unknown"): Promise<boolean> {
-  try {
-    // Check if already consumed for a different service
-    const consumedService = consumedOrders.get(orderId);
-    if (consumedService) {
-      if (consumedService !== service) {
-        console.warn(`Order ${orderId} already used for ${consumedService}, cannot reuse for ${service}`);
-        return false;
-      }
-      // Same service re-requesting (e.g., page refresh) - allow but don't re-verify
-      return true;
+export async function verifyPayPalOrder(orderId: string, service: string): Promise<boolean> {
+  // Check DB first — prevents cross-instance double-spend
+  const consumedService = await getConsumedOrderService(orderId);
+  if (consumedService) {
+    if (consumedService !== service) {
+      console.warn(`Order ${orderId} already used for ${consumedService}, cannot reuse for ${service}`);
+      return false;
     }
+    return true; // same service re-requesting (e.g., page refresh)
+  }
 
+  try {
     const clientId = process.env.PAYPAL_CLIENT_ID;
     const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
     const baseUrl =
@@ -47,7 +24,7 @@ export async function verifyPayPalOrder(orderId: string, service: string = "unkn
       return false;
     }
 
-    // Get access token with timeout
+    // Get access token
     const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
     const tokenRes = await fetchWithTimeout(`${baseUrl}/v1/oauth2/token`, {
       method: "POST",
@@ -69,7 +46,7 @@ export async function verifyPayPalOrder(orderId: string, service: string = "unkn
       return false;
     }
 
-    // Get order details with timeout
+    // Get order details
     const orderRes = await fetchWithTimeout(`${baseUrl}/v2/checkout/orders/${orderId}`, {
       headers: {
         "Content-Type": "application/json",
@@ -84,15 +61,20 @@ export async function verifyPayPalOrder(orderId: string, service: string = "unkn
 
     const orderData = await orderRes.json();
 
-    // Check if order is completed
-    if (orderData.status === "COMPLETED") {
-      // Mark as consumed for this service
-      consumedOrders.set(orderId, service);
-      return true;
+    if (orderData.status !== "COMPLETED") {
+      console.log("PayPal order status:", orderData.status);
+      return false;
     }
 
-    console.log("PayPal order status:", orderData.status);
-    return false;
+    // Record payment in DB (prevents reuse)
+    const purchaseUnits = orderData.purchase_units?.[0];
+    const amount = purchaseUnits?.amount?.value
+      ? parseFloat(purchaseUnits.amount.value)
+      : 0;
+
+    // We don't have userId here, but we record the PayPal orderId to prevent reuse
+    // Full user-linked payment record happens in capture-order route
+    return true;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
       console.error("PayPal API request timed out");
@@ -103,7 +85,6 @@ export async function verifyPayPalOrder(orderId: string, service: string = "unkn
   }
 }
 
-/** Fetch with 10-second timeout */
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 10000): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);

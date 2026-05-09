@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@clerk/nextjs/server";
-import OpenAI from "openai";
+import { getDeepSeek } from "@/lib/deepseek";
+import { parseAiJsonResponse } from "@/lib/ai-response";
 import { MEDITATION_SYSTEM_PROMPT, buildMeditationUserPrompt, buildMeditationPreviewPrompt } from "@/lib/ai-prompts-meditation";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
-
-function getDeepSeek() {
-  if (!process.env.DEEPSEEK_API_KEY) return null;
-  return new OpenAI({
-    apiKey: process.env.DEEPSEEK_API_KEY,
-    baseURL: "https://api.deepseek.com",
-  });
-}
 
 const requestSchema = z.object({
   type: z.enum(["stress", "sleep", "focus", "self-healing", "gratitude"]),
@@ -30,30 +23,28 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid request", details: parsed.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { type, duration, mood, orderId } = parsed.data;
     const { userId } = await auth();
 
-    // Verify payment if orderId is provided (requires sign-in)
     let isPaid = false;
     if (orderId) {
       if (!userId) {
         return NextResponse.json(
           { error: "Please sign in to use paid readings." },
-          { status: 401 }
+          { status: 401 },
         );
       }
       isPaid = await verifyPayPalOrder(orderId, "meditation");
     }
 
-    // Rate limiting
     const clientIp = getClientIp(req);
     const rateKey = userId ? `ai:${userId}` : `ai:anon:${clientIp}`;
     const maxRequests = isPaid ? 20 : (userId ? 5 : 3);
-    const rateResult = checkRateLimit(rateKey, { maxRequests, windowSeconds: 60 });
+    const rateResult = await checkRateLimit(rateKey, { maxRequests, windowSeconds: 60 });
 
     if (!rateResult.allowed) {
       return NextResponse.json(
@@ -64,7 +55,7 @@ export async function POST(req: NextRequest) {
             "Retry-After": String(Math.ceil((rateResult.resetAt - Date.now()) / 1000)),
             "X-RateLimit-Remaining": "0",
           },
-        }
+        },
       );
     }
 
@@ -72,7 +63,7 @@ export async function POST(req: NextRequest) {
     if (!deepseek) {
       return NextResponse.json(
         { error: "AI service is not configured." },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
@@ -91,25 +82,9 @@ export async function POST(req: NextRequest) {
     });
 
     const content = completion.choices[0]?.message?.content || "";
-
-    let reading;
-    if (isPaid) {
-      try {
-        const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-        reading = JSON.parse(jsonStr);
-      } catch {
-        reading = {
-          title: `${type} Meditation`,
-          introduction: content,
-          script: [{ phase: "core", instruction: content.slice(0, 500), duration: `${duration} minutes` }],
-          breathingPattern: { name: "Deep Breathing", inhale: "4 seconds", hold: "0", exhale: "6 seconds", description: "A simple calming breath." },
-          affirmations: ["I am at peace.", "I release what I cannot control.", "I embrace this moment."],
-          tips: ["Find a quiet space", "Set an intention before starting"],
-        };
-      }
-    } else {
-      reading = { preview: extractPreviewText(content, [...PREVIEW_FIELDS.meditation]) };
-    }
+    const reading = isPaid
+      ? parseAiJsonResponse(content) || buildMeditationFallback(content, type, duration)
+      : { preview: extractPreviewText(content, [...PREVIEW_FIELDS.meditation]) };
 
     return NextResponse.json({
       reading,
@@ -121,7 +96,18 @@ export async function POST(req: NextRequest) {
     console.error("Meditation error:", error);
     return NextResponse.json(
       { error: "Failed to generate meditation." },
-      { status: 500 }
+      { status: 500 },
     );
   }
+}
+
+function buildMeditationFallback(content: string, type: string, duration: string) {
+  return {
+    title: `${type} Meditation`,
+    introduction: content,
+    script: [{ phase: "core", instruction: content.slice(0, 500), duration: `${duration} minutes` }],
+    breathingPattern: { name: "Deep Breathing", inhale: "4 seconds", hold: "0", exhale: "6 seconds", description: "A simple calming breath." },
+    affirmations: ["I am at peace.", "I release what I cannot control.", "I embrace this moment."],
+    tips: ["Find a quiet space", "Set an intention before starting"],
+  };
 }

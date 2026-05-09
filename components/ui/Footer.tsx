@@ -5,7 +5,7 @@ export default function Footer() {
       <div
         className="h-px mx-auto max-w-4xl mb-8"
         style={{
-          background: "linear-gradient(90deg, transparent, var(--color-primary)66, transparent)",
+          background: "linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-primary) 40%, transparent), transparent)",
         }}
       />
 
@@ -21,9 +21,9 @@ export default function Footer() {
           className="flex items-center gap-6 text-sm"
           style={{ color: "var(--color-text-muted)" }}
         >
-          <a href="#" className="hover:text-[var(--color-primary)] transition-colors">Privacy</a>
-          <a href="#" className="hover:text-[var(--color-primary)] transition-colors">Terms</a>
-          <a href="#" className="hover:text-[var(--color-primary)] transition-colors">Contact</a>
+          <a href="/privacy" className="hover:text-[var(--color-primary)] transition-colors">Privacy</a>
+          <a href="/terms" className="hover:text-[var(--color-primary)] transition-colors">Terms</a>
+          <a href="mailto:support@wentchine.shop" className="hover:text-[var(--color-primary)] transition-colors">Contact</a>
         </div>
       </div>
 

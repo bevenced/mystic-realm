@@ -61,7 +61,7 @@ export default function ThemeCard({
           {theme.name}
         </h3>
         <p className="text-sm mb-3 theme-transition" style={{ color: c.textMuted, opacity: 0.7 }}>
-          {theme.nameZh}
+          <span lang="zh">{theme.nameZh}</span>
         </p>
 
         {/* 描述 */}
