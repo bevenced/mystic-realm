@@ -134,6 +134,9 @@ export async function initDatabase() {
     ON CONFLICT (id) DO NOTHING;
   `;
 
+  // Ensure existing tables have new columns (for upgrades from older schema)
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0`;
+
   return { success: true, message: "Database initialized" };
 }
 
