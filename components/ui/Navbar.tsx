@@ -60,6 +60,13 @@ export default function Navbar() {
               >
                 Dashboard
               </Link>
+              <Link
+                href="/profile"
+                className="text-sm nav-link theme-transition hover:text-[var(--color-primary)]"
+                style={{ color: "var(--color-text-muted)" }}
+              >
+                Profile
+              </Link>
             </>
           )}
           {!isSignedIn && (

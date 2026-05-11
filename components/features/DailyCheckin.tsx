@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { Sparkles, CheckCircle, Loader2, Flame } from "lucide-react";
+import { Sparkles, CheckCircle, Loader2, Flame, UserCircle } from "lucide-react";
+import Link from "next/link";
 
 interface CheckinData {
   checkedIn: boolean;
@@ -49,7 +50,11 @@ export default function DailyCheckin({ isSignedIn, initialData }: { isSignedIn: 
       const res = await fetch("/api/checkin", { method: "POST" });
       const json = await res.json();
       if (json.error) {
-        setError(json.details ? `${json.error} (${json.details})` : json.error);
+        if (json.code === "PROFILE_REQUIRED") {
+          setError(json.code);
+        } else {
+          setError(json.details ? `${json.error} (${json.details})` : json.error);
+        }
       } else {
         setData({
           checkedIn: true,
@@ -96,31 +101,53 @@ export default function DailyCheckin({ isSignedIn, initialData }: { isSignedIn: 
       {/* Not checked in yet */}
       {!data?.checkedIn && (
         <div className="text-center">
-          <p className="text-sm mb-4" style={{ color: c.textMuted }}>
-            Check in to receive your daily fortune and earn points
-          </p>
-          <button
-            onClick={handleCheckin}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all"
-            style={{
-              backgroundColor: loading ? `${c.primary}30` : c.primary,
-              color: loading ? c.textMuted : isDark ? c.bg : "#FFFFFF",
-              cursor: loading ? "not-allowed" : "pointer",
-              boxShadow: loading ? "none" : `0 0 15px ${currentTheme.glow}`,
-            }}
-          >
-            {loading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Sparkles size={16} />
-            )}
-            {loading ? "Consulting the stars..." : "Check In"}
-          </button>
-          {error && (
-            <p className="text-xs mt-2" style={{ color: "#E74C3C" }}>
-              {error}
-            </p>
+          {error === "PROFILE_REQUIRED" ? (
+            <div>
+              <p className="text-sm mb-3" style={{ color: c.textMuted }}>
+                Complete your birth profile to receive personalized daily fortunes based on your BaZi chart.
+              </p>
+              <Link
+                href="/profile"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all"
+                style={{
+                  backgroundColor: c.primary,
+                  color: isDark ? c.bg : "#FFFFFF",
+                  boxShadow: `0 0 15px ${currentTheme.glow}`,
+                }}
+              >
+                <UserCircle size={16} />
+                Set Up Profile
+              </Link>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm mb-4" style={{ color: c.textMuted }}>
+                Check in to receive your daily fortune and earn points
+              </p>
+              <button
+                onClick={handleCheckin}
+                disabled={loading}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all"
+                style={{
+                  backgroundColor: loading ? `${c.primary}30` : c.primary,
+                  color: loading ? c.textMuted : isDark ? c.bg : "#FFFFFF",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  boxShadow: loading ? "none" : `0 0 15px ${currentTheme.glow}`,
+                }}
+              >
+                {loading ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Sparkles size={16} />
+                )}
+                {loading ? "Consulting the stars..." : "Check In"}
+              </button>
+              {error && error !== "PROFILE_REQUIRED" && (
+                <p className="text-xs mt-2" style={{ color: "#E74C3C" }}>
+                  {error}
+                </p>
+              )}
+            </>
           )}
         </div>
       )}

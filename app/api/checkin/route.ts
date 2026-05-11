@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getOrCreateUser, performCheckin, getTodayCheckin, getCheckinHistory, getUserPoints } from "@/lib/db";
 import { getDailyFortune } from "@/lib/fortunes";
+import { generateFortune, type FortuneContext } from "@/lib/ai-fortune";
+import { calculateBaZi } from "@/lib/bazi";
 
 export async function GET() {
   const { userId } = await auth();
@@ -24,6 +26,7 @@ export async function GET() {
       } : null,
       totalPoints: points,
       recentHistory: recent,
+      hasProfile: !!(user.birth_date),
     });
   } catch (error) {
     console.error("Checkin GET error:", error);
@@ -39,7 +42,44 @@ export async function POST() {
 
   try {
     const user = await getOrCreateUser(userId);
-    const fortune = getDailyFortune(new Date());
+
+    // If user hasn't set birth info, require profile completion first
+    if (!user.birth_date) {
+      return NextResponse.json({
+        error: "Complete your birth profile to receive personalized daily fortunes.",
+        code: "PROFILE_REQUIRED",
+      }, { status: 400 });
+    }
+
+    // Calculate BaZi and generate AI fortune
+    const [year, month, day] = user.birth_date instanceof Date
+      ? [user.birth_date.getFullYear(), user.birth_date.getMonth() + 1, user.birth_date.getDate()]
+      : String(user.birth_date).split("-").map(Number);
+    const birthHour = user.birth_hour ?? 0;
+    const bazi = calculateBaZi(year, month, day, birthHour);
+
+    const age = new Date().getFullYear() - year -
+      (new Date() < new Date(new Date().getFullYear(), month - 1, day) ? 1 : 0);
+
+    const fortuneContext: FortuneContext = {
+      name: user.name || undefined,
+      gender: user.gender || undefined,
+      age,
+      dayMasterElement: bazi.dayMasterElement,
+      dayMasterYinYang: bazi.dayMasterYinYang,
+      zodiac: bazi.day.zodiac,
+      streak: 0,
+      elementCounts: bazi.elementCounts,
+    };
+
+    let fortune = await generateFortune(fortuneContext);
+    const aiGenerated = !!fortune;
+
+    // Fallback to fortune pool if AI fails
+    if (!fortune) {
+      fortune = getDailyFortune(new Date());
+    }
+
     const result = await performCheckin(user.id, fortune);
 
     return NextResponse.json({
@@ -49,6 +89,7 @@ export async function POST() {
       totalPoints: result.totalPoints,
       fortune: result.fortune,
       checkinDate: result.checkin_date,
+      aiGenerated,
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Check-in failed";

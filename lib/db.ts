@@ -136,6 +136,9 @@ export async function initDatabase() {
 
   // Ensure existing tables have new columns (for upgrades from older schema)
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date DATE`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_hour INTEGER`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10)`;
 
   return { success: true, message: "Database initialized" };
 }
@@ -157,6 +160,35 @@ export async function getOrCreateUser(clerkId: string, email?: string, name?: st
     return result.rows[0];
   } catch (error) {
     console.error("getOrCreateUser error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update user profile fields (birth info, gender, name).
+ */
+export async function updateUserProfile(
+  userId: string,
+  data: { birthDate?: string; birthHour?: number; gender?: string; name?: string },
+): Promise<Record<string, unknown> | null> {
+  if (!userId) throw new Error("userId is required");
+  try {
+    if (data.name !== undefined) {
+      await sql`UPDATE users SET name = ${data.name}, updated_at = NOW() WHERE id = ${userId}`;
+    }
+    if (data.birthDate !== undefined) {
+      await sql`UPDATE users SET birth_date = ${data.birthDate || null}, updated_at = NOW() WHERE id = ${userId}`;
+    }
+    if (data.birthHour !== undefined) {
+      await sql`UPDATE users SET birth_hour = ${data.birthHour}, updated_at = NOW() WHERE id = ${userId}`;
+    }
+    if (data.gender !== undefined) {
+      await sql`UPDATE users SET gender = ${data.gender}, updated_at = NOW() WHERE id = ${userId}`;
+    }
+    const result = await sql`SELECT * FROM users WHERE id = ${userId}`;
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error("updateUserProfile error:", error);
     throw error;
   }
 }

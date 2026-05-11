@@ -15,6 +15,7 @@ const navLinks = [
 
 const authLinks = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/profile", label: "Profile" },
 ];
 
 export default function MobileMenu() {
