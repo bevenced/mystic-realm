@@ -9,7 +9,12 @@ import { useUser, SignInButton, SignUpButton, UserButton, SignOutButton } from "
 const navLinks = [
   { href: "/shop", label: "Shop" },
   { href: "/tools", label: "AI Tools" },
+  { href: "/membership", label: "Membership" },
   { href: "/blog", label: "Blog" },
+];
+
+const authLinks = [
+  { href: "/dashboard", label: "Dashboard" },
 ];
 
 export default function MobileMenu() {
@@ -68,6 +73,19 @@ export default function MobileMenu() {
               </p>
               <ThemeSwitcher />
             </div>
+
+            {/* Auth-only links */}
+            {isSignedIn && authLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="text-lg font-medium animate-slide-up theme-transition"
+                style={{ color: "var(--color-text-muted)" }}
+              >
+                {link.label}
+              </Link>
+            ))}
 
             {/* 用户菜单 */}
             <div className="mt-8 animate-slide-up delay-300 flex flex-col items-center gap-4">

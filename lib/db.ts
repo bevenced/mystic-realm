@@ -13,6 +13,7 @@ export async function initDatabase() {
       email VARCHAR(255),
       name VARCHAR(255),
       plan VARCHAR(50) DEFAULT 'free',
+      points INTEGER DEFAULT 0,
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
@@ -98,13 +99,38 @@ export async function initDatabase() {
     );
   `;
 
+  // Daily check-ins
+  await sql`
+    CREATE TABLE IF NOT EXISTS daily_checkins (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      checkin_date DATE NOT NULL DEFAULT CURRENT_DATE,
+      streak INTEGER NOT NULL DEFAULT 1,
+      points_earned INTEGER NOT NULL DEFAULT 10,
+      fortune TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, checkin_date)
+    );
+  `;
+
+  // Point redemptions (one-time-use tokens for free readings)
+  await sql`
+    CREATE TABLE IF NOT EXISTS point_redemptions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token VARCHAR(255) UNIQUE NOT NULL,
+      service VARCHAR(50) NOT NULL DEFAULT 'reading',
+      used BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `;
+
   // Insert default plans
   await sql`
     INSERT INTO subscription_plans (id, name, price_monthly, price_yearly, features, ai_credits_per_month)
     VALUES
-      ('free', 'Free', 0, 0, ARRAY['1 free preview per service', 'Basic AI guidance'], 3),
-      ('mystic', 'Mystic', 8.88, 79.99, ARRAY['10 AI readings per month', 'Full interpretations', 'Priority support', 'Reading history'], 10),
-      ('oracle', 'Oracle', 19.99, 179.99, ARRAY['Unlimited AI readings', 'Full interpretations', 'Priority support', 'Reading history', 'Export PDF', 'Early access to new features'], 999)
+      ('free', 'Free', 0, 0, ARRAY['3 free previews per service', 'Basic AI guidance'], 3),
+      ('mystic', 'Mystic', 9.99, 99.99, ARRAY['Unlimited AI readings', 'Full interpretations', 'Reading history', 'Export PDF', 'Priority support'], 999)
     ON CONFLICT (id) DO NOTHING;
   `;
 
@@ -156,7 +182,7 @@ export async function getUserSubscription(userId: string) {
 /**
  * Get user's AI usage this month
  */
-export async function getUserMonthlyUsage(userId: string) {
+export async function getUserMonthlyUsage(userId: string): Promise<{ totalTokens: number; readings: number }> {
   if (!userId) throw new Error("userId is required");
   try {
     const result = await sql`
@@ -165,7 +191,11 @@ export async function getUserMonthlyUsage(userId: string) {
       WHERE user_id = ${userId}
       AND created_at >= date_trunc('month', NOW())
     `;
-    return result.rows[0];
+    const row = result.rows[0];
+    return {
+      totalTokens: Number(row?.total_tokens || 0),
+      readings: Number(row?.readings || 0),
+    };
   } catch (error) {
     console.error("getUserMonthlyUsage error:", error);
     throw error;
@@ -350,5 +380,318 @@ export async function getConsumedOrderService(orderId: string): Promise<string |
   } catch (error) {
     console.error("getConsumedOrderService error:", error);
     return null;
+  }
+}
+
+// ===== Subscription Management =====
+
+/**
+ * Activate (or extend) a subscription for a user after successful payment.
+ * If user has an active subscription, extends it by 30 days from current expiry.
+ */
+export async function activateSubscription(
+  userId: string,
+  planId: string,
+  paypalOrderId: string,
+) {
+  if (!userId) throw new Error("userId is required");
+  if (!planId) throw new Error("planId is required");
+  try {
+    // Idempotency: check if this PayPal order was already processed
+    const consumedService = await getConsumedOrderService(paypalOrderId);
+    if (consumedService) {
+      // Return existing active subscription without double-charging
+      const existingSub = await sql`
+        SELECT * FROM subscriptions
+        WHERE user_id = ${userId} AND status = 'active' AND current_period_end > NOW()
+        ORDER BY current_period_end DESC LIMIT 1
+      `;
+      if (existingSub.rows.length > 0) return existingSub.rows[0];
+      throw new Error("Payment already processed but no active subscription found. Please contact support.");
+    }
+
+    // Check if user already has an active subscription
+    const existing = await sql`
+      SELECT * FROM subscriptions
+      WHERE user_id = ${userId} AND status = 'active' AND current_period_end > NOW()
+      ORDER BY current_period_end DESC LIMIT 1
+    `;
+
+    let sub;
+    if (existing.rows.length > 0) {
+      // Extend existing subscription
+      const row = existing.rows[0];
+      const newEnd = new Date(Math.max(
+        new Date(row.current_period_end).getTime(),
+        Date.now(),
+      ) + 30 * 24 * 60 * 60 * 1000);
+      const result = await sql`
+        UPDATE subscriptions
+        SET current_period_end = ${newEnd.toISOString()},
+            updated_at = NOW()
+        WHERE id = ${row.id}
+        RETURNING *
+      `;
+      sub = result.rows[0];
+    } else {
+      // Create new subscription
+      const now = new Date();
+      const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const result = await sql`
+        INSERT INTO subscriptions (user_id, plan_id, status, current_period_start, current_period_end)
+        VALUES (${userId}, ${planId}, 'active', ${now.toISOString()}, ${end.toISOString()})
+        RETURNING *
+      `;
+      sub = result.rows[0];
+    }
+
+    // Update user's plan
+    await sql`UPDATE users SET plan = ${planId}, updated_at = NOW() WHERE id = ${userId}`;
+
+    // Record the payment (subscription purchase)
+    const plan = await sql`SELECT * FROM subscription_plans WHERE id = ${planId}`;
+    const price = plan.rows[0]?.price_monthly || 9.99;
+    await recordPayment(userId, {
+      paypalOrderId,
+      amount: Number(price),
+      service: `subscription:${planId}`,
+      status: "completed",
+    });
+
+    return sub;
+  } catch (error) {
+    console.error("activateSubscription error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get the active subscription for a user (returns null if expired or none).
+ */
+export async function getActiveSubscription(userId: string) {
+  if (!userId) return null;
+  try {
+    const result = await sql`
+      SELECT s.*, p.name as plan_name, p.price_monthly, p.features, p.ai_credits_per_month
+      FROM subscriptions s
+      JOIN subscription_plans p ON s.plan_id = p.id
+      WHERE s.user_id = ${userId}
+        AND s.status = 'active'
+        AND s.current_period_end > NOW()
+      ORDER BY s.current_period_end DESC
+      LIMIT 1
+    `;
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error("getActiveSubscription error:", error);
+    return null;
+  }
+}
+
+// ===== Points & Check-ins =====
+
+/**
+ * Add points to a user and return the new total.
+ */
+export async function addUserPoints(userId: string, points: number) {
+  if (!userId) throw new Error("userId is required");
+  try {
+    const result = await sql`
+      UPDATE users SET points = points + ${points}, updated_at = NOW()
+      WHERE id = ${userId}
+      RETURNING points
+    `;
+    return result.rows[0]?.points || 0;
+  } catch (error) {
+    console.error("addUserPoints error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get user's current points balance.
+ */
+export async function getUserPoints(userId: string): Promise<number> {
+  if (!userId) return 0;
+  try {
+    const result = await sql`SELECT points FROM users WHERE id = ${userId}`;
+    return result.rows[0]?.points || 0;
+  } catch (error) {
+    console.error("getUserPoints error:", error);
+    return 0;
+  }
+}
+
+/**
+ * Redeem points (deduct) if user has enough. Returns new balance or throws.
+ */
+export async function redeemPoints(userId: string, points: number) {
+  if (!userId) throw new Error("userId is required");
+  try {
+    const result = await sql`
+      UPDATE users SET points = points - ${points}, updated_at = NOW()
+      WHERE id = ${userId} AND points >= ${points}
+      RETURNING points
+    `;
+    if (result.rows.length === 0) {
+      const current = await getUserPoints(userId);
+      throw new Error(`Insufficient points (have ${current}, need ${points})`);
+    }
+    return Number(result.rows[0]?.points || 0);
+  } catch (error) {
+    console.error("redeemPoints error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Create a one-time redemption token (after points are deducted).
+ * Returns the token string for the client to pass to AI routes.
+ */
+export async function createRedemption(userId: string, service: string) {
+  if (!userId) throw new Error("userId is required");
+  try {
+    const token = crypto.randomUUID();
+    await sql`
+      INSERT INTO point_redemptions (user_id, token, service)
+      VALUES (${userId}, ${token}, ${service})
+    `;
+    return token;
+  } catch (error) {
+    console.error("createRedemption error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Consume a redemption token — returns the user_id if valid and unused, null otherwise.
+ * Atomically marks the token as used to prevent double-spend.
+ */
+export async function consumeRedemption(token: string) {
+  if (!token) return null;
+  try {
+    const result = await sql`
+      UPDATE point_redemptions SET used = TRUE
+      WHERE token = ${token} AND used = FALSE
+      RETURNING user_id, service
+    `;
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error("consumeRedemption error:", error);
+    return null;
+  }
+}
+
+/**
+ * Perform daily check-in: calculates streak, awards points, inserts row.
+ * Returns the check-in result with fortune.
+ */
+export async function performCheckin(userId: string, fortune: string): Promise<{
+  id: string;
+  user_id: string;
+  checkin_date: string;
+  streak: number;
+  points_earned: number;
+  fortune: string;
+  totalPoints: number;
+}> {
+  if (!userId) throw new Error("userId is required");
+  try {
+    // Check if already checked in today
+    const today = new Date().toISOString().slice(0, 10);
+    const existing = await sql`
+      SELECT id FROM daily_checkins
+      WHERE user_id = ${userId} AND checkin_date = ${today}
+    `;
+    if (existing.rows.length > 0) {
+      throw new Error("Already checked in today");
+    }
+
+    // Calculate streak from yesterday's check-in
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const prev = await sql`
+      SELECT streak FROM daily_checkins
+      WHERE user_id = ${userId} AND checkin_date = ${yesterday}
+      ORDER BY checkin_date DESC LIMIT 1
+    `;
+    const streak = prev.rows.length > 0 ? (prev.rows[0].streak + 1) : 1;
+
+    // Points based on streak tier
+    let pointsEarned = 10;
+    if (streak >= 30) pointsEarned = 30;
+    else if (streak >= 7) pointsEarned = 20;
+    else if (streak >= 3) pointsEarned = 15;
+
+    // Insert check-in
+    const result = await sql`
+      INSERT INTO daily_checkins (user_id, checkin_date, streak, points_earned, fortune)
+      VALUES (${userId}, ${today}, ${streak}, ${pointsEarned}, ${fortune})
+      RETURNING *
+    `;
+
+    // Add points to user
+    await addUserPoints(userId, pointsEarned);
+
+    const row = result.rows[0] as {
+      id: string;
+      user_id: string;
+      checkin_date: string;
+      streak: number;
+      points_earned: number;
+      fortune: string;
+    };
+    return {
+      id: row.id,
+      user_id: row.user_id,
+      checkin_date: row.checkin_date,
+      streak: row.streak,
+      points_earned: row.points_earned,
+      fortune: row.fortune,
+      totalPoints: await getUserPoints(userId),
+    };
+  } catch (error) {
+    if (error instanceof Error && (error.message.includes("duplicate key") || error.message.includes("unique constraint") || error.message.includes("duplicate"))) {
+      throw new Error("Already checked in today");
+    }
+    console.error("performCheckin error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get today's check-in status for a user.
+ */
+export async function getTodayCheckin(userId: string) {
+  if (!userId) return null;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const result = await sql`
+      SELECT * FROM daily_checkins
+      WHERE user_id = ${userId} AND checkin_date = ${today}
+    `;
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error("getTodayCheckin error:", error);
+    return null;
+  }
+}
+
+/**
+ * Get recent check-in history for a user.
+ */
+export async function getCheckinHistory(userId: string, limit = 30) {
+  if (!userId) return [];
+  try {
+    const result = await sql`
+      SELECT checkin_date, streak, points_earned, fortune
+      FROM daily_checkins
+      WHERE user_id = ${userId}
+      ORDER BY checkin_date DESC
+      LIMIT ${limit}
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error("getCheckinHistory error:", error);
+    return [];
   }
 }

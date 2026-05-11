@@ -6,13 +6,15 @@ import { parseAiJsonResponse } from "@/lib/ai-response";
 import { drawCards, getSpread } from "@/lib/tarot";
 import { SYSTEM_PROMPT, buildUserPrompt, buildPreviewPrompt } from "@/lib/ai-prompts";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
+import { checkSubscriptionAndRateLimit } from "@/lib/subscription-check";
+import { recordAiUsage, consumeRedemption } from "@/lib/db";
 
 const requestSchema = z.object({
   spreadKey: z.enum(["three-card", "five-card", "celtic-cross"]),
   question: z.string().min(3).max(500),
   orderId: z.string().optional(),
+  redeemed: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -27,7 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { spreadKey, question, orderId } = parsed.data;
+    const { spreadKey, question, orderId, redeemed } = parsed.data;
     const { userId } = await auth();
 
     let isPaid = false;
@@ -41,18 +43,23 @@ export async function POST(req: NextRequest) {
       isPaid = await verifyPayPalOrder(orderId, "tarot");
     }
 
-    const clientIp = getClientIp(req);
-    const rateKey = userId ? `ai:${userId}` : `ai:anon:${clientIp}`;
-    const maxRequests = isPaid ? 20 : (userId ? 5 : 3);
-    const rateResult = await checkRateLimit(rateKey, { maxRequests, windowSeconds: 60 });
+    // Points redemption: validate one-time token
+    if (redeemed && userId) {
+      const redemption = await consumeRedemption(redeemed);
+      if (redemption) {
+        isPaid = true;
+      }
+    }
 
-    if (!rateResult.allowed) {
+    const { allowed, dbUserId, retryAfter } = await checkSubscriptionAndRateLimit(req, userId, isPaid);
+
+    if (!allowed) {
       return NextResponse.json(
         { error: "Too many requests. Please wait a moment before trying again." },
         {
           status: 429,
           headers: {
-            "Retry-After": String(Math.ceil((rateResult.resetAt - Date.now()) / 1000)),
+            "Retry-After": retryAfter || "60",
             "X-RateLimit-Remaining": "0",
           },
         },
@@ -96,13 +103,19 @@ export async function POST(req: NextRequest) {
       ? parseAiJsonResponse(content) || buildReadingFallback(content, cardData)
       : { preview: extractPreviewText(content, [...PREVIEW_FIELDS.reading]) };
 
+    // Record AI usage for analytics
+    const tokensUsed = completion.usage?.total_tokens || 0;
+    if (dbUserId) {
+      recordAiUsage(dbUserId, "reading", tokensUsed).catch(() => {});
+    }
+
     return NextResponse.json({
       cards: cardData,
       reading,
       spreadKey,
       spreadName: spread.name,
       question,
-      tokensUsed: completion.usage?.total_tokens || 0,
+      tokensUsed,
     });
   } catch (error) {
     console.error("AI Reading error:", error);

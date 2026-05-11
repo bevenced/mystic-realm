@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import HeroSection from "@/components/ui/HeroSection";
+import HomeCheckinWidget from "@/components/features/HomeCheckinWidget";
 import TrustBadges from "@/components/ui/TrustBadges";
 import ThemeCard from "@/components/ui/ThemeCard";
 import FeatureSection from "@/components/ui/FeatureSection";
@@ -17,6 +18,13 @@ export default function HomePage() {
     <main>
       {/* Section 1: 沉浸式首屏 */}
       <HeroSection />
+
+      {/* Daily Check-in Widget (signed-in users only) */}
+      <section className="py-8 px-6">
+        <div className="mx-auto max-w-md">
+          <HomeCheckinWidget />
+        </div>
+      </section>
 
       {/* Section 2: 信任徽章 */}
       <TrustBadges />

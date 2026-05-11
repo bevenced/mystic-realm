@@ -6,14 +6,16 @@ import { parseAiJsonResponse } from "@/lib/ai-response";
 import { calculateBaZi, type BaZiResult } from "@/lib/bazi";
 import { BAZI_SYSTEM_PROMPT, buildBaZiUserPrompt, buildBaZiPreviewPrompt } from "@/lib/ai-prompts-bazi";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
+import { checkSubscriptionAndRateLimit } from "@/lib/subscription-check";
+import { recordAiUsage, consumeRedemption } from "@/lib/db";
 
 const requestSchema = z.object({
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   birthHour: z.number().int().min(0).max(23),
   gender: z.enum(["male", "female"]),
   orderId: z.string().optional(),
+  redeemed: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -28,7 +30,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { birthDate, birthHour, gender, orderId } = parsed.data;
+    const { birthDate, birthHour, gender, orderId, redeemed } = parsed.data;
     const { userId } = await auth();
 
     let isPaid = false;
@@ -42,18 +44,23 @@ export async function POST(req: NextRequest) {
       isPaid = await verifyPayPalOrder(orderId, "bazi");
     }
 
-    const clientIp = getClientIp(req);
-    const rateKey = userId ? `ai:${userId}` : `ai:anon:${clientIp}`;
-    const maxRequests = isPaid ? 20 : (userId ? 5 : 3);
-    const rateResult = await checkRateLimit(rateKey, { maxRequests, windowSeconds: 60 });
+    // Points redemption: validate one-time token
+    if (redeemed && userId) {
+      const redemption = await consumeRedemption(redeemed);
+      if (redemption) {
+        isPaid = true;
+      }
+    }
 
-    if (!rateResult.allowed) {
+    const { allowed, dbUserId, retryAfter } = await checkSubscriptionAndRateLimit(req, userId, isPaid);
+
+    if (!allowed) {
       return NextResponse.json(
         { error: "Too many requests. Please wait a moment before trying again." },
         {
           status: 429,
           headers: {
-            "Retry-After": String(Math.ceil((rateResult.resetAt - Date.now()) / 1000)),
+            "Retry-After": retryAfter || "60",
             "X-RateLimit-Remaining": "0",
           },
         },
@@ -90,13 +97,19 @@ export async function POST(req: NextRequest) {
       ? parseAiJsonResponse(content) || buildBaZiFallback(content, baziData)
       : { preview: extractPreviewText(content, [...PREVIEW_FIELDS.bazi]) };
 
+    // Record AI usage for analytics
+    const tokensUsed = completion.usage?.total_tokens || 0;
+    if (dbUserId) {
+      recordAiUsage(dbUserId, "bazi", tokensUsed).catch(() => {});
+    }
+
     return NextResponse.json({
       baziData,
       reading,
       birthDate,
       birthHour,
       gender,
-      tokensUsed: completion.usage?.total_tokens || 0,
+      tokensUsed,
     });
   } catch (error) {
     console.error("BaZi Reading error:", error);

@@ -5,14 +5,16 @@ import { getDeepSeek } from "@/lib/deepseek";
 import { parseAiJsonResponse } from "@/lib/ai-response";
 import { FENGSHUI_SYSTEM_PROMPT, buildFengShuiUserPrompt, buildFengShuiPreviewPrompt } from "@/lib/ai-prompts-fengshui";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
+import { checkSubscriptionAndRateLimit } from "@/lib/subscription-check";
+import { recordAiUsage, consumeRedemption } from "@/lib/db";
 
 const requestSchema = z.object({
   homeType: z.enum(["apartment", "house", "studio", "office"]),
   roomDescription: z.string().min(10).max(1000),
   concerns: z.string().max(500).default(""),
   orderId: z.string().optional(),
+  redeemed: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -27,7 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { homeType, roomDescription, concerns, orderId } = parsed.data;
+    const { homeType, roomDescription, concerns, orderId, redeemed } = parsed.data;
     const { userId } = await auth();
 
     let isPaid = false;
@@ -41,18 +43,23 @@ export async function POST(req: NextRequest) {
       isPaid = await verifyPayPalOrder(orderId, "fengshui");
     }
 
-    const clientIp = getClientIp(req);
-    const rateKey = userId ? `ai:${userId}` : `ai:anon:${clientIp}`;
-    const maxRequests = isPaid ? 20 : (userId ? 5 : 3);
-    const rateResult = await checkRateLimit(rateKey, { maxRequests, windowSeconds: 60 });
+    // Points redemption: validate one-time token
+    if (redeemed && userId) {
+      const redemption = await consumeRedemption(redeemed);
+      if (redemption) {
+        isPaid = true;
+      }
+    }
 
-    if (!rateResult.allowed) {
+    const { allowed, dbUserId, retryAfter } = await checkSubscriptionAndRateLimit(req, userId, isPaid);
+
+    if (!allowed) {
       return NextResponse.json(
         { error: "Too many requests. Please wait a moment before trying again." },
         {
           status: 429,
           headers: {
-            "Retry-After": String(Math.ceil((rateResult.resetAt - Date.now()) / 1000)),
+            "Retry-After": retryAfter || "60",
             "X-RateLimit-Remaining": "0",
           },
         },
@@ -86,10 +93,16 @@ export async function POST(req: NextRequest) {
       ? parseAiJsonResponse(content) || buildFengShuiFallback(content)
       : { preview: extractPreviewText(content, [...PREVIEW_FIELDS.fengshui]) };
 
+    // Record AI usage for analytics
+    const tokensUsed = completion.usage?.total_tokens || 0;
+    if (dbUserId) {
+      recordAiUsage(dbUserId, "fengshui", tokensUsed).catch(() => {});
+    }
+
     return NextResponse.json({
       reading,
       homeType,
-      tokensUsed: completion.usage?.total_tokens || 0,
+      tokensUsed,
     });
   } catch (error) {
     console.error("Feng Shui error:", error);

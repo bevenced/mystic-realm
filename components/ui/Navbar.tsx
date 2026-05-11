@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import MobileMenu from "@/components/ui/MobileMenu";
+import StreakBadge from "@/components/features/StreakBadge";
 import { useUser, UserButton, SignInButton, SignUpButton } from "@clerk/nextjs";
 
 export default function Navbar() {
@@ -39,13 +40,28 @@ export default function Navbar() {
           <Link href="/tools" className="nav-link theme-transition hover:text-[var(--color-primary)]">
             AI Tools
           </Link>
+          <Link href="/membership" className="nav-link theme-transition hover:text-[var(--color-primary)]">
+            Membership
+          </Link>
           <Link href="/blog" className="nav-link theme-transition hover:text-[var(--color-primary)]">
             Blog
           </Link>
         </div>
 
         {/* 用户菜单 */}
-        <div className="hidden md:flex items-center ml-6">
+        <div className="hidden md:flex items-center gap-3 ml-6">
+          {isSignedIn && (
+            <>
+              <StreakBadge isSignedIn={isSignedIn} />
+              <Link
+                href="/dashboard"
+                className="text-sm nav-link theme-transition hover:text-[var(--color-primary)]"
+                style={{ color: "var(--color-text-muted)" }}
+              >
+                Dashboard
+              </Link>
+            </>
+          )}
           {!isSignedIn && (
             <>
               <SignInButton mode="modal">

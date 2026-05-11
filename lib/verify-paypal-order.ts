@@ -1,6 +1,6 @@
 import { getConsumedOrderService, recordPayment } from "@/lib/db";
 
-export async function verifyPayPalOrder(orderId: string, service: string): Promise<boolean> {
+export async function verifyPayPalOrder(orderId: string, service: string, expectedAmount?: number): Promise<boolean> {
   // Check DB first — prevents cross-instance double-spend
   const consumedService = await getConsumedOrderService(orderId);
   if (consumedService) {
@@ -66,11 +66,16 @@ export async function verifyPayPalOrder(orderId: string, service: string): Promi
       return false;
     }
 
-    // Record payment in DB (prevents reuse)
+    // Verify amount if expectedAmount provided
     const purchaseUnits = orderData.purchase_units?.[0];
     const amount = purchaseUnits?.amount?.value
       ? parseFloat(purchaseUnits.amount.value)
       : 0;
+
+    if (expectedAmount !== undefined && Math.abs(amount - expectedAmount) > 0.01) {
+      console.error(`PayPal amount mismatch: expected ${expectedAmount}, got ${amount}`);
+      return false;
+    }
 
     // We don't have userId here, but we record the PayPal orderId to prevent reuse
     // Full user-linked payment record happens in capture-order route
