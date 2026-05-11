@@ -57,8 +57,7 @@ export async function POST() {
     }
     console.error("Checkin POST error:", error);
     return NextResponse.json({
-      error: "Check-in failed. Please try again.",
-      details: String(error),
+      error: `Check-in failed: ${error instanceof Error ? error.message : String(error)}`,
     }, { status: 500 });
   }
 }

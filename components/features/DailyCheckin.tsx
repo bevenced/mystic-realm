@@ -49,7 +49,7 @@ export default function DailyCheckin({ isSignedIn, initialData }: { isSignedIn: 
       const res = await fetch("/api/checkin", { method: "POST" });
       const json = await res.json();
       if (json.error) {
-        setError(json.error);
+        setError(json.details ? `${json.error} (${json.details})` : json.error);
       } else {
         setData({
           checkedIn: true,
