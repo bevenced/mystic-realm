@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { sql } from "@vercel/postgres";
+import { sql } from "@/lib/sql";
 
 const JWT_SECRET = process.env.JWT_SECRET || "mystic-realm-jwt-secret-change-in-production";
 const COOKIE_NAME = "session";
