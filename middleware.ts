@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getSessionUserFromRequest } from "@/lib/auth";
+import { getSessionUserFromRequest } from "@/lib/auth-edge";
 
 const publicRoutes = [
   "/",
