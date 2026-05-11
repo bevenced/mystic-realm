@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getSessionUserFromRequest } from "@/lib/auth-edge";
 
 const publicRoutes = [
   "/",
@@ -31,19 +30,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check authentication
-  const session = getSessionUserFromRequest(request);
-
-  // API routes: return 401 if not authenticated
+  // API routes: let route handlers manage auth
   if (pathname.startsWith("/api/")) {
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
     return NextResponse.next();
   }
 
   // Page routes: redirect to sign-in if not authenticated
-  if (!session) {
+  // (JWT verification happens in the API routes via @/lib/auth, which uses Node.js crypto)
+  const session = request.cookies.get("session");
+  if (!session?.value) {
     const signInUrl = new URL("/sign-in", request.url);
     signInUrl.searchParams.set("redirect_url", pathname);
     return NextResponse.redirect(signInUrl);

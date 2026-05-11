@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import Navbar from "@/components/ui/Navbar";
@@ -89,7 +88,6 @@ export default function RootLayout({
               <Navbar />
               {children}
             </AuthProvider>
-            <Analytics />
             <JsonLd />
           </ThemeProvider>
         </body>

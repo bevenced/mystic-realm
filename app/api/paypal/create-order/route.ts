@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       const discountUser = await getAuthUser(req);
       if (discountUser) {
         try {
-          const { sql } = await import("@vercel/postgres");
+          const { sql } = await import("@/lib/sql");
           const result = await sql`SELECT COUNT(*) as count FROM payments WHERE user_id = ${discountUser.id}`;
           const count = parseInt(result.rows[0]?.count || "0", 10);
           if (count === 0) {
