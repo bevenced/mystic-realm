@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { getOrCreateUser, performCheckin, getTodayCheckin, getCheckinHistory, getUserPoints } from "@/lib/db";
+import { getAuthUser } from "@/lib/auth";
+import { performCheckin, getTodayCheckin, getCheckinHistory, getUserPoints } from "@/lib/db";
 import { getDailyFortune } from "@/lib/fortunes";
 import { generateFortune, type FortuneContext } from "@/lib/ai-fortune";
 import { calculateBaZi } from "@/lib/bazi";
 
-export async function GET() {
-  const { userId } = await auth();
-  if (!userId) {
+export async function GET(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) {
     return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   }
 
   try {
-    const user = await getOrCreateUser(userId);
     const todayCheckin = await getTodayCheckin(user.id);
     const points = await getUserPoints(user.id);
     const recent = await getCheckinHistory(user.id, 7);
@@ -34,15 +33,13 @@ export async function GET() {
   }
 }
 
-export async function POST() {
-  const { userId } = await auth();
-  if (!userId) {
+export async function POST(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) {
     return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   }
 
   try {
-    const user = await getOrCreateUser(userId);
-
     // If user hasn't set birth info, require profile completion first
     if (!user.birth_date) {
       return NextResponse.json({

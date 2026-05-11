@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@clerk/nextjs/server";
+import { getAuthUser } from "@/lib/auth";
 import { getDeepSeek } from "@/lib/deepseek";
 import { parseAiJsonResponse } from "@/lib/ai-response";
 import { calculateZodiac, type ZodiacInfo } from "@/lib/astrology";
@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
     }
 
     const { birthDate, birthHour, orderId, redeemed } = parsed.data;
-    const { userId } = await auth();
+    const authUser = await getAuthUser(req);
+    const userId = authUser?.id || null;
 
     let isPaid = false;
     if (orderId) {

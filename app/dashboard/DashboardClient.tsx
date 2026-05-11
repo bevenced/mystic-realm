@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/components/auth/AuthProvider";
 import Link from "next/link";
 import DailyCheckin from "@/components/features/DailyCheckin";
 import { Sparkles, Calendar, Zap, TrendingUp, Gift } from "lucide-react";
@@ -30,7 +30,7 @@ export default function DashboardClient() {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded } = useAuth();
 
   const [subStatus, setSubStatus] = useState<SubStatus | null>(null);
   const [checkinData, setCheckinData] = useState<{

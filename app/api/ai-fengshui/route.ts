@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@clerk/nextjs/server";
+import { getAuthUser } from "@/lib/auth";
 import { getDeepSeek } from "@/lib/deepseek";
 import { parseAiJsonResponse } from "@/lib/ai-response";
 import { FENGSHUI_SYSTEM_PROMPT, buildFengShuiUserPrompt, buildFengShuiPreviewPrompt } from "@/lib/ai-prompts-fengshui";
@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
     }
 
     const { homeType, roomDescription, concerns, orderId, redeemed } = parsed.data;
-    const { userId } = await auth();
+    const authUser = await getAuthUser(req);
+    const userId = authUser?.id || null;
 
     let isPaid = false;
     if (orderId) {

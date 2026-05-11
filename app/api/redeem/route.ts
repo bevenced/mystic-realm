@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@clerk/nextjs/server";
-import { getOrCreateUser, redeemPoints, getUserPoints, createRedemption } from "@/lib/db";
+import { getAuthUser } from "@/lib/auth";
+import { redeemPoints, getUserPoints, createRedemption } from "@/lib/db";
 
 const REDEEM_COST = 100;
 
@@ -11,8 +11,8 @@ const redeemSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const user = await getAuthUser(req);
+    if (!user) {
       return NextResponse.json({ error: "Sign in to redeem points" }, { status: 401 });
     }
 
@@ -23,7 +23,6 @@ export async function POST(req: NextRequest) {
     }
 
     const { service } = parsed.data;
-    const user = await getOrCreateUser(userId);
     const currentPoints = await getUserPoints(user.id);
 
     if (currentPoints < REDEEM_COST) {

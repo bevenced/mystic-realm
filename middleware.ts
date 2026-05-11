@@ -1,27 +1,56 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getSessionUserFromRequest } from "@/lib/auth";
 
-// Define public routes that don't require authentication
-// AI routes are public to allow anonymous preview, but auth is checked inside routes for paid features
-const isPublicRoute = createRouteMatcher([
+const publicRoutes = [
   "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/blog(.*)",
-  "/membership(.*)",
-  "/shop(.*)",
-  "/tools(.*)",
-  "/theme(.*)",
-  "/api/paypal(.*)",
-  "/api/ai-(.*)",
-  // NOTE: /api/db is NOT public - requires auth for init
-]);
+  "/sign-in",
+  "/sign-up",
+  "/blog",
+  "/membership",
+  "/shop",
+  "/tools",
+  "/theme",
+  "/api/paypal",
+  "/api/ai-",
+  "/api/auth",
+  "/api/db/init",
+  "/privacy",
+  "/terms",
+];
 
-export default clerkMiddleware(async (auth, request) => {
-  // Protect non-public routes (e.g., /api/db/init, /dashboard, etc.)
-  if (!isPublicRoute(request)) {
-    await auth.protect();
+function isPublicRoute(pathname: string): boolean {
+  return publicRoutes.some((route) => pathname === route || pathname.startsWith(route + "/") || pathname.startsWith(route + "?"));
+}
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Allow public routes
+  if (isPublicRoute(pathname)) {
+    return NextResponse.next();
   }
-});
+
+  // Check authentication
+  const session = getSessionUserFromRequest(request);
+
+  // API routes: return 401 if not authenticated
+  if (pathname.startsWith("/api/")) {
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
+  // Page routes: redirect to sign-in if not authenticated
+  if (!session) {
+    const signInUrl = new URL("/sign-in", request.url);
+    signInUrl.searchParams.set("redirect_url", pathname);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: ["/((?!.*\\..*|_next|favicon.ico).*)", "/(api|trpc)(.*)"],

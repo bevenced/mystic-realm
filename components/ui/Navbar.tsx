@@ -3,10 +3,10 @@
 import Link from "next/link";
 import MobileMenu from "@/components/ui/MobileMenu";
 import StreakBadge from "@/components/features/StreakBadge";
-import { useUser, UserButton, SignInButton, SignUpButton } from "@clerk/nextjs";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function Navbar() {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, signOut } = useAuth();
 
   return (
     <nav
@@ -29,7 +29,7 @@ export default function Navbar() {
           <span>Mystic Realm</span>
         </Link>
 
-        {/* 桌面端导航链接 */}
+        {/* Desktop nav links */}
         <div
           className="hidden md:flex items-center gap-8"
           style={{ color: "var(--color-text-muted)" }}
@@ -48,7 +48,7 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* 用户菜单 */}
+        {/* User menu */}
         <div className="hidden md:flex items-center gap-3 ml-6">
           {isSignedIn && (
             <>
@@ -71,22 +71,30 @@ export default function Navbar() {
           )}
           {!isSignedIn && (
             <>
-              <SignInButton mode="modal">
+              <Link href="/sign-in">
                 <button className="px-5 py-2.5 rounded-full theme-transition" style={{ color: "var(--color-text-muted)", border: "1px solid color-mix(in srgb, var(--color-text-muted) 20%, transparent)" }}>
                   Sign In
                 </button>
-              </SignInButton>
-              <SignUpButton mode="modal">
+              </Link>
+              <Link href="/sign-up">
                 <button className="px-5 py-2.5 rounded-full ml-2 theme-transition" style={{ backgroundColor: "var(--color-primary)", color: "var(--color-bg)", border: "none" }}>
                   Sign Up
                 </button>
-              </SignUpButton>
+              </Link>
             </>
           )}
-          {isSignedIn && <UserButton />}
+          {isSignedIn && (
+            <button
+              onClick={signOut}
+              className="text-sm px-3 py-2 rounded-full theme-transition"
+              style={{ color: "var(--color-text-muted)", border: "1px solid color-mix(in srgb, var(--color-text-muted) 20%, transparent)" }}
+            >
+              Sign Out
+            </button>
+          )}
         </div>
 
-        {/* 移动端菜单按钮 */}
+        {/* Mobile menu button */}
         <MobileMenu />
       </div>
     </nav>

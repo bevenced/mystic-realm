@@ -139,8 +139,32 @@ export async function initDatabase() {
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date DATE`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_hour INTEGER`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10)`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)`;
 
   return { success: true, message: "Database initialized" };
+}
+
+/**
+ * Create a new user (password-based auth)
+ */
+export async function createUser(email: string, name: string, passwordHash: string) {
+  const id = crypto.randomUUID();
+  const result = await sql`
+    INSERT INTO users (id, clerk_id, email, name, password_hash)
+    VALUES (${id}, ${id}, ${email}, ${name}, ${passwordHash})
+    RETURNING id, email, name, plan, points, created_at
+  `;
+  return result.rows[0];
+}
+
+/**
+ * Find user by email (for login)
+ */
+export async function getUserByEmail(email: string) {
+  const result = await sql`
+    SELECT * FROM users WHERE email = ${email}
+  `;
+  return result.rows[0] || null;
 }
 
 /**

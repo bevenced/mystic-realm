@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@clerk/nextjs/server";
-import { getOrCreateUser, updateUserProfile } from "@/lib/db";
+import { getAuthUser } from "@/lib/auth";
+import { updateUserProfile } from "@/lib/db";
 
-export async function GET() {
-  const { userId } = await auth();
-  if (!userId) {
+export async function GET(request: NextRequest) {
+  const user = await getAuthUser(request);
+  if (!user) {
     return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   }
 
   try {
-    const user = await getOrCreateUser(userId);
-
     return NextResponse.json({
       name: user.name || "",
       email: user.email || "",
@@ -33,8 +31,8 @@ const profileSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
+  const user = await getAuthUser(req);
+  if (!user) {
     return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   }
 
@@ -45,7 +43,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid data", details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const user = await getOrCreateUser(userId);
     await updateUserProfile(user.id, parsed.data);
 
     return NextResponse.json({ success: true });

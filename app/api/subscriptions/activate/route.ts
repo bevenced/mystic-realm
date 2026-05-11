@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@clerk/nextjs/server";
-import { getOrCreateUser, activateSubscription } from "@/lib/db";
+import { getAuthUser } from "@/lib/auth";
+import { activateSubscription } from "@/lib/db";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 
 const activateSchema = z.object({
@@ -11,8 +11,8 @@ const activateSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const user = await getAuthUser(req);
+    if (!user) {
       return NextResponse.json({ error: "Sign in to subscribe" }, { status: 401 });
     }
 
@@ -30,7 +30,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Payment not verified. Please complete the PayPal payment first." }, { status: 400 });
     }
 
-    const user = await getOrCreateUser(userId);
     const sub = await activateSubscription(user.id, planId, orderId);
 
     return NextResponse.json({

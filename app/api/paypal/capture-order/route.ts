@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@clerk/nextjs/server";
+import { getAuthUser } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { SERVICE_PRICES } from "@/lib/pricing";
 
@@ -19,12 +19,12 @@ async function getAccessToken(): Promise<string> {
       ? "https://api-m.paypal.com"
       : "https://api-m.sandbox.paypal.com";
 
-  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  const authStr = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
   const res = await fetch(`${baseUrl}/v1/oauth2/token`, {
     method: "POST",
     headers: {
-      Authorization: `Basic ${auth}`,
+      Authorization: `Basic ${authStr}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: "grant_type=client_credentials",
@@ -50,7 +50,8 @@ export async function POST(req: NextRequest) {
     }
 
     const { orderId } = parsed.data;
-    const { userId } = await auth();
+    const captureUser = await getAuthUser(req);
+    const userId = captureUser?.id || null;
 
     // Rate limiting: max 10 captures per IP per hour
     const clientIp = getClientIp(req);
@@ -98,10 +99,8 @@ export async function POST(req: NextRequest) {
 
     // Verify amount matches server-side price (log mismatch but still complete)
     let expectedPrice: number | undefined;
-    // Try the exact key first
     expectedPrice = SERVICE_PRICES[serviceKey];
     if (!expectedPrice) {
-      // Fuzzy match: e.g. "tarot:three-card" -> try "tarot" then "three-card"
       const parts = serviceKey.split(":");
       for (const part of parts) {
         if (SERVICE_PRICES[part]) {
@@ -121,9 +120,8 @@ export async function POST(req: NextRequest) {
     // Record payment to database if user is logged in
     if (userId) {
       try {
-        const { getOrCreateUser, recordPayment } = await import("@/lib/db");
-        const user = await getOrCreateUser(userId);
-        await recordPayment(user.id, {
+        const { recordPayment } = await import("@/lib/db");
+        await recordPayment(userId, {
           paypalOrderId: orderId,
           amount: capturedAmount,
           currency,
@@ -131,7 +129,6 @@ export async function POST(req: NextRequest) {
           status: "completed",
         });
       } catch (dbError) {
-        // Don't fail the payment response if DB recording fails
         console.error("Failed to record payment to DB:", dbError);
       }
     }

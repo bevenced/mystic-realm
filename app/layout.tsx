@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import Navbar from "@/components/ui/Navbar";
 import JsonLd from "@/components/ui/JsonLd";
 import { getGoogleFontsUrl } from "@/lib/themes";
@@ -73,8 +73,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
-      <html lang="en" data-theme="meditation">
+    <html lang="en" data-theme="meditation">
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -86,13 +85,14 @@ export default function RootLayout({
         </head>
         <body className="antialiased">
           <ThemeProvider>
-            <Navbar />
-            {children}
+            <AuthProvider>
+              <Navbar />
+              {children}
+            </AuthProvider>
             <Analytics />
             <JsonLd />
           </ThemeProvider>
         </body>
       </html>
-    </ClerkProvider>
   );
 }

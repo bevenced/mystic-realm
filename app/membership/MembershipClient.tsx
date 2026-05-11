@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { Sparkles, Check, Infinity, History, FileText, Headphones } from "lucide-react";
 import PayPalButton from "@/components/features/PayPalButton";
 import Link from "next/link";
@@ -30,7 +30,7 @@ export default function MembershipClient() {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
-  const { isSignedIn } = useUser();
+  const { isSignedIn } = useAuth();
 
   const [subStatus, setSubStatus] = useState<SubStatus | null>(null);
   const [loading, setLoading] = useState(true);

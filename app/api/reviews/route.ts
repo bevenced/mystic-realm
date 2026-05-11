@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@clerk/nextjs/server";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { getAuthUser } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { submitReview } from "@/lib/db";
 
 const reviewSchema = z.object({
   service: z.string().min(1),
@@ -11,13 +12,13 @@ const reviewSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const user = await getAuthUser(req);
+    if (!user) {
       return NextResponse.json({ error: "Please sign in to submit a review." }, { status: 401 });
     }
 
     // Rate limiting: max 5 reviews per user per hour
-    const rateResult = await checkRateLimit(`review:${userId}`, { maxRequests: 5, windowSeconds: 3600 });
+    const rateResult = await checkRateLimit(`review:${user.id}`, { maxRequests: 5, windowSeconds: 3600 });
     if (!rateResult.allowed) {
       return NextResponse.json(
         { error: "Too many reviews. Please wait before submitting another." },
@@ -32,9 +33,6 @@ export async function POST(req: NextRequest) {
     }
 
     const { service, rating, comment } = parsed.data;
-
-    const { getOrCreateUser, submitReview } = await import("@/lib/db");
-    const user = await getOrCreateUser(userId);
 
     const review = await submitReview({
       userId: user.id,

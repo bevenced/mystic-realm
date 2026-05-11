@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@clerk/nextjs/server";
+import { getAuthUser } from "@/lib/auth";
 import { validateServicePrice, FIRST_TIME_PRICE } from "@/lib/pricing";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
@@ -22,12 +22,12 @@ async function getAccessToken(): Promise<string> {
       ? "https://api-m.paypal.com"
       : "https://api-m.sandbox.paypal.com";
 
-  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  const authStr = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
   const res = await fetch(`${baseUrl}/v1/oauth2/token`, {
     method: "POST",
     headers: {
-      Authorization: `Basic ${auth}`,
+      Authorization: `Basic ${authStr}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: "grant_type=client_credentials",
@@ -78,24 +78,21 @@ export async function POST(req: NextRequest) {
     let appliedDiscount = false;
 
     if (isFirstReading) {
-      // For logged-in users, verify they have no prior payments
-      const { userId } = await auth();
-      if (userId) {
+      const discountUser = await getAuthUser(req);
+      if (discountUser) {
         try {
           const { sql } = await import("@vercel/postgres");
-          const result = await sql`SELECT COUNT(*) as count FROM payments WHERE user_id IN (SELECT id FROM users WHERE clerk_id = ${userId})`;
+          const result = await sql`SELECT COUNT(*) as count FROM payments WHERE user_id = ${discountUser.id}`;
           const count = parseInt(result.rows[0]?.count || "0", 10);
           if (count === 0) {
             amount = FIRST_TIME_PRICE;
             appliedDiscount = true;
           }
         } catch {
-          // If DB check fails, still offer discount (better UX)
           amount = FIRST_TIME_PRICE;
           appliedDiscount = true;
         }
       } else {
-        // Not logged in - offer the discount
         amount = FIRST_TIME_PRICE;
         appliedDiscount = true;
       }

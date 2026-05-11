@@ -20,7 +20,7 @@ export default function PrivacyPage() {
           </p>
           <h2>1. Information We Collect</h2>
           <p>
-            When you sign in, we collect your email address and name from Clerk authentication.
+            When you sign in, we collect your email address and name for authentication.
             When you make a purchase, PayPal processes your payment — we do not store your
             credit card or bank details. We store your reading history and preferences to
             provide our services.
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
           </p>
           <h2>4. Cookies</h2>
           <p>
-            We use essential cookies for authentication (Clerk) and analytics (Vercel).
+            We use essential cookies for authentication and analytics (Vercel).
             No tracking cookies for advertising are used.
           </p>
           <h2>5. Contact</h2>

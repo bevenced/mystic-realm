@@ -1,5 +1,5 @@
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import { getOrCreateUser, getActiveSubscription } from "@/lib/db";
+import { getActiveSubscription } from "@/lib/db";
 import { NextRequest } from "next/server";
 
 export interface RateLimitResult {
@@ -12,6 +12,7 @@ export interface RateLimitResult {
 /**
  * Shared helper: check subscription status and apply rate limit.
  * Subscribers get 100 requests/60s; signed-in free users get 5; anonymous gets 3.
+ * @param userId — DB user ID (UUID), null if anonymous
  */
 export async function checkSubscriptionAndRateLimit(
   req: NextRequest,
@@ -19,12 +20,10 @@ export async function checkSubscriptionAndRateLimit(
   isPaid: boolean,
 ): Promise<RateLimitResult> {
   let isSubscriber = false;
-  let dbUserId: string | null = null;
+  let dbUserId: string | null = userId;
 
   if (userId) {
-    const user = await getOrCreateUser(userId);
-    dbUserId = user.id;
-    const sub = await getActiveSubscription(user.id);
+    const sub = await getActiveSubscription(userId);
     isSubscriber = !!(sub && sub.status === "active");
   }
 

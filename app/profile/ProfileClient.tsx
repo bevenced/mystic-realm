@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/components/auth/AuthProvider";
 import Link from "next/link";
 import { Sparkles, Save, Loader2 } from "lucide-react";
 
@@ -29,7 +29,7 @@ export default function ProfileClient() {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
-  const { isSignedIn, isLoaded, user: clerkUser } = useUser();
+  const { isSignedIn, isLoaded, user: authUser } = useAuth();
 
   const [profile, setProfile] = useState<ProfileData>({ name: "", email: "", birthDate: null, birthHour: null, gender: "" });
   const [loading, setLoading] = useState(true);
@@ -139,7 +139,7 @@ export default function ProfileClient() {
                 type="text"
                 value={profile.name}
                 onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                placeholder={clerkUser?.firstName || "Your name"}
+                placeholder={authUser?.name || "Your name"}
                 className="w-full px-3 py-2 rounded-lg text-sm border outline-none transition-colors"
                 style={{
                   background: isDark ? "#1a1a2e" : "#fafafa",
