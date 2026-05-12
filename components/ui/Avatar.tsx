@@ -32,16 +32,19 @@ export default function Avatar({ src, name, size = 36, className = "", onClick }
   return (
     <div
       onClick={onClick}
-      className={`rounded-full flex items-center justify-center font-bold select-none flex-shrink-0 ${className} ${onClick ? "cursor-pointer" : ""}`}
-      style={{
-        width: size,
-        height: size,
-        backgroundColor: "color-mix(in srgb, var(--color-primary) 15%, white)",
-        color: "var(--color-primary)",
-        fontSize: Math.round(size * 0.45),
-      }}
+      className={`relative rounded-full flex-shrink-0 ${className} ${onClick ? "cursor-pointer" : ""}`}
+      style={{ width: size, height: size }}
     >
-      {letter}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{ backgroundColor: "var(--color-primary)", opacity: 0.13 }}
+      />
+      <div
+        className="relative w-full h-full rounded-full flex items-center justify-center font-bold select-none"
+        style={{ color: "var(--color-primary)", fontSize: Math.round(size * 0.45) }}
+      >
+        {letter}
+      </div>
     </div>
   );
 }
