@@ -140,6 +140,7 @@ export async function initDatabase() {
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_hour INTEGER`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10)`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT`;
 
   return { success: true, message: "Database initialized" };
 }
@@ -213,6 +214,26 @@ export async function updateUserProfile(
     return result.rows[0] || null;
   } catch (error) {
     console.error("updateUserProfile error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update user avatar (base64 data URL or null to remove).
+ */
+export async function updateUserAvatar(
+  userId: string,
+  avatarDataUrl: string | null,
+): Promise<Record<string, unknown> | null> {
+  if (!userId) throw new Error("userId is required");
+  try {
+    await sql`
+      UPDATE users SET avatar = ${avatarDataUrl}, updated_at = NOW() WHERE id = ${userId}
+    `;
+    const result = await sql`SELECT * FROM users WHERE id = ${userId}`;
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error("updateUserAvatar error:", error);
     throw error;
   }
 }

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import Link from "next/link";
-import { Sparkles, Save, Loader2 } from "lucide-react";
+import { Sparkles, Save, Loader2, Camera } from "lucide-react";
+import Avatar from "@/components/ui/Avatar";
 
 interface ProfileData {
   name: string;
@@ -35,6 +36,8 @@ export default function ProfileClient() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarSaving, setAvatarSaving] = useState(false);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -72,6 +75,104 @@ export default function ProfileClient() {
       setMessage({ type: "error", text: "Network error. Please try again." });
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Avatar upload
+  const resizeImage = useCallback((file: File, maxDim: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const ratio = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d")?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/webp", 0.8));
+      };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }, []);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(file.type)) {
+      setMessage({ type: "error", text: "Invalid image type. Allowed: JPEG, PNG, GIF, WebP" });
+      return;
+    }
+    if (file.size > 512_000) {
+      setMessage({ type: "error", text: "Image too large. Maximum 500KB." });
+      return;
+    }
+
+    try {
+      const dataUrl = await resizeImage(file, 256);
+      setAvatarPreview(dataUrl);
+      setMessage(null);
+    } catch {
+      setMessage({ type: "error", text: "Failed to process image" });
+    }
+  };
+
+  const handleSaveAvatar = async () => {
+    if (!avatarPreview) return;
+    setAvatarSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/user/avatar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar: avatarPreview }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setMessage({ type: "error", text: data.error });
+      } else {
+        setAvatarPreview(null);
+        await fetch("/api/auth/me")
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.user) {
+              // trigger AuthProvider refresh indirectly via window focus
+            }
+          });
+        window.location.reload();
+      }
+    } catch {
+      setMessage({ type: "error", text: "Network error" });
+    } finally {
+      setAvatarSaving(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setAvatarSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/user/avatar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar: null }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setMessage({ type: "error", text: data.error });
+      } else {
+        setAvatarPreview(null);
+        window.location.reload();
+      }
+    } catch {
+      setMessage({ type: "error", text: "Network error" });
+    } finally {
+      setAvatarSaving(false);
     }
   };
 
@@ -130,6 +231,60 @@ export default function ProfileClient() {
             className="rounded-xl p-6 space-y-5"
             style={{ background: c.surface, border: `1px solid ${c.primary}22` }}
           >
+            {/* Avatar upload */}
+            <div className="flex flex-col items-center mb-2">
+              <div
+                className="relative group cursor-pointer"
+                onClick={() => document.getElementById("avatar-input")?.click()}
+              >
+                <Avatar
+                  src={avatarPreview ?? authUser?.avatar}
+                  name={profile.name || authUser?.name}
+                  size={96}
+                />
+                <div
+                  className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Camera size={24} className="text-white" />
+                </div>
+              </div>
+              <input
+                id="avatar-input"
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
+              <div className="flex gap-3 mt-2">
+                {avatarPreview && (
+                  <button
+                    onClick={handleSaveAvatar}
+                    disabled={avatarSaving}
+                    className="text-xs px-3 py-1 rounded-full"
+                    style={{
+                      backgroundColor: c.primary,
+                      color: isDark ? c.bg : "#FFFFFF",
+                    }}
+                  >
+                    {avatarSaving ? "Saving..." : "Save Avatar"}
+                  </button>
+                )}
+                {(authUser?.avatar || avatarPreview) && (
+                  <button
+                    onClick={handleRemoveAvatar}
+                    disabled={avatarSaving}
+                    className="text-xs px-3 py-1 rounded-full"
+                    style={{
+                      border: `1px solid #E74C3C44`,
+                      color: "#E74C3C",
+                    }}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* Name */}
             <div>
               <label className="text-xs font-semibold tracking-wider uppercase mb-1.5 block" style={{ color: c.textMuted }}>

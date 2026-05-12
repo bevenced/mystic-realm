@@ -9,6 +9,7 @@ interface User {
   name: string;
   plan?: string;
   points?: number;
+  avatar?: string | null;
 }
 
 interface AuthContextValue {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 import { useAuth } from "@/components/auth/AuthProvider";
+import Avatar from "@/components/ui/Avatar";
 
 const navLinks = [
   { href: "/shop", label: "Shop" },
@@ -20,7 +21,7 @@ const authLinks = [
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
-  const { isSignedIn, signOut } = useAuth();
+  const { isSignedIn, user, signOut } = useAuth();
 
   return (
     <div className="md:hidden">
@@ -84,13 +85,19 @@ export default function MobileMenu() {
 
             <div className="mt-8 animate-slide-up delay-300 flex flex-col items-center gap-4">
               {isSignedIn ? (
-                <button
-                  onClick={() => { signOut(); setOpen(false); }}
-                  className="text-sm px-6 py-2 rounded-full"
-                  style={{ color: "var(--color-text-muted)", border: "1px solid var(--color-border-tertiary)" }}
-                >
-                  Sign Out
-                </button>
+                <>
+                  <Avatar src={user?.avatar} name={user?.name} size={64} />
+                  <p className="text-sm font-medium" style={{ color: "var(--color-text)" }}>
+                    {user?.name || user?.email}
+                  </p>
+                  <button
+                    onClick={() => { signOut(); setOpen(false); }}
+                    className="text-sm px-6 py-2 rounded-full"
+                    style={{ color: "var(--color-text-muted)", border: "1px solid var(--color-border-tertiary)" }}
+                  >
+                    Sign Out
+                  </button>
+                </>
               ) : (
                 <div className="flex gap-3">
                   <Link href="/sign-in" onClick={() => setOpen(false)}>

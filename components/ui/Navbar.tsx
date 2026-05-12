@@ -4,9 +4,10 @@ import Link from "next/link";
 import MobileMenu from "@/components/ui/MobileMenu";
 import StreakBadge from "@/components/features/StreakBadge";
 import { useAuth } from "@/components/auth/AuthProvider";
+import UserMenu from "@/components/ui/UserMenu";
 
 export default function Navbar() {
-  const { isSignedIn, signOut } = useAuth();
+  const { isSignedIn } = useAuth();
 
   return (
     <nav
@@ -83,15 +84,7 @@ export default function Navbar() {
               </Link>
             </>
           )}
-          {isSignedIn && (
-            <button
-              onClick={signOut}
-              className="text-sm px-3 py-2 rounded-full theme-transition"
-              style={{ color: "var(--color-text-muted)", border: "1px solid color-mix(in srgb, var(--color-text-muted) 20%, transparent)" }}
-            >
-              Sign Out
-            </button>
-          )}
+          {isSignedIn && <UserMenu />}
         </div>
 
         {/* Mobile menu button */}
