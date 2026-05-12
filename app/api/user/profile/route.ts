@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       if (d instanceof Date) return d.toISOString().slice(0, 10);
       return String(d).slice(0, 10);
     };
-    const birthDate = fmtDate(updated?.birth_date);
+    const birthDate = fmtDate(updated?.birth_date as Date | string | null);
     console.log("Profile POST update result birth_date:", updated?.birth_date, "formatted:", birthDate);
 
     return NextResponse.json({ success: true, birthDate });
