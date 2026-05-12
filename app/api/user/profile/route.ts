@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       name: user.name || "",
       email: user.email || "",
+      avatar: user.avatar || null,
       birthDate: user.birth_date || null,
       birthHour: user.birth_hour ?? null,
       gender: user.gender || "",

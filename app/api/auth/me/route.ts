@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
       name: user.name,
       plan: user.plan,
       points: user.points,
+      avatar: user.avatar,
       birthDate: user.birth_date,
       birthHour: user.birth_hour,
       gender: user.gender,
