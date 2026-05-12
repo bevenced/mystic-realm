@@ -32,3 +32,6 @@ scripts/
 
 # build info
 tsconfig.tsbuildinfo
+
+# debug screenshots
+pictures/
