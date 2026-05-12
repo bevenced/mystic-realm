@@ -68,6 +68,29 @@ export interface BaZiResult {
 }
 
 /**
+ * Get the Heavenly Stem and Earthly Branch (day pillar) for any given date.
+ * Same reference point as calculateBaZi: Jan 1, 1900 = 庚子 (Stem 6, Branch 0).
+ */
+export function getDayPillar(date: Date): BaZiPillar {
+  const refDate = new Date(1900, 0, 1);
+  const diffDays = Math.floor(
+    (date.getTime() - refDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const stemIdx = ((diffDays + 6) % 10 + 10) % 10;
+  const branchIdx = ((diffDays + 0) % 12 + 12) % 12;
+
+  return {
+    stem: HEAVENLY_STEMS[stemIdx],
+    stemEn: STEM_EN[stemIdx],
+    branch: EARTHLY_BRANCHES[branchIdx],
+    branchEn: BRANCH_EN[branchIdx],
+    stemElement: STEM_ELEMENTS[stemIdx],
+    branchElement: BRANCH_ELEMENTS[branchIdx],
+    zodiac: ZODIAC_ANIMALS[branchIdx],
+  };
+}
+
+/**
  * Calculate the Four Pillars (BaZi) from a Gregorian date.
  * @param year - Full year (e.g., 1990)
  * @param month - Month (1-12)

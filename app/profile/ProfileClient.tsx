@@ -59,15 +59,19 @@ export default function ProfileClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: profile.name || undefined,
-          birthDate: profile.birthDate || undefined,
+          birthDate: profile.birthDate ? profile.birthDate.slice(0, 10) : undefined,
           birthHour: profile.birthHour ?? undefined,
           gender: profile.gender || undefined,
         }),
       });
       const data = await res.json();
       if (data.error) {
-        setMessage({ type: "error", text: data.error });
+        setMessage({ type: "error", text: `Save failed: ${data.error}${data.details ? " — " + JSON.stringify(data.details) : ""}` });
       } else {
+        // Update local state from server response so UI reflects saved data immediately
+        if (data.birthDate) {
+          setProfile((prev) => ({ ...prev, birthDate: data.birthDate }));
+        }
         setMessage({ type: "success", text: "Profile saved successfully" });
         setTimeout(() => setMessage(null), 3000);
       }

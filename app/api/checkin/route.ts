@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
 import { performCheckin, getTodayCheckin, getCheckinHistory, getUserPoints } from "@/lib/db";
 import { getDailyFortune } from "@/lib/fortunes";
-import { generateFortune, type FortuneContext } from "@/lib/ai-fortune";
-import { calculateBaZi } from "@/lib/bazi";
+import {
+  generateFortune,
+  generateStructuredFortune,
+  tryParseStructured,
+  type FortuneContext,
+  type StructuredFortune,
+} from "@/lib/ai-fortune";
+import { calculateBaZi, getDayPillar } from "@/lib/bazi";
 
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
@@ -16,15 +22,54 @@ export async function GET(request: NextRequest) {
     const points = await getUserPoints(user.id);
     const recent = await getCheckinHistory(user.id, 7);
 
+    // Compute BaZi context for display (available even if not checked in today)
+    let baziContext = null;
+    if (user.birth_date) {
+      const [y, m, d] = user.birth_date instanceof Date
+        ? [user.birth_date.getFullYear(), user.birth_date.getMonth() + 1, user.birth_date.getDate()]
+        : String(user.birth_date).split("-").map(Number);
+      const bh = user.birth_hour ?? 0;
+      const bazi = calculateBaZi(y, m, d, bh);
+      const todayPillar = getDayPillar(new Date());
+      baziContext = {
+        dayMaster: `${bazi.dayMasterYinYang} ${bazi.dayMasterElement}`,
+        dayMasterElement: bazi.dayMasterElement,
+        zodiac: bazi.day.zodiac,
+        elementCounts: bazi.elementCounts,
+        todayStem: todayPillar.stem,
+        todayBranch: todayPillar.branch,
+        todayStemEn: todayPillar.stemEn,
+        todayBranchEn: todayPillar.branchEn,
+        todayElement: todayPillar.stemElement,
+      };
+    }
+
+    // Try to parse today's fortune as structured data
+    let fortuneData: StructuredFortune | null = null;
+    if (todayCheckin?.fortune) {
+      fortuneData = tryParseStructured(todayCheckin.fortune);
+    }
+
+    // Parse history fortunes too
+    const recentHistory = recent.map((item: { checkin_date: string; streak: number; points_earned: number; fortune: string }) => ({
+      checkin_date: item.checkin_date,
+      streak: item.streak,
+      points_earned: item.points_earned,
+      fortune: item.fortune,
+      fortuneData: tryParseStructured(item.fortune),
+    }));
+
     return NextResponse.json({
       checkedIn: !!todayCheckin,
       today: todayCheckin ? {
         streak: todayCheckin.streak,
         pointsEarned: todayCheckin.points_earned,
         fortune: todayCheckin.fortune,
+        fortuneData,
       } : null,
+      baziContext,
       totalPoints: points,
-      recentHistory: recent,
+      recentHistory,
       hasProfile: !!(user.birth_date),
     });
   } catch (error) {
@@ -48,7 +93,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Calculate BaZi and generate AI fortune
+    // Calculate BaZi from birth data
     const [year, month, day] = user.birth_date instanceof Date
       ? [user.birth_date.getFullYear(), user.birth_date.getMonth() + 1, user.birth_date.getDate()]
       : String(user.birth_date).split("-").map(Number);
@@ -69,15 +114,44 @@ export async function POST(request: NextRequest) {
       elementCounts: bazi.elementCounts,
     };
 
-    let fortune = await generateFortune(fortuneContext);
-    const aiGenerated = !!fortune;
+    // Today's pillar for interaction analysis
+    const todayPillar = getDayPillar(new Date());
 
-    // Fallback to fortune pool if AI fails
-    if (!fortune) {
-      fortune = getDailyFortune(new Date());
+    // Try structured AI fortune first
+    let fortune: string;
+    let fortuneData: StructuredFortune | null = null;
+    let aiGenerated = false;
+
+    const structured = await generateStructuredFortune(fortuneContext, todayPillar);
+    if (structured) {
+      fortuneData = structured;
+      fortune = JSON.stringify(structured);
+      aiGenerated = true;
+    } else {
+      // Fallback to single-sentence AI fortune
+      const single = await generateFortune(fortuneContext);
+      if (single) {
+        fortune = single;
+        aiGenerated = true;
+      } else {
+        // Final fallback to fortune pool
+        fortune = getDailyFortune(new Date());
+      }
     }
 
     const result = await performCheckin(user.id, fortune);
+
+    const baziContext = {
+      dayMaster: `${bazi.dayMasterYinYang} ${bazi.dayMasterElement}`,
+      dayMasterElement: bazi.dayMasterElement,
+      zodiac: bazi.day.zodiac,
+      elementCounts: bazi.elementCounts,
+      todayStem: todayPillar.stem,
+      todayBranch: todayPillar.branch,
+      todayStemEn: todayPillar.stemEn,
+      todayBranchEn: todayPillar.branchEn,
+      todayElement: todayPillar.stemElement,
+    };
 
     return NextResponse.json({
       success: true,
@@ -85,6 +159,8 @@ export async function POST(request: NextRequest) {
       pointsEarned: result.points_earned,
       totalPoints: result.totalPoints,
       fortune: result.fortune,
+      fortuneData,
+      baziContext,
       checkinDate: result.checkin_date,
       aiGenerated,
     });

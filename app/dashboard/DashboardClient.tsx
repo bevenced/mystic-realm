@@ -7,6 +7,7 @@ import Link from "next/link";
 import DailyCheckin from "@/components/features/DailyCheckin";
 import { Sparkles, Calendar, Zap, TrendingUp, Gift } from "lucide-react";
 import SafeHtml from "@/components/features/SafeHtml";
+import type { StructuredFortune } from "@/lib/ai-fortune";
 
 interface SubStatus {
   plan: string;
@@ -24,6 +25,7 @@ interface CheckinHistoryItem {
   streak: number;
   points_earned: number;
   fortune: string;
+  fortuneData?: StructuredFortune | null;
 }
 
 export default function DashboardClient() {
@@ -35,7 +37,18 @@ export default function DashboardClient() {
   const [subStatus, setSubStatus] = useState<SubStatus | null>(null);
   const [checkinData, setCheckinData] = useState<{
     checkedIn: boolean;
-    today: { streak: number; pointsEarned: number; fortune: string } | null;
+    today: { streak: number; pointsEarned: number; fortune: string; fortuneData?: StructuredFortune | null } | null;
+    baziContext?: {
+      dayMaster: string;
+      dayMasterElement: string;
+      zodiac: string;
+      elementCounts: Record<string, number>;
+      todayStem: string;
+      todayBranch: string;
+      todayStemEn: string;
+      todayBranchEn: string;
+      todayElement: string;
+    } | null;
     totalPoints: number;
     recentHistory: CheckinHistoryItem[];
   } | null>(null);
@@ -185,7 +198,7 @@ export default function DashboardClient() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs italic" style={{ color: c.text }}>
-                            &ldquo;{item.fortune}&rdquo;
+                            &ldquo;{item.fortuneData ? item.fortuneData.advice : item.fortune}&rdquo;
                           </p>
                         </div>
                         <div className="text-xs whitespace-nowrap text-right" style={{ color: c.textMuted }}>
