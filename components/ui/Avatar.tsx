@@ -36,7 +36,7 @@ export default function Avatar({ src, name, size = 36, className = "", onClick }
       style={{
         width: size,
         height: size,
-        backgroundColor: "color-mix(in srgb, var(--color-primary) 12%, transparent)",
+        backgroundColor: "color-mix(in srgb, var(--color-primary) 15%, white)",
         color: "var(--color-primary)",
         fontSize: Math.round(size * 0.45),
       }}
