@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import DashboardClient from "./DashboardClient";
 import Footer from "@/components/ui/Footer";
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Dashboard",

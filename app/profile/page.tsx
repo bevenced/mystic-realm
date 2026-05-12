@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import ProfileClient from "./ProfileClient";
 import Footer from "@/components/ui/Footer";
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Profile",

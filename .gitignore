@@ -26,3 +26,9 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# SSH deployment scripts (contain credentials)
+scripts/
+
+# build info
+tsconfig.tsbuildinfo
