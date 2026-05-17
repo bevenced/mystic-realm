@@ -2,7 +2,7 @@ export default function JsonLd() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Mystic Realm",
+    name: "Orient Wisdom",
     url: "https://mystic-realm.wentchine.shop",
     description: "AI-powered tarot, BaZi, feng shui, astrology, and meditation guidance for your spiritual journey.",
     applicationCategory: "LifestyleApplication",
@@ -15,7 +15,7 @@ export default function JsonLd() {
     },
     author: {
       "@type": "Organization",
-      name: "Mystic Realm",
+      name: "Orient Wisdom",
     },
   };
 

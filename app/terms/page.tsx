@@ -20,12 +20,12 @@ export default function TermsPage() {
           </p>
           <h2>1. Acceptance of Terms</h2>
           <p>
-            By accessing Mystic Realm, you agree to these terms. If you do not agree,
+            By accessing Orient Wisdom, you agree to these terms. If you do not agree,
             please do not use our services.
           </p>
           <h2>2. Services</h2>
           <p>
-            Mystic Realm provides AI-generated spiritual guidance, including tarot
+            Orient Wisdom provides AI-generated spiritual guidance, including tarot
             readings, BaZi analysis, astrology readings, Feng Shui consultations,
             and guided meditations. These readings are for entertainment and personal
             reflection purposes and do not constitute professional medical, legal, or
@@ -45,7 +45,7 @@ export default function TermsPage() {
           </p>
           <h2>5. Limitation of Liability</h2>
           <p>
-            Mystic Realm provides services &ldquo;as is&rdquo; without warranties.
+            Orient Wisdom provides services &ldquo;as is&rdquo; without warranties.
             We are not liable for any damages arising from the use of our services.
           </p>
           <h2>6. Contact</h2>

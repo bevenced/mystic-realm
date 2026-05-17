@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Mystic Realm",
-    short_name: "Mystic Realm",
+    name: "Orient Wisdom",
+    short_name: "Orient Wisdom",
     description: "AI-powered tarot, BaZi, feng shui, astrology & meditation guidance.",
     start_url: "/",
     display: "standalone",

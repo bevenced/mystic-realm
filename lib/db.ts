@@ -123,6 +123,16 @@ export async function initDatabase() {
       used BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS daily_wishes (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      wish_date DATE NOT NULL DEFAULT CURRENT_DATE,
+      category VARCHAR(20) NOT NULL,
+      wish_text VARCHAR(300) NOT NULL,
+      recipient_email VARCHAR(255),
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `;
 
   // Insert default plans
@@ -773,5 +783,64 @@ export async function getCheckinHistory(userId: string, limit = 30) {
   } catch (error) {
     console.error("getCheckinHistory error:", error);
     return [];
+  }
+}
+
+// ===== Daily Wishes =====
+
+/** Insert a new daily wish. */
+export async function createWish(
+  userId: string,
+  category: string,
+  wishText: string,
+  recipientEmail?: string,
+) {
+  if (!userId) throw new Error("userId is required");
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const result = await sql`
+      INSERT INTO daily_wishes (user_id, wish_date, category, wish_text, recipient_email)
+      VALUES (${userId}, ${today}, ${category}, ${wishText}, ${recipientEmail || null})
+      RETURNING id, user_id, wish_date, category, wish_text, recipient_email, created_at
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error("createWish error:", error);
+    throw error;
+  }
+}
+
+/** Get today's wishes for a user. */
+export async function getTodayWishes(userId: string) {
+  if (!userId) return [];
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const result = await sql`
+      SELECT id, wish_date, category, wish_text, recipient_email, created_at
+      FROM daily_wishes
+      WHERE user_id = ${userId} AND wish_date = ${today}
+      ORDER BY created_at ASC
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error("getTodayWishes error:", error);
+    return [];
+  }
+}
+
+/** Count today's wishes for a user. */
+export async function getTodayWishCount(userId: string): Promise<number> {
+  if (!userId) return 0;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const result = await sql`
+      SELECT COUNT(*)::int AS count
+      FROM daily_wishes
+      WHERE user_id = ${userId} AND wish_date = ${today}
+    `;
+    return result.rows[0]?.count || 0;
+  } catch (error) {
+    console.error("getTodayWishCount error:", error);
+    return 0;
   }
 }

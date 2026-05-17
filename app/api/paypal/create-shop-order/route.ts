@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
                 },
               },
             },
-            description: `Mystic Realm Shop: ${description}`,
+            description: `Orient Wisdom Shop: ${description}`,
             custom_id: "shop-order",
             items: items.map(item => ({
               name: item.name,

@@ -58,7 +58,7 @@ export default function SignInClient() {
           Sign In
         </h1>
         <p className="text-sm text-center mb-6" style={{ color: "var(--color-text-muted)" }}>
-          Welcome back to Mystic Realm
+          Welcome back to Orient Wisdom
         </p>
 
         {error && (

@@ -16,7 +16,7 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
     title: theme.name,
     description: `${theme.desc} Explore ${theme.name.toLowerCase()} readings, products, and guides.`,
     openGraph: {
-      title: `${theme.name} — Mystic Realm`,
+      title: `${theme.name} — Orient Wisdom`,
       description: theme.desc,
     },
   };

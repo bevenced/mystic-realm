@@ -46,34 +46,27 @@ export default function HeroSection() {
           className="text-5xl md:text-7xl font-bold tracking-wider animate-slide-up"
           style={{ color: c.primary }}
         >
-          Mystic Realm
+          Orient Wisdom
         </h1>
 
         <p
           className="mt-4 text-xl md:text-2xl animate-slide-up delay-200"
           style={{ color: c.textMuted }}
         >
-          Ancient wisdom, modern magic.
-        </p>
-
-        <p
-          className="mt-2 text-sm md:text-base tracking-widest animate-slide-up delay-300"
-          style={{ color: c.textMuted, opacity: 0.6 }}
-        >
-          <span lang="zh">六界古老智慧，为你开启</span>
+          AI-powered BaZi fortune, daily wishes, and cosmic insights.
         </p>
 
         {/* CTA 按钮 */}
         <div className="mt-10 animate-slide-up delay-400">
           <a
-            href="#realms"
+            href="#features"
             className="inline-block px-8 py-3 rounded-full text-base font-semibold animate-pulse-glow theme-transition"
             style={{
               color: currentTheme.isDark ? c.bg : "#FFFFFF",
               backgroundColor: c.primary,
             }}
           >
-            Begin Your Journey
+            Explore Features
           </a>
         </div>
 

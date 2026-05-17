@@ -19,8 +19,8 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://mystic-realm.wentchine.shop"),
   title: {
-    default: "Mystic Realm — Meditation · Healing · Divination",
-    template: "%s — Mystic Realm",
+    default: "Orient Wisdom — Meditation · Healing · Divination",
+    template: "%s — Orient Wisdom",
   },
   description:
     "Explore meditation, healing, feng shui, BaZi, tarot, and astrology. AI-powered spiritual guidance and mystical products for your journey.",
@@ -46,21 +46,21 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Mystic Realm",
+    title: "Orient Wisdom",
   },
   openGraph: {
-    title: "Mystic Realm — Meditation · Healing · Divination",
+    title: "Orient Wisdom — Meditation · Healing · Divination",
     description:
       "AI-powered tarot, BaZi, feng shui, astrology & meditation guidance.",
     url: "https://mystic-realm.wentchine.shop",
-    siteName: "Mystic Realm",
+    siteName: "Orient Wisdom",
     type: "website",
     locale: "en_US",
     images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mystic Realm",
+    title: "Orient Wisdom",
     description: "AI-powered mystical guidance for your spiritual journey.",
     images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
   },

@@ -27,7 +27,7 @@ export default function Navbar() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
           </svg>
-          <span>Mystic Realm</span>
+          <span>Orient Wisdom</span>
         </Link>
 
         {/* Desktop nav links */}
@@ -35,11 +35,11 @@ export default function Navbar() {
           className="hidden md:flex items-center gap-8"
           style={{ color: "var(--color-text-muted)" }}
         >
-          <Link href="/shop" className="nav-link theme-transition hover:text-[var(--color-primary)]">
-            Shop
+          <Link href="/dashboard" className="nav-link theme-transition hover:text-[var(--color-primary)]">
+            Daily Fortune
           </Link>
-          <Link href="/tools" className="nav-link theme-transition hover:text-[var(--color-primary)]">
-            AI Tools
+          <Link href="/wish" className="nav-link theme-transition hover:text-[var(--color-primary)]">
+            Daily Wish
           </Link>
           <Link href="/membership" className="nav-link theme-transition hover:text-[var(--color-primary)]">
             Membership
@@ -54,13 +54,6 @@ export default function Navbar() {
           {isSignedIn && (
             <>
               <StreakBadge isSignedIn={isSignedIn} />
-              <Link
-                href="/dashboard"
-                className="text-sm nav-link theme-transition hover:text-[var(--color-primary)]"
-                style={{ color: "var(--color-text-muted)" }}
-              >
-                Dashboard
-              </Link>
               <Link
                 href="/profile"
                 className="text-sm nav-link theme-transition hover:text-[var(--color-primary)]"

@@ -14,7 +14,7 @@ export default function Footer() {
           className="text-sm"
           style={{ color: "var(--color-text-muted)" }}
         >
-          Mystic Realm &copy; {new Date().getFullYear()} &mdash; Ancient wisdom, modern magic.
+          Orient Wisdom &copy; {new Date().getFullYear()} &mdash; Ancient wisdom, modern magic.
         </p>
 
         <div

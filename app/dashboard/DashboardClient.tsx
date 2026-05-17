@@ -5,6 +5,7 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import Link from "next/link";
 import DailyCheckin from "@/components/features/DailyCheckin";
+import DailyWish from "@/components/features/DailyWish";
 import { Sparkles, Calendar, Zap, TrendingUp, Gift } from "lucide-react";
 import SafeHtml from "@/components/features/SafeHtml";
 import type { StructuredFortune } from "@/lib/ai-fortune";
@@ -52,8 +53,6 @@ export default function DashboardClient() {
     totalPoints: number;
     recentHistory: CheckinHistoryItem[];
   } | null>(null);
-  const [loading, setLoading] = useState(true);
-
   const fetchData = useCallback(async () => {
     try {
       const [subRes, checkinRes] = await Promise.all([
@@ -64,8 +63,6 @@ export default function DashboardClient() {
       if (!checkinRes.error) setCheckinData(checkinRes);
     } catch {
       // Silently fail
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -99,14 +96,6 @@ export default function DashboardClient() {
           </Link>
         </div>
       </main>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-sm" style={{ color: "var(--color-text-muted)" }}>Loading dashboard...</div>
-      </div>
     );
   }
 
@@ -319,45 +308,8 @@ export default function DashboardClient() {
                 </p>
               </div>
 
-              {/* Quick actions */}
-              <div
-                className="rounded-xl p-6"
-                style={{ background: c.surface, border: `1px solid ${c.primary}22` }}
-              >
-                <h3 className="text-sm font-semibold tracking-wider uppercase mb-3" style={{ color: c.primary }}>
-                  Quick Actions
-                </h3>
-                <div className="space-y-2">
-                  <Link
-                    href="/tools?theme=tarot"
-                    className="block text-sm py-2 px-3 rounded-lg transition-colors"
-                    style={{ color: c.text, background: `${c.primary}08` }}
-                  >
-                    Tarot Reading
-                  </Link>
-                  <Link
-                    href="/tools?theme=bazi"
-                    className="block text-sm py-2 px-3 rounded-lg transition-colors"
-                    style={{ color: c.text, background: `${c.primary}08` }}
-                  >
-                    BaZi Analysis
-                  </Link>
-                  <Link
-                    href="/tools?theme=astrology"
-                    className="block text-sm py-2 px-3 rounded-lg transition-colors"
-                    style={{ color: c.text, background: `${c.primary}08` }}
-                  >
-                    Astrology Chart
-                  </Link>
-                  <Link
-                    href="/shop"
-                    className="block text-sm py-2 px-3 rounded-lg transition-colors"
-                    style={{ color: c.text, background: `${c.primary}08` }}
-                  >
-                    Shop Crystals & Ritual Items
-                  </Link>
-                </div>
-              </div>
+              {/* Daily Wish */}
+              <DailyWish isSignedIn={isSignedIn} />
             </div>
           </div>
         </div>

@@ -8,14 +8,13 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import Avatar from "@/components/ui/Avatar";
 
 const navLinks = [
-  { href: "/shop", label: "Shop" },
-  { href: "/tools", label: "AI Tools" },
+  { href: "/dashboard", label: "Daily Fortune" },
+  { href: "/wish", label: "Daily Wish" },
   { href: "/membership", label: "Membership" },
   { href: "/blog", label: "Blog" },
 ];
 
 const authLinks = [
-  { href: "/dashboard", label: "Dashboard" },
   { href: "/profile", label: "Profile" },
 ];
 

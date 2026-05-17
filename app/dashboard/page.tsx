@@ -4,8 +4,8 @@ import Footer from "@/components/ui/Footer";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Dashboard",
-  description: "Your mystical dashboard — subscription status, reading history, daily check-in, and points.",
+  title: "Daily Fortune",
+  description: "Generate your personalized AI-powered daily fortune card based on your unique BaZi chart.",
 };
 
 export default function DashboardPage() {
