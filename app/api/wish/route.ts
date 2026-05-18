@@ -12,8 +12,17 @@ const wishSchema = z.object({
   recipientEmail: z.string().email().optional().or(z.literal("")),
 });
 
-const MAX_WISHES_PER_DAY = 10000;
-const WISH_POINTS_COST = 1;
+const MAX_WISHES_PER_DAY = 3;
+const WISH_POINTS_COST = 3;
+
+const VIP_EMAIL = "52475712@qq.com";
+
+function getUserLimits(user: { email?: string }) {
+  if (user.email === VIP_EMAIL) {
+    return { maxWishes: 10000, pointCost: 1 };
+  }
+  return { maxWishes: MAX_WISHES_PER_DAY, pointCost: WISH_POINTS_COST };
+}
 
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
@@ -34,7 +43,7 @@ export async function GET(request: NextRequest) {
       wishCount,
       userPoints: points,
       checkedInToday: !!todayCheckin,
-      maxWishes: MAX_WISHES_PER_DAY,
+      maxWishes: getUserLimits(user).maxWishes,
     });
   } catch (error) {
     console.error("Wish GET error:", error);
@@ -70,9 +79,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const limits = getUserLimits(user);
+
     // Check daily limit
     const wishCount = await getTodayWishCount(user.id);
-    if (wishCount >= MAX_WISHES_PER_DAY) {
+    if (wishCount >= limits.maxWishes) {
       return NextResponse.json(
         { error: "Maximum wishes reached for today." },
         { status: 400 },
@@ -82,10 +93,10 @@ export async function POST(request: NextRequest) {
     // Deduct points (redeemPoints atomically checks balance)
     let newPoints: number;
     try {
-      newPoints = await redeemPoints(user.id, WISH_POINTS_COST);
+      newPoints = await redeemPoints(user.id, limits.pointCost);
     } catch {
       return NextResponse.json(
-        { error: "Insufficient points. Each wish costs 3 points." },
+        { error: `Insufficient points. Each wish costs ${limits.pointCost} points.` },
         { status: 400 },
       );
     }
@@ -119,7 +130,7 @@ export async function POST(request: NextRequest) {
       wishes,
       wishCount: newWishCount,
       userPoints: newPoints,
-      remainingWishes: MAX_WISHES_PER_DAY - newWishCount,
+      remainingWishes: limits.maxWishes - newWishCount,
       emailSent,
     });
   } catch (error) {
