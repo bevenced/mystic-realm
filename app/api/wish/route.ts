@@ -12,8 +12,8 @@ const wishSchema = z.object({
   recipientEmail: z.string().email().optional().or(z.literal("")),
 });
 
-const MAX_WISHES_PER_DAY = 3;
-const WISH_POINTS_COST = 3;
+const MAX_WISHES_PER_DAY = 10000;
+const WISH_POINTS_COST = 1;
 
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
