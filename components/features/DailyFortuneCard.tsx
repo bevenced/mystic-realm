@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
-import type { StructuredFortune } from "@/lib/ai-fortune";
+import type { StructuredFortune, FortuneAspect } from "@/lib/ai-fortune";
 
 interface BaziContext {
   dayMaster: string;
@@ -44,8 +44,108 @@ function ratingColor(rating: "strong" | "neutral" | "weak"): string {
   return rating === "strong" ? "#2ECC71" : rating === "neutral" ? "#F1C40F" : "#E74C3C";
 }
 
-function ratingDots(rating: "strong" | "neutral" | "weak"): number {
-  return rating === "strong" ? 5 : rating === "neutral" ? 3 : 1;
+// ── Pentagon radar chart ──
+
+function FortuneRadar({
+  aspects,
+  colors,
+}: {
+  aspects: FortuneAspect[];
+  colors: Record<string, string>;
+}) {
+  const sz = 280;
+  const cx = sz / 2;
+  const cy = sz / 2 + 5;
+  const r = 90;
+  const n = 5;
+
+  const getPt = (i: number, radius: number) => {
+    const a = -Math.PI / 2 + i * (2 * Math.PI) / n;
+    return { x: cx + radius * Math.cos(a), y: cy + radius * Math.sin(a) };
+  };
+
+  const values = aspects.map((a) =>
+    a.rating === "strong" ? 1 : a.rating === "neutral" ? 0.6 : 0.3,
+  );
+  const grid = [0.25, 0.5, 0.75, 1.0];
+  const ptsStr = (radius: number) =>
+    Array.from({ length: n }, (_, i) => {
+      const p = getPt(i, radius);
+      return `${p.x},${p.y}`;
+    }).join(" ");
+
+  return (
+    <div className="flex justify-center py-2">
+      <svg viewBox={`0 0 ${sz} ${sz + 20}`} className="w-full max-w-[260px]">
+        {/* Bagua-inspired rings */}
+        <circle cx={cx} cy={cy} r={r + 8} fill="none" stroke={`${colors.primary}10`} strokeWidth="1" strokeDasharray="4 4" />
+        <circle cx={cx} cy={cy} r={r + 12} fill="none" stroke={`${colors.primary}06`} strokeWidth="1" strokeDasharray="2 6" />
+
+        {/* Grid pentagons */}
+        {grid.map((l) => (
+          <polygon key={l} points={ptsStr(r * l)} fill="none" stroke={`${colors.primary}12`} strokeWidth="1" />
+        ))}
+
+        {/* Axis lines */}
+        {Array.from({ length: n }, (_, i) => {
+          const p = getPt(i, r);
+          return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke={`${colors.primary}10`} strokeWidth="1" />;
+        })}
+
+        {/* Data polygon */}
+        <polygon
+          points={aspects
+            .map((a, i) => {
+              const v = a.rating === "strong" ? 1 : a.rating === "neutral" ? 0.6 : 0.3;
+              const p = getPt(i, r * v);
+              return `${p.x},${p.y}`;
+            })
+            .join(" ")}
+          fill={`${colors.primary}18`}
+          stroke={colors.primary}
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+
+        {/* Vertex dots */}
+        {Array.from({ length: n }, (_, i) => {
+          const p = getPt(i, r * values[i]);
+          const clr = ratingColor(aspects[i].rating);
+          return (
+            <g key={i}>
+              <circle cx={p.x} cy={p.y} r="6" fill={clr} opacity="0.2" />
+              <circle cx={p.x} cy={p.y} r="3.5" fill={clr} />
+            </g>
+          );
+        })}
+
+        {/* Center dot */}
+        <circle cx={cx} cy={cy} r="3" fill={colors.primary} opacity="0.35" />
+
+        {/* Labels */}
+        {Array.from({ length: n }, (_, i) => {
+          const p = getPt(i, r + 30);
+          return (
+            <g key={i}>
+              <text
+                x={p.x} y={p.y - 5}
+                textAnchor="middle" dominantBaseline="middle" fontSize="15"
+              >
+                {ASPECT_EMOJI[aspects[i].name] || "✨"}
+              </text>
+              <text
+                x={p.x} y={p.y + 12}
+                textAnchor="middle" dominantBaseline="middle"
+                fill={colors.text} fontSize="11" fontWeight="600"
+              >
+                {aspects[i].name}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
 }
 
 function formatDate(dateStr: string) {
@@ -66,15 +166,36 @@ export default function DailyFortuneCard({
 
   return (
     <div
-      className="rounded-xl overflow-hidden animate-fade-in"
+      className="rounded-xl overflow-hidden animate-fade-in relative"
       style={{
         background: c.surface,
         border: `1px solid ${c.primary}22`,
         boxShadow: `0 4px 24px ${c.primary}10`,
       }}
     >
-      {/* Top accent bar */}
-      <div style={{ height: 4, background: `linear-gradient(90deg, ${c.primary}, ${c.primary}60)` }} />
+      {/* 福 stamp */}
+      <div
+        className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center select-none pointer-events-none"
+        style={{
+          background: "#C41E3A",
+          borderRadius: 3,
+          transform: "rotate(6deg)",
+        }}
+      >
+        <span className="text-white text-[10px] font-bold leading-none" style={{ fontFamily: "serif" }}>
+          福
+        </span>
+      </div>
+      {/* Top decorative bar */}
+      <div style={{
+        height: 5,
+        background: `repeating-linear-gradient(90deg,
+          ${c.primary} 0, ${c.primary} 6px,
+          transparent 6px, transparent 8px,
+          ${c.primary}40 8px, ${c.primary}40 14px,
+          transparent 14px, transparent 16px
+        )`,
+      }} />
 
       <div className="p-6 space-y-5">
         {/* Header: date */}
@@ -113,39 +234,12 @@ export default function DailyFortuneCard({
           )}
         </div>
 
-        {/* Life Aspects */}
-        <div className="space-y-2">
-          {fortuneData.aspects.map((aspect) => (
-            <div
-              key={aspect.name}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg"
-              style={{ background: `${c.primary}06` }}
-            >
-              <span className="text-base flex-shrink-0">{ASPECT_EMOJI[aspect.name] || "✨"}</span>
-              <span className="text-xs font-semibold w-20 flex-shrink-0" style={{ color: c.text }}>
-                {aspect.name}
-              </span>
-              {/* Dots */}
-              <div className="flex gap-0.5">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div
-                    key={i}
-                    className="w-2 h-2 rounded-full"
-                    style={{
-                      background: i <= ratingDots(aspect.rating) ? ratingColor(aspect.rating) : `${c.primary}10`,
-                    }}
-                  />
-                ))}
-              </div>
-              <span
-                className="text-[11px] font-bold flex-shrink-0"
-                style={{ color: ratingColor(aspect.rating) }}
-              >
-                {aspect.rating === "strong" ? "↑" : aspect.rating === "neutral" ? "→" : "↓"}{" "}
-                {aspect.rating === "strong" ? "Strong" : aspect.rating === "neutral" ? "Neutral" : "Watch"}
-              </span>
-            </div>
-          ))}
+        {/* Life Aspects — pentagon chart */}
+        <div>
+          <p className="text-xs font-semibold tracking-wider text-center mb-3" style={{ color: c.textMuted }}>
+            ✦ Fortune Chart
+          </p>
+          <FortuneRadar aspects={fortuneData.aspects} colors={c} />
         </div>
 
         {/* Advice */}
