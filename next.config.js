@@ -3,6 +3,17 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
 
+  // Redirect /dashboard → /dailyfortune
+  async redirects() {
+    return [
+      {
+        source: "/dashboard",
+        destination: "/dailyfortune",
+        permanent: true,
+      },
+    ];
+  },
+
   // Security headers
   async headers() {
     return [
