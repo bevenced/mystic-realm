@@ -53,16 +53,6 @@ export default function UserMenu() {
 
           {/* Menu items */}
           <Link
-            href="/dashboard"
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2.5 text-sm theme-transition"
-            style={{ color: "var(--color-text-muted)" }}
-            onMouseEnter={e => (e.currentTarget.style.color = "var(--color-primary)")}
-            onMouseLeave={e => (e.currentTarget.style.color = "var(--color-text-muted)")}
-          >
-            Dashboard
-          </Link>
-          <Link
             href="/profile"
             onClick={() => setOpen(false)}
             className="block px-4 py-2.5 text-sm theme-transition"
