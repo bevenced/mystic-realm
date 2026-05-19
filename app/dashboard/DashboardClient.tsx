@@ -291,21 +291,6 @@ export default function DashboardClient() {
                 <p className="text-3xl font-bold mb-1" style={{ color: c.text }}>
                   {subStatus?.totalPoints || checkinData?.totalPoints || 0}
                 </p>
-                <p className="text-xs mb-4" style={{ color: c.textMuted }}>
-                  100 points = 1 free full reading
-                </p>
-                <div className="w-full rounded-full h-2 mb-2" style={{ background: `${c.primary}20` }}>
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      background: c.primary,
-                      width: `${Math.min(100, ((subStatus?.totalPoints || checkinData?.totalPoints || 0) / 100) * 100)}%`,
-                    }}
-                  />
-                </div>
-                <p className="text-[10px]" style={{ color: c.textMuted }}>
-                  Check in daily to earn points faster
-                </p>
               </div>
 
               {/* Daily Wish */}
