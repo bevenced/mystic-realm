@@ -27,6 +27,7 @@ interface WishData {
   userPoints: number;
   checkedInToday: boolean;
   maxWishes: number;
+  pointCost: number;
 }
 
 export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
@@ -76,6 +77,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
           userPoints: json.userPoints,
           checkedInToday: true,
           maxWishes: data?.maxWishes || 3,
+          pointCost: json.pointCost || data?.pointCost || 3,
         });
         if (json.emailSent) {
           setLastEmailSent(recipientEmail.trim() || null);
@@ -115,7 +117,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
               color: remaining > 0 ? c.primary : c.textMuted,
             }}
           >
-            ❤️×{Math.max(0, remaining)}
+            剩余 {Math.max(0, remaining)} 次
           </span>
         )}
       </div>
@@ -227,7 +229,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
                     Blessing...
                   </span>
                 ) : (
-                  <span>✨ Wish Blessing (-3 pts)</span>
+                  <span>✨ 送出许愿 (-{data?.pointCost || 3} 积分)</span>
                 )}
               </button>
             </>
@@ -273,7 +275,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
                   {wish.recipient_email && (
                     lastEmailSent === wish.recipient_email ? (
                       <span className="inline-flex items-center gap-1 mt-1.5 ml-6 text-[10px] font-medium" style={{ color: "#2ECC71" }}>
-                        ✓ Email sent to {wish.recipient_email}
+                        ✓ 邮件已发送至 {wish.recipient_email} +5 积分
                       </span>
                     ) : (
                       <a
@@ -298,9 +300,9 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
       {/* Points reminder */}
       {data && data.checkedInToday && remaining > 0 && !data.wishes.length && (
         <p className="text-[10px] mt-4 text-center" style={{ color: c.textMuted }}>
-          {data.userPoints >= 3
-            ? `You have ${data.userPoints} pts — each wish costs 3 pts`
-            : "Need 3 points to make a wish"}
+          {data.userPoints >= (data.pointCost || 3)
+            ? `你有 ${data.userPoints} 积分 — 每次许愿消耗 ${data.pointCost || 3} 积分`
+            : `需要 ${data.pointCost || 3} 积分才能许愿`}
         </p>
       )}
     </div>

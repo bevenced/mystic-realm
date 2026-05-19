@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     if (currentPoints < REDEEM_COST) {
       return NextResponse.json({
-        error: `Insufficient points. You have ${currentPoints}, need ${REDEEM_COST}.`,
+        error: `积分不足，您有 ${currentPoints}，需要 ${REDEEM_COST}。`,
         currentPoints,
       }, { status: 400 });
     }
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       pointsRedeemed: REDEEM_COST,
       remainingPoints,
       service,
-      message: "100 points redeemed for a free full reading. Pass the token to the AI endpoint.",
+      message: "已兑换 100 积分，可用于一次深度解读。将 token 传递给 AI 端点即可使用。",
     });
   } catch (error) {
     console.error("Redeem error:", error);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthUser } from "@/lib/auth";
-import { getTodayCheckin, createWish, getTodayWishes, getTodayWishCount, getUserPoints, redeemPoints } from "@/lib/db";
+import { getTodayCheckin, createWish, getTodayWishes, getTodayWishCount, getUserPoints, redeemPoints, addUserPoints } from "@/lib/db";
 import { sendWishEmail } from "@/lib/mail";
 
 const wishCategories = ["health", "wealth", "luck", "friendship", "love"] as const;
@@ -38,12 +38,15 @@ export async function GET(request: NextRequest) {
       getTodayCheckin(user.id),
     ]);
 
+    const limits = getUserLimits(user);
+
     return NextResponse.json({
       wishes,
       wishCount,
       userPoints: points,
       checkedInToday: !!todayCheckin,
-      maxWishes: getUserLimits(user).maxWishes,
+      maxWishes: limits.maxWishes,
+      pointCost: limits.pointCost,
     });
   } catch (error) {
     console.error("Wish GET error:", error);
@@ -96,7 +99,7 @@ export async function POST(request: NextRequest) {
       newPoints = await redeemPoints(user.id, limits.pointCost);
     } catch {
       return NextResponse.json(
-        { error: `Insufficient points. Each wish costs ${limits.pointCost} points.` },
+        { error: `积分不足，每次许愿消耗 ${limits.pointCost} 积分。` },
         { status: 400 },
       );
     }
@@ -106,6 +109,7 @@ export async function POST(request: NextRequest) {
 
     // Send email if recipient provided
     let emailSent = false;
+    let emailBonusEarned = 0;
     if (recipientEmail && recipientEmail.trim()) {
       try {
         await sendWishEmail({
@@ -122,6 +126,15 @@ export async function POST(request: NextRequest) {
 
     // Get updated wishes
     const wishes = await getTodayWishes(user.id);
+
+    // +5 points for email wishes, max 15/day (3 emails)
+    if (emailSent) {
+      const emailWishCount = wishes.filter(w => w.recipient_email).length;
+      if (emailWishCount <= 3) {
+        newPoints = await addUserPoints(user.id, 5);
+        emailBonusEarned = 5;
+      }
+    }
     const newWishCount = await getTodayWishCount(user.id);
 
     return NextResponse.json({
@@ -131,7 +144,9 @@ export async function POST(request: NextRequest) {
       wishCount: newWishCount,
       userPoints: newPoints,
       remainingWishes: limits.maxWishes - newWishCount,
+      pointCost: limits.pointCost,
       emailSent,
+      emailBonusEarned,
     });
   } catch (error) {
     console.error("Wish POST error:", error);

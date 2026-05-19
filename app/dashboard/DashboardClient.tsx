@@ -162,7 +162,7 @@ export default function DashboardClient() {
                   <p className="text-2xl font-bold" style={{ color: c.text }}>
                     {subStatus?.totalPoints || checkinData?.totalPoints || 0}
                   </p>
-                  <p className="text-xs" style={{ color: c.textMuted }}>Points</p>
+                  <p className="text-xs" style={{ color: c.textMuted }}>积分</p>
                 </div>
               </div>
 
@@ -191,7 +191,7 @@ export default function DashboardClient() {
                           </p>
                         </div>
                         <div className="text-xs whitespace-nowrap text-right" style={{ color: c.textMuted }}>
-                          +{item.points_earned} pts &middot; {item.streak}d
+                          +{item.points_earned} 积分 &middot; {item.streak}d
                         </div>
                       </div>
                     ))}
@@ -286,13 +286,13 @@ export default function DashboardClient() {
                 style={{ background: c.surface, border: `1px solid ${c.primary}22` }}
               >
                 <h3 className="text-sm font-semibold tracking-wider uppercase mb-3" style={{ color: c.primary }}>
-                  Points
+                  积分
                 </h3>
                 <p className="text-3xl font-bold mb-1" style={{ color: c.text }}>
                   {subStatus?.totalPoints || checkinData?.totalPoints || 0}
                 </p>
                 <p className="text-xs mb-4" style={{ color: c.textMuted }}>
-                  100 points = 1 free full reading
+                  100 积分兑换 1 次深度解读
                 </p>
                 <div className="w-full rounded-full h-2 mb-2" style={{ background: `${c.primary}20` }}>
                   <div
@@ -304,7 +304,7 @@ export default function DashboardClient() {
                   />
                 </div>
                 <p className="text-[10px]" style={{ color: c.textMuted }}>
-                  Check in daily to earn points faster
+                  每日签到赚取更多积分
                 </p>
               </div>
 

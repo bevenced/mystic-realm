@@ -206,7 +206,7 @@ export default function DailyFortuneCard({
         </span>
         <div className="flex items-center gap-3">
           <span className="text-xs" style={{ color: c.textMuted }}>
-            ✨ +{pointsEarned} pts
+            ✨ +{pointsEarned} 积分
           </span>
           {streak > 0 && (
             <span className="text-xs" style={{ color: c.textMuted }}>
