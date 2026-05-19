@@ -1,5 +1,6 @@
 import { Sparkles } from "lucide-react";
 import WishClient from "./WishClient";
+import WishFeed from "@/components/features/WishFeed";
 
 export const metadata = {
   title: "Daily Wish",
@@ -17,7 +18,7 @@ export default function WishPage() {
             opacity: 0.08,
           }}
         />
-        <div className="relative mx-auto max-w-2xl px-6 pt-24 pb-20">
+        <div className="relative mx-auto max-w-5xl px-6 pt-24 pb-20">
           <div className="text-center mb-10 animate-fade-in">
             <h1 className="text-3xl font-bold" style={{ color: "var(--color-primary)" }}>
               <Sparkles size={28} className="inline mr-2" />
@@ -27,7 +28,17 @@ export default function WishPage() {
               Light a star for your heart&apos;s desire — 3 wishes per day, 3 points each
             </p>
           </div>
-          <WishClient />
+          <div className="grid lg:grid-cols-3 gap-8 items-start">
+            <div className="lg:col-span-2">
+              <WishClient />
+              <div className="mt-8 lg:hidden">
+                <WishFeed />
+              </div>
+            </div>
+            <div className="hidden lg:block">
+              <WishFeed />
+            </div>
+          </div>
         </div>
       </div>
     </main>

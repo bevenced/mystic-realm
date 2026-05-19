@@ -844,3 +844,19 @@ export async function getTodayWishCount(userId: string): Promise<number> {
     return 0;
   }
 }
+
+export async function getRecentPublicWishes(limit = 50) {
+  try {
+    const result = await sql`
+      SELECT dw.id, dw.category, dw.wish_text, dw.created_at, u.name as user_name
+      FROM daily_wishes dw
+      JOIN users u ON dw.user_id = u.id
+      ORDER BY dw.created_at DESC
+      LIMIT ${limit}
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error("getRecentPublicWishes error:", error);
+    return [];
+  }
+}
