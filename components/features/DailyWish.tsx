@@ -30,6 +30,14 @@ interface WishData {
   pointCost: number;
 }
 
+const WISH_EXAMPLES: Record<string, string> = {
+  health: `"Wishing my mother a speedy recovery from her surgery."`,
+  wealth: `"May my business bring prosperity and growth this year."`,
+  luck: `"Hoping for good luck on my upcoming job interview."`,
+  friendship: `"Wishing my best friend happiness in their new journey."`,
+  love: `"May my relationship grow deeper with love and understanding."`,
+};
+
 export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
@@ -168,7 +176,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
                 onChange={(e) => setWishText(e.target.value.slice(0, 300))}
                 placeholder={
                   cat
-                    ? `Write your ${cat.label.toLowerCase()} wish here...\ne.g. "Wishing my family good health and happiness this year."`
+                    ? `Write your ${cat.label.toLowerCase()} wish here...\ne.g. ${WISH_EXAMPLES[cat.value]}`
                     : "Write your wish here..."
                 }
                 rows={3}
