@@ -24,7 +24,7 @@ export default function WishPage() {
               Daily Wish
             </h1>
             <p className="text-sm mt-2" style={{ color: "var(--color-text-muted)" }}>
-              Light a star for your heart&apos;s desire — 3 wishes per day, 3 积分 each
+              Light a star for your heart&apos;s desire — 3 wishes per day, 3 points each
             </p>
           </div>
           <WishClient />

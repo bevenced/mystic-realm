@@ -117,7 +117,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
               color: remaining > 0 ? c.primary : c.textMuted,
             }}
           >
-            剩余 {Math.max(0, remaining)} 次
+            {Math.max(0, remaining)} left
           </span>
         )}
       </div>
@@ -168,7 +168,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
                 onChange={(e) => setWishText(e.target.value.slice(0, 300))}
                 placeholder={
                   cat
-                    ? `Write your ${cat.label.toLowerCase()} wish here...\ne.g. "妈妈生病住院了，今天是第三天，希望她早日康复。"`
+                    ? `Write your ${cat.label.toLowerCase()} wish here...\ne.g. "Wishing my family good health and happiness this year."`
                     : "Write your wish here..."
                 }
                 rows={3}
@@ -229,7 +229,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
                     Blessing...
                   </span>
                 ) : (
-                  <span>✨ 送出许愿 (-{data?.pointCost || 3} 积分)</span>
+                  <span>✨ Make a Wish (-{data?.pointCost || 3} pts)</span>
                 )}
               </button>
             </>
@@ -275,7 +275,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
                   {wish.recipient_email && (
                     lastEmailSent === wish.recipient_email ? (
                       <span className="inline-flex items-center gap-1 mt-1.5 ml-6 text-[10px] font-medium" style={{ color: "#2ECC71" }}>
-                        ✓ 邮件已发送至 {wish.recipient_email} +5 积分
+                        ✓ Email sent to {wish.recipient_email} +5 pts
                       </span>
                     ) : (
                       <a
@@ -301,8 +301,8 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
       {data && data.checkedInToday && remaining > 0 && !data.wishes.length && (
         <p className="text-[10px] mt-4 text-center" style={{ color: c.textMuted }}>
           {data.userPoints >= (data.pointCost || 3)
-            ? `你有 ${data.userPoints} 积分 — 每次许愿消耗 ${data.pointCost || 3} 积分`
-            : `需要 ${data.pointCost || 3} 积分才能许愿`}
+            ? `You have ${data.userPoints} pts — each wish costs ${data.pointCost || 3} pts`
+            : `Need ${data.pointCost || 3} pts to make a wish`}
         </p>
       )}
     </div>

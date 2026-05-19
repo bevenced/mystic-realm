@@ -252,7 +252,7 @@ export default function DailyCheckin({
             style={{ borderTop: `1px solid ${c.primary}10` }}
           >
             <span className="text-xs flex items-center gap-1" style={{ color: c.textMuted }}>
-              <Sparkles size={12} />+{data.today.pointsEarned} 积分
+              <Sparkles size={12} />+{data.today.pointsEarned} pts
             </span>
             <span className="text-xs flex items-center gap-1" style={{ color: c.textMuted }}>
               <Flame size={12} /> {data.today.streak} day streak
@@ -279,7 +279,7 @@ export default function DailyCheckin({
             Points balance
           </span>
           <span className="text-sm font-bold" style={{ color: c.primary }}>
-            {data.totalPoints} 积分
+            {data.totalPoints} pts
           </span>
         </div>
       )}

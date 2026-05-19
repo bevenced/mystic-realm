@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       newPoints = await redeemPoints(user.id, limits.pointCost);
     } catch {
       return NextResponse.json(
-        { error: `积分不足，每次许愿消耗 ${limits.pointCost} 积分。` },
+        { error: `Insufficient points. Each wish costs ${limits.pointCost} points.` },
         { status: 400 },
       );
     }
