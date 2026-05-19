@@ -41,9 +41,6 @@ export default function Navbar() {
           <Link href="/wish" className="nav-link theme-transition hover:text-[var(--color-primary)]">
             Daily Wish
           </Link>
-          <Link href="/membership" className="nav-link theme-transition hover:text-[var(--color-primary)]">
-            Membership
-          </Link>
           <Link href="/blog" className="nav-link theme-transition hover:text-[var(--color-primary)]">
             Blog
           </Link>

@@ -62,6 +62,16 @@ export default function UserMenu() {
           >
             Profile
           </Link>
+          <Link
+            href="/membership"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2.5 text-sm theme-transition"
+            style={{ color: "var(--color-text-muted)" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "var(--color-primary)")}
+            onMouseLeave={e => (e.currentTarget.style.color = "var(--color-text-muted)")}
+          >
+            Membership
+          </Link>
 
           <div className="border-t" style={{ borderColor: "color-mix(in srgb, var(--color-text-muted) 10%, transparent)" }} />
 
