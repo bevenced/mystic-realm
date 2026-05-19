@@ -9,7 +9,7 @@ const features = [
     icon: Flame,
     title: "Daily Fortune",
     desc: "AI-powered BaZi fortune card every day. Check in to reveal life aspect ratings, lucky colors, and personalized advice.",
-    href: "/dashboard",
+    href: "/dailyfortune",
   },
   {
     icon: Sparkles,

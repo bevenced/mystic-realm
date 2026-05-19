@@ -35,7 +35,7 @@ export default function Navbar() {
           className="hidden md:flex items-center gap-8"
           style={{ color: "var(--color-text-muted)" }}
         >
-          <Link href="/dashboard" className="nav-link theme-transition hover:text-[var(--color-primary)]">
+          <Link href="/dailyfortune" className="nav-link theme-transition hover:text-[var(--color-primary)]">
             Daily Fortune
           </Link>
           <Link href="/wish" className="nav-link theme-transition hover:text-[var(--color-primary)]">

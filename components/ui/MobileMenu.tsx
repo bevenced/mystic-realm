@@ -8,7 +8,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import Avatar from "@/components/ui/Avatar";
 
 const navLinks = [
-  { href: "/dashboard", label: "Daily Fortune" },
+  { href: "/dailyfortune", label: "Daily Fortune" },
   { href: "/wish", label: "Daily Wish" },
   { href: "/membership", label: "Membership" },
   { href: "/blog", label: "Blog" },
