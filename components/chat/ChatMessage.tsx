@@ -68,7 +68,7 @@ export default function ChatMessage({ role, content, isStreaming, personaEmoji }
   };
 
   return (
-    <div className={`flex items-end gap-3 mb-4 ${isUser ? "justify-end" : "justify-start"} ${
+    <div className={`flex items-start gap-3 mb-4 ${isUser ? "justify-end" : "justify-start"} ${
       isUser ? "animate-slide-in-right" : "animate-slide-in-left"
     }`}>
       {/* Assistant avatar */}
@@ -123,6 +123,9 @@ export default function ChatMessage({ role, content, isStreaming, personaEmoji }
           </span>
         )}
       </div>
+
+      {/* User right spacer (matches avatar width for alignment symmetry) */}
+      {isUser && <div className="flex-shrink-0 w-8" />}
     </div>
   );
 }
