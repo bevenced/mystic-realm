@@ -75,7 +75,22 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="flex-1 overflow-y-auto px-4 py-6 relative">
+        {/* Ambient glow background */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          <div
+            className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
+            style={{
+              background: `radial-gradient(circle, ${c.primary}15 0%, transparent 70%)`,
+            }}
+          />
+          <div
+            className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full"
+            style={{
+              background: `radial-gradient(circle, ${c.secondary || c.primary}10 0%, transparent 70%)`,
+            }}
+          />
+        </div>
         <div className="mx-auto max-w-3xl">
           {!hasMessages && !isStreaming ? (
             <ChatWelcome
@@ -90,10 +105,10 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
           ) : (
             <>
               {messages.map((msg) => (
-                <ChatMessage key={msg.id} role={msg.role} content={msg.content} />
+                <ChatMessage key={msg.id} role={msg.role} content={msg.content} personaEmoji={currentPersona.emoji} />
               ))}
               {isStreaming && (
-                <ChatMessage role="assistant" content="" isStreaming />
+                <ChatMessage role="assistant" content="" isStreaming personaEmoji={currentPersona.emoji} />
               )}
             </>
           )}
@@ -133,32 +148,47 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
             )}
 
             <div
-              className="flex-1 flex items-end rounded-lg"
+              className="flex-1 flex items-end rounded-xl transition-all duration-200"
               style={{
                 backgroundColor: `${c.primary}06`,
                 border: `1px solid ${c.primary}15`,
+                boxShadow: input.trim() ? `0 0 0 2px ${c.primary}12` : "none",
               }}
-            >
+              onFocus={() => {}}>
               <textarea
                 ref={inputRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  // Auto-grow
+                  const el = e.target;
+                  el.style.height = "auto";
+                  el.style.height = Math.min(el.scrollHeight, 200) + "px";
+                }}
                 onKeyDown={handleKeyDown}
                 placeholder={`Ask ${currentPersona.name} anything...`}
                 rows={1}
                 className="flex-1 bg-transparent px-4 py-[14px] text-sm resize-none outline-none"
-                style={{ color: c.text }}
+                style={{ color: c.text, minHeight: "48px" }}
               />
             </div>
 
             <button
               onClick={handleSend}
               disabled={!input.trim() || isStreaming}
-              className="flex-shrink-0 w-[44px] h-[44px] flex items-center justify-center rounded-lg transition-all"
+              className="flex-shrink-0 w-[44px] h-[44px] flex items-center justify-center rounded-xl transition-all duration-200 active:scale-95"
               style={{
                 backgroundColor: input.trim() && !isStreaming ? c.primary : `${c.primary}20`,
                 color: input.trim() && !isStreaming ? (currentTheme.isDark ? c.bg : "#FFFFFF") : c.textMuted,
                 cursor: input.trim() && !isStreaming ? "pointer" : "not-allowed",
+                transform: input.trim() && !isStreaming ? "scale(1)" : "scale(1)",
+                boxShadow: input.trim() && !isStreaming ? `0 4px 12px ${c.primary}25` : "none",
+              }}
+              onMouseEnter={(e) => {
+                if (input.trim() && !isStreaming) e.currentTarget.style.transform = "scale(1.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
               }}
               aria-label="Send message"
             >
