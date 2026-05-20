@@ -17,6 +17,8 @@ export interface ThemeConfig {
   gradientHero: string;
   font: string;
   fontFallback: string;
+  fontHeading: string;
+  fontHeadingFallback: string;
   isDark: boolean;
 }
 
@@ -40,6 +42,8 @@ export const themes: Record<string, ThemeConfig> = {
     gradientHero: "linear-gradient(180deg, #F5F0E8 0%, #E8DFD0 50%, #DDD4C0 100%)",
     font: "'Cormorant Garamond'",
     fontFallback: "Georgia, serif",
+    fontHeading: "'Cormorant Garamond'",
+    fontHeadingFallback: "Georgia, serif",
     isDark: false,
   },
   healing: {
@@ -61,6 +65,8 @@ export const themes: Record<string, ThemeConfig> = {
     gradientHero: "linear-gradient(180deg, #FFF8F0 0%, #F0EDE5 50%, #E8E4DA 100%)",
     font: "'Nunito'",
     fontFallback: "system-ui, sans-serif",
+    fontHeading: "'Nunito'",
+    fontHeadingFallback: "system-ui, sans-serif",
     isDark: false,
   },
   fengshui: {
@@ -82,6 +88,8 @@ export const themes: Record<string, ThemeConfig> = {
     gradientHero: "linear-gradient(180deg, #0F0F0F 0%, #1A0A0A 50%, #0F0F0F 100%)",
     font: "'Noto Serif SC'",
     fontFallback: "'SimSun', serif",
+    fontHeading: "'Noto Serif SC'",
+    fontHeadingFallback: "'SimSun', serif",
     isDark: true,
   },
   bazi: {
@@ -101,8 +109,10 @@ export const themes: Record<string, ThemeConfig> = {
     },
     glow: "rgba(196, 160, 53, 0.25)",
     gradientHero: "linear-gradient(180deg, #12101A 0%, #1A1525 50%, #12101A 100%)",
-    font: "'Cinzel'",
+    font: "'Cormorant Garamond'",
     fontFallback: "Georgia, serif",
+    fontHeading: "'Cinzel'",
+    fontHeadingFallback: "Georgia, serif",
     isDark: true,
   },
   tarot: {
@@ -122,8 +132,10 @@ export const themes: Record<string, ThemeConfig> = {
     },
     glow: "rgba(255, 215, 0, 0.2)",
     gradientHero: "linear-gradient(180deg, #0A0A20 0%, #150A30 50%, #0A0A20 100%)",
-    font: "'Uncial Antiqua'",
+    font: "'Cormorant Garamond'",
     fontFallback: "Georgia, serif",
+    fontHeading: "'Uncial Antiqua'",
+    fontHeadingFallback: "Georgia, serif",
     isDark: true,
   },
   astrology: {
@@ -145,6 +157,8 @@ export const themes: Record<string, ThemeConfig> = {
     gradientHero: "linear-gradient(180deg, #020810 0%, #081020 50%, #020810 100%)",
     font: "'Josefin Sans'",
     fontFallback: "system-ui, sans-serif",
+    fontHeading: "'Josefin Sans'",
+    fontHeadingFallback: "system-ui, sans-serif",
     isDark: true,
   },
 };

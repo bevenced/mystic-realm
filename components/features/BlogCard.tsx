@@ -31,7 +31,7 @@ export default function BlogCard({
   return (
     <Link
       href={`/blog/${slug}`}
-      className="group block rounded-xl overflow-hidden hover-lift animate-slide-up"
+      className="group block rounded-lg overflow-hidden hover-lift animate-slide-up"
       style={{
         background: c.surface,
         border: `1px solid ${c.primary}22`,

@@ -114,7 +114,7 @@ export default function DailyCheckin({
 
   return (
     <div
-      className="rounded-xl animate-fade-in overflow-hidden"
+      className="rounded-lg animate-fade-in overflow-hidden"
       style={{
         background: c.surface,
         border: `1px solid ${c.primary}22`,
@@ -122,7 +122,7 @@ export default function DailyCheckin({
     >
       {/* ── Header ── */}
       <div
-        className="px-6 pt-5 pb-3"
+        className="px-7 pt-6 pb-4"
         style={{
           background: `linear-gradient(135deg, ${c.primary}10 0%, transparent 60%)`,
           borderBottom: `1px solid ${c.primary}10`,
@@ -163,7 +163,7 @@ export default function DailyCheckin({
 
       {/* ── Not checked in ── */}
       {!data?.checkedIn && (
-        <div className="px-6 py-8 text-center">
+        <div className="px-7 py-10 text-center">
           {error === "PROFILE_REQUIRED" ? (
             <div className="animate-fade-in space-y-4">
               <div className="text-3xl mb-2">🔮</div>
@@ -219,7 +219,7 @@ export default function DailyCheckin({
 
       {/* ── Checked in — show fortune card ── */}
       {data?.checkedIn && data.today && (
-        <div className="px-6 py-5 space-y-4 animate-fade-in">
+        <div className="px-7 py-6 space-y-5 animate-fade-in">
           {fortuneData ? (
             <>
               <DailyFortuneCard
@@ -269,7 +269,7 @@ export default function DailyCheckin({
       {/* ── Check-in history ── */}
       {data?.checkedIn && data.recentHistory && data.recentHistory.length > 0 && (
         <div
-          className="px-6 py-4 space-y-2 animate-fade-in"
+          className="px-7 py-5 space-y-2 animate-fade-in"
           style={{ borderTop: `1px solid ${c.primary}10` }}
         >
           <div className="flex items-center gap-2 mb-3">
@@ -316,7 +316,7 @@ export default function DailyCheckin({
       {/* ── Points total ── */}
       {data && (
         <div
-          className="px-6 py-3 flex justify-between items-center"
+          className="px-7 py-4 flex justify-between items-center"
           style={{
             background: `${c.primary}06`,
             borderTop: `1px solid ${c.primary}10`,

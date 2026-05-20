@@ -166,7 +166,7 @@ export default function DailyFortuneCard({
 
   return (
     <div
-      className="rounded-xl overflow-hidden animate-fade-in relative"
+      className="rounded-lg overflow-hidden animate-fade-in relative"
       style={{
         background: c.surface,
         border: `1px solid ${c.primary}22`,
@@ -197,7 +197,7 @@ export default function DailyFortuneCard({
         )`,
       }} />
 
-      <div className="p-6 space-y-5">
+      <div className="p-7 space-y-6">
         {/* Header: date */}
         <div className="text-center">
           <p className="text-xs font-medium tracking-wider" style={{ color: c.textMuted }}>
@@ -244,7 +244,7 @@ export default function DailyFortuneCard({
 
         {/* Advice */}
         <div
-          className="rounded-xl p-4"
+          className="rounded-lg p-4"
           style={{
             background: `linear-gradient(135deg, ${c.primary}10 0%, ${c.primary}05 100%)`,
             border: `1px solid ${c.primary}15`,
@@ -289,7 +289,7 @@ export default function DailyFortuneCard({
 
       {/* Footer */}
       <div
-        className="px-6 py-3 flex items-center justify-between"
+        className="px-7 py-4 flex items-center justify-between"
         style={{
           background: `${c.primary}06`,
           borderTop: `1px solid ${c.primary}10`,

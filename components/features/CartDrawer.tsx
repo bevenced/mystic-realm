@@ -113,7 +113,7 @@ export default function CartDrawer({
               {cart.map((item) => (
                 <div
                   key={item.product.id}
-                  className="flex items-center gap-4 p-3 rounded-xl"
+                  className="flex items-center gap-4 p-3 rounded-lg"
                   style={{
                     background: c.surface,
                     border: `1px solid ${c.primary}10`,

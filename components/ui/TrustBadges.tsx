@@ -40,7 +40,7 @@ export default function TrustBadges() {
             return (
               <div
                 key={i}
-                className="relative rounded-xl p-5 text-center animate-fade-in"
+                className="relative rounded-lg p-5 text-center animate-fade-in"
                 style={{
                   background: `linear-gradient(135deg, ${c.primary}08 0%, ${c.surface} 100%)`,
                   border: `1px solid ${c.primary}15`,

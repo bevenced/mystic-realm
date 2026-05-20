@@ -54,7 +54,7 @@ export default function CoreFeatures() {
               <Link
                 key={f.href}
                 href={f.href}
-                className="group relative block rounded-2xl overflow-hidden hover-lift animate-slide-up"
+                className="group relative block rounded-lg overflow-hidden hover-lift animate-slide-up"
                 style={{
                   opacity: 0,
                   animationDelay: `${index * 100 + 200}ms`,
@@ -81,14 +81,14 @@ export default function CoreFeatures() {
 
                 {/* Border */}
                 <div
-                  className="absolute inset-0 rounded-2xl theme-transition"
+                  className="absolute inset-0 rounded-lg theme-transition"
                   style={{ border: `1px solid ${c.primary}33` }}
                 />
 
                 {/* Content */}
                 <div className="relative p-8">
                   <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300"
+                    className="w-12 h-12 rounded-lg flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300"
                     style={{ background: `${c.primary}15` }}
                   >
                     <Icon size={24} style={{ color: c.primary }} />

@@ -109,7 +109,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
 
   return (
     <div
-      className="rounded-xl p-6 animate-fade-in"
+      className="rounded-lg p-7 animate-fade-in"
       style={{ background: c.surface, border: `1px solid ${c.primary}22` }}
     >
       {/* Header */}

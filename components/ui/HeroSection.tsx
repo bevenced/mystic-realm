@@ -1,7 +1,6 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
-import GlowOrb from "@/components/ui/GlowOrb";
 
 export default function HeroSection() {
   const { currentTheme } = useTheme();
@@ -15,31 +14,42 @@ export default function HeroSection() {
         style={{ background: currentTheme.gradientHero }}
       />
 
-      {/* 浮动光效球 */}
-      <GlowOrb size={300} color={c.primary + "33"} top="10%" left="5%" delay={0} />
-      <GlowOrb size={200} color={c.accent + "28"} top="60%" left="75%" delay={2} />
-      <GlowOrb size={250} color={c.secondary + "20"} top="30%" left="60%" delay={4} />
-
-      {/* 缓慢旋转的装饰圆环 */}
+      {/* 极淡的径向光晕（替代 GlowOrb） */}
       <div
-        className="absolute animate-rotate-slow pointer-events-none"
+        className="absolute pointer-events-none"
         style={{
-          width: 400,
-          height: 400,
-          top: "15%",
-          right: "-5%",
-          border: `1px solid ${c.primary}15`,
-          borderRadius: "50%",
-          opacity: 0.4,
+          width: "60%",
+          height: "60%",
+          top: "20%",
+          left: "20%",
+          background: `radial-gradient(ellipse at center, ${c.primary}10 0%, transparent 60%)`,
         }}
       />
 
+      {/* 背景中文水印装饰 */}
+      <div
+        className="absolute select-none pointer-events-none"
+        style={{
+          fontFamily: "'Noto Serif SC', serif",
+          fontSize: "clamp(12rem, 30vw, 24rem)",
+          fontWeight: 400,
+          color: `${c.primary}06`,
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          letterSpacing: "0.1em",
+          lineHeight: 1,
+        }}
+      >
+        易
+      </div>
+
       {/* 主内容 */}
       <div className="relative z-10 text-center px-6 max-w-3xl">
-        {/* 装饰线 */}
+        {/* 顶部装饰线 */}
         <div
-          className="w-16 h-px mx-auto mb-8 animate-fade-in"
-          style={{ background: c.primary }}
+          className="w-12 h-px mx-auto mb-8 animate-fade-in"
+          style={{ background: `linear-gradient(90deg, transparent, ${c.primary}, transparent)` }}
         />
 
         <h1
@@ -50,31 +60,33 @@ export default function HeroSection() {
         </h1>
 
         <p
-          className="mt-4 text-xl md:text-2xl animate-slide-up delay-200"
+          className="mt-5 text-xl md:text-2xl animate-slide-up delay-200 leading-relaxed"
           style={{ color: c.textMuted }}
         >
           AI-powered BaZi fortune, daily wishes, and cosmic insights.
         </p>
 
-        {/* CTA 按钮 */}
-        <div className="mt-10 animate-slide-up delay-400">
+        {/* CTA 按钮 — 无脉冲呼吸灯 */}
+        <div className="mt-12 animate-slide-up delay-400">
           <a
             href="#features"
-            className="inline-block px-8 py-3 rounded-full text-base font-semibold animate-pulse-glow theme-transition"
+            className="inline-block px-8 py-3 rounded-lg text-base font-semibold theme-transition hover-lift"
             style={{
               color: currentTheme.isDark ? c.bg : "#FFFFFF",
               backgroundColor: c.primary,
+              border: `1px solid ${c.primary}40`,
             }}
           >
             Explore Features
           </a>
         </div>
 
-        {/* 装饰线 */}
-        <div
-          className="w-16 h-px mx-auto mt-8 animate-fade-in delay-500"
-          style={{ background: c.primary }}
-        />
+        {/* 底部装饰线 + 菱形点缀 */}
+        <div className="flex items-center justify-center gap-2 mt-12 animate-fade-in delay-500">
+          <div className="w-16 h-px" style={{ background: `linear-gradient(90deg, transparent, ${c.primary}30)` }} />
+          <div className="w-1.5 h-1.5 rotate-45" style={{ background: `${c.primary}40` }} />
+          <div className="w-16 h-px" style={{ background: `linear-gradient(90deg, ${c.primary}30, transparent)` }} />
+        </div>
       </div>
     </section>
   );

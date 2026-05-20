@@ -62,11 +62,11 @@ export default function HomepageSocialProof() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {wishes.map((wish, index) => (
             <div
               key={wish.id}
-              className="group relative rounded-xl overflow-hidden animate-slide-up"
+              className="group relative rounded-lg overflow-hidden animate-slide-up"
               style={{
                 opacity: 0,
                 animationDelay: `${index * 80}ms`,

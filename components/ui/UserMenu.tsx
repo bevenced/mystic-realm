@@ -38,7 +38,7 @@ export default function UserMenu() {
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-2 w-48 rounded-xl shadow-lg overflow-hidden z-50"
+          className="absolute right-0 top-full mt-2 w-48 rounded-lg shadow-lg overflow-hidden z-50"
           style={{
             backgroundColor: "var(--color-card-bg)",
             border: "1px solid color-mix(in srgb, var(--color-text-muted) 15%, transparent)",

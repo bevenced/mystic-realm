@@ -65,7 +65,7 @@ function ProductRecommendationCard({
   return (
     <a
       href={`/shop?theme=${product.theme}`}
-      className="block rounded-xl p-4 transition-all hover:scale-[1.02]"
+      className="block rounded-lg p-4 transition-all hover:scale-[1.02]"
       style={{
         background: `${c.primary}08`,
         border: `1px solid ${c.primary}15`,

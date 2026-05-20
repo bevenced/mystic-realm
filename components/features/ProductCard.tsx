@@ -16,7 +16,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
 
   return (
     <div
-      className="group rounded-xl overflow-hidden hover-lift animate-slide-up"
+      className="group rounded-lg overflow-hidden hover-lift animate-slide-up"
       style={{
         background: c.surface,
         border: `1px solid ${c.primary}22`,

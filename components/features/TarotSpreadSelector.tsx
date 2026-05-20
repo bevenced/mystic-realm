@@ -20,7 +20,7 @@ export default function TarotSpreadSelector({ selected, onSelect }: TarotSpreadS
           <button
             key={spread.key}
             onClick={() => onSelect(spread.key)}
-            className="group text-left rounded-xl overflow-hidden hover-lift animate-slide-up"
+            className="group text-left rounded-lg overflow-hidden hover-lift animate-slide-up"
             style={{
               opacity: 0,
               animationDelay: `${spreads.indexOf(spread) * 100}ms`,

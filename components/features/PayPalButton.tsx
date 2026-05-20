@@ -30,7 +30,7 @@ export default function PayPalButton({
   if (!clientId) {
     return (
       <div
-        className="rounded-xl p-4 text-center"
+        className="rounded-lg p-4 text-center"
         style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}22` }}
       >
         <p className="text-xs tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>
@@ -52,7 +52,7 @@ export default function PayPalButton({
       }}
     >
       <div
-        className="rounded-xl p-6 mt-6"
+        className="rounded-lg p-6 mt-6"
         style={{
           background: `linear-gradient(135deg, ${c.primary}12 0%, ${c.surface} 100%)`,
           border: isFirstReading ? `2px solid ${c.primary}44` : `1px solid ${c.primary}33`,

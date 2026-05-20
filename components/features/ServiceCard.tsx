@@ -68,7 +68,7 @@ export default function ServiceCard({ service, isSelected, onSelect }: ServiceCa
   return (
     <button
       onClick={() => onSelect(service.key)}
-      className="group text-left rounded-xl overflow-hidden transition-all duration-300 animate-slide-up"
+      className="group text-left rounded-lg overflow-hidden transition-all duration-300 animate-slide-up"
       style={{
         background: isSelected ? `${c.primary}12` : c.surface,
         border: `2px solid ${isSelected ? c.primary : `${c.primary}22`}`,
@@ -82,7 +82,7 @@ export default function ServiceCard({ service, isSelected, onSelect }: ServiceCa
         <div className="flex items-start gap-4">
           {/* Emoji */}
           <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+            className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
             style={{
               backgroundColor: `${c.primary}12`,
             }}

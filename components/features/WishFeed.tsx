@@ -46,7 +46,7 @@ export default function WishFeed() {
 
   return (
     <div
-      className="rounded-xl overflow-hidden"
+      className="rounded-lg overflow-hidden"
       style={{
         background: c.surface,
         border: `1px solid ${c.primary}22`,

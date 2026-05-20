@@ -49,7 +49,7 @@ export default function ReviewStars({ service, onSubmitted }: ReviewStarsProps) 
   if (submitted) {
     return (
       <div
-        className="mt-8 rounded-xl p-5 text-center animate-fade-in"
+        className="mt-8 rounded-lg p-5 text-center animate-fade-in"
         style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}22` }}
       >
         <p className="text-lg mb-1">🙏</p>
@@ -63,7 +63,7 @@ export default function ReviewStars({ service, onSubmitted }: ReviewStarsProps) 
 
   return (
     <div
-      className="mt-8 rounded-xl p-5 animate-fade-in"
+      className="mt-8 rounded-lg p-5 animate-fade-in"
       style={{ background: `${c.primary}05`, border: `1px solid ${c.primary}15` }}
     >
       <p className="text-sm font-semibold text-center mb-3" style={{ color: c.text }}>

@@ -80,7 +80,7 @@ export default function TarotCardReveal({ cards, reading, isPaid, isRevealed }: 
                 >
                   {/* Card back */}
                   <div
-                    className="absolute inset-0 rounded-xl flex items-center justify-center"
+                    className="absolute inset-0 rounded-lg flex items-center justify-center"
                     style={{
                       backfaceVisibility: "hidden",
                       background: `linear-gradient(135deg, ${c.primary}, ${c.secondary})`,
@@ -92,7 +92,7 @@ export default function TarotCardReveal({ cards, reading, isPaid, isRevealed }: 
 
                   {/* Card front */}
                   <div
-                    className="absolute inset-0 rounded-xl flex flex-col items-center justify-center p-3"
+                    className="absolute inset-0 rounded-lg flex flex-col items-center justify-center p-3"
                     style={{
                       backfaceVisibility: "hidden",
                       transform: "rotateY(180deg)",
@@ -130,7 +130,7 @@ export default function TarotCardReveal({ cards, reading, isPaid, isRevealed }: 
           {!isPaid && reading.preview ? (
             /* Free preview */
             <div
-              className="rounded-xl p-6 mb-4"
+              className="rounded-lg p-6 mb-4"
               style={{
                 background: `${c.primary}08`,
                 border: `1px solid ${c.primary}22`,
@@ -145,7 +145,7 @@ export default function TarotCardReveal({ cards, reading, isPaid, isRevealed }: 
             <div className="space-y-6">
               {/* Overview */}
               <div
-                className="rounded-xl p-6"
+                className="rounded-lg p-6"
                 style={{
                   background: `${c.primary}08`,
                   border: `1px solid ${c.primary}22`,
@@ -168,7 +168,7 @@ export default function TarotCardReveal({ cards, reading, isPaid, isRevealed }: 
                   {reading.cards.map((cardReading, i) => (
                     <div
                       key={i}
-                      className="rounded-xl p-5"
+                      className="rounded-lg p-5"
                       style={{
                         background: c.surface,
                         border: `1px solid ${c.primary}15`,
@@ -199,7 +199,7 @@ export default function TarotCardReveal({ cards, reading, isPaid, isRevealed }: 
               {/* Summary */}
               {reading.summary && (
                 <div
-                  className="rounded-xl p-6"
+                  className="rounded-lg p-6"
                   style={{
                     background: `${c.accent}10`,
                     border: `1px solid ${c.accent}33`,
@@ -220,7 +220,7 @@ export default function TarotCardReveal({ cards, reading, isPaid, isRevealed }: 
               {/* Affirmation */}
               {reading.affirmation && (
                 <div
-                  className="rounded-xl p-6 text-center glow"
+                  className="rounded-lg p-6 text-center glow"
                   style={{ background: `${c.primary}08` }}
                 >
                   <p
