@@ -1,3 +1,9 @@
+const withSerwist = require("@serwist/next").default({
+  swSrc: "sw.ts",
+  swDest: "public/sw.js",
+  reloadOnOnline: true,
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -38,4 +44,4 @@ const nextConfig = {
   compress: true,
 };
 
-module.exports = nextConfig;
+module.exports = withSerwist(nextConfig);

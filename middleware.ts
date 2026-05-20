@@ -6,6 +6,7 @@ const publicRoutes = [
   "/sign-in",
   "/sign-up",
   "/blog",
+  "/chat",
   "/membership",
   "/shop",
   "/tools",

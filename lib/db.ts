@@ -113,6 +113,37 @@ export async function initDatabase() {
     );
   `;
 
+  // Conversations (multi-turn AI chat)
+  await sql`
+    CREATE TABLE IF NOT EXISTS conversations (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      title VARCHAR(255) NOT NULL DEFAULT 'New Conversation',
+      persona VARCHAR(50) NOT NULL DEFAULT 'meditation',
+      theme VARCHAR(50) NOT NULL DEFAULT 'meditation',
+      messages_count INT NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS messages (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+      role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'assistant')),
+      content TEXT NOT NULL,
+      metadata JSONB,
+      tokens_used INT DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_messages_conversation_created ON messages(conversation_id, created_at);
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_conversations_user_updated ON conversations(user_id, updated_at DESC);
+  `;
+
   // Point redemptions (one-time-use tokens for free readings)
   await sql`
     CREATE TABLE IF NOT EXISTS points_transactions (
@@ -871,6 +902,76 @@ export async function getTodayWishCount(userId: string): Promise<number> {
     console.error("getTodayWishCount error:", error);
     return 0;
   }
+}
+
+/** Create a new conversation for multi-turn AI chat. */
+export async function createConversation(
+  userId: string,
+  persona: string,
+  theme: string,
+  title?: string,
+) {
+  if (!userId) throw new Error("userId is required");
+  const result = await sql`
+    INSERT INTO conversations (user_id, persona, theme, title)
+    VALUES (${userId}, ${persona}, ${theme}, ${title || 'New Conversation'})
+    RETURNING *
+  `;
+  return result.rows[0];
+}
+
+/** Get recent conversations for a user. */
+export async function getConversations(userId: string, limit = 20) {
+  if (!userId) return [];
+  const result = await sql`
+    SELECT id, title, persona, theme, messages_count, created_at, updated_at
+    FROM conversations
+    WHERE user_id = ${userId}
+    ORDER BY updated_at DESC
+    LIMIT ${limit}
+  `;
+  return result.rows;
+}
+
+/** Get a single conversation with all its messages. */
+export async function getConversation(conversationId: string) {
+  if (!conversationId) throw new Error("conversationId is required");
+  const conv = await sql`SELECT * FROM conversations WHERE id = ${conversationId}`;
+  if (conv.rows.length === 0) return null;
+  const messages = await sql`
+    SELECT id, role, content, metadata, tokens_used, created_at
+    FROM messages
+    WHERE conversation_id = ${conversationId}
+    ORDER BY created_at ASC
+  `;
+  return { ...conv.rows[0], messages: messages.rows };
+}
+
+/** Add a message to a conversation and bump updated_at + messages_count. */
+export async function addMessage(
+  conversationId: string,
+  role: "user" | "assistant",
+  content: string,
+  tokensUsed = 0,
+) {
+  if (!conversationId) throw new Error("conversationId is required");
+  const result = await sql`
+    INSERT INTO messages (conversation_id, role, content, tokens_used)
+    VALUES (${conversationId}, ${role}, ${content}, ${tokensUsed})
+    RETURNING *
+  `;
+  await sql`
+    UPDATE conversations
+    SET messages_count = messages_count + 1, updated_at = NOW()
+    WHERE id = ${conversationId}
+  `;
+  return result.rows[0];
+}
+
+/** Delete a conversation and its messages (CASCADE handles messages). */
+export async function deleteConversation(conversationId: string) {
+  if (!conversationId) throw new Error("conversationId is required");
+  await sql`DELETE FROM conversations WHERE id = ${conversationId}`;
 }
 
 export async function getRecentPublicWishes(limit = 50) {

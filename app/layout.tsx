@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import Navbar from "@/components/ui/Navbar";
 import JsonLd from "@/components/ui/JsonLd";
+import PwaInstallPrompt from "@/components/ui/PwaInstallPrompt";
 import { getGoogleFontsUrl } from "@/lib/themes";
 
 export const viewport: Viewport = {
@@ -89,6 +90,7 @@ export default function RootLayout({
               {children}
             </AuthProvider>
             <JsonLd />
+            <PwaInstallPrompt />
           </ThemeProvider>
         </body>
       </html>

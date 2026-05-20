@@ -1,0 +1,183 @@
+"use client";
+
+import { useRef, useEffect, useState } from "react";
+import { useTheme } from "@/components/theme/ThemeProvider";
+import { useChat } from "@/hooks/useChat";
+import { getPersona, PERSONAS, type PersonaConfig } from "@/lib/personas";
+import ChatMessage from "@/components/chat/ChatMessage";
+import ChatWelcome from "@/components/chat/ChatWelcome";
+import PersonaSelector from "@/components/chat/PersonaSelector";
+import { Send, Sparkles, Trash2 } from "lucide-react";
+
+export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
+  const { currentTheme, setTheme } = useTheme();
+  const c = currentTheme.colors;
+  const [currentPersona, setCurrentPersona] = useState<PersonaConfig>(PERSONAS[0]);
+  const [input, setInput] = useState("");
+  const [error, setError] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  const { messages, isStreaming, sendMessage, resetConversation } = useChat({
+    persona: currentPersona.id,
+    onError: (msg) => setError(msg),
+  });
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isStreaming]);
+
+  const handleSelectPersona = (p: PersonaConfig) => {
+    if (isStreaming) return;
+    setCurrentPersona(p);
+    setTheme(p.themeKey);
+    resetConversation();
+    setError("");
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() || isStreaming) return;
+    setError("");
+    setInput("");
+    await sendMessage(input.trim());
+    inputRef.current?.focus();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const hasMessages = messages.length > 0;
+
+  return (
+    <div
+      className="flex flex-col h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)]"
+      style={{ backgroundColor: c.bg }}
+    >
+      {/* Persona selector — fixed top */}
+      <div
+        className="flex-shrink-0 px-4 py-3"
+        style={{
+          borderBottom: `1px solid ${c.primary}10`,
+          backgroundColor: c.bg,
+        }}
+      >
+        <PersonaSelector selected={currentPersona.id} onSelect={handleSelectPersona} />
+      </div>
+
+      {/* Messages area — scrollable */}
+      <div className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="mx-auto max-w-3xl">
+          {!hasMessages && !isStreaming ? (
+            <ChatWelcome
+              personaEmoji={currentPersona.emoji}
+              personaName={currentPersona.name}
+              starterQuestions={currentPersona.starterQuestions}
+              onSelectQuestion={(q) => {
+                setInput(q);
+                inputRef.current?.focus();
+              }}
+            />
+          ) : (
+            <>
+              {messages.map((msg) => (
+                <ChatMessage key={msg.id} role={msg.role} content={msg.content} />
+              ))}
+              {isStreaming && (
+                <ChatMessage role="assistant" content="" isStreaming />
+              )}
+            </>
+          )}
+          <div ref={bottomRef} />
+        </div>
+      </div>
+
+      {/* Input area — fixed bottom */}
+      <div
+        className="flex-shrink-0 px-4 py-4"
+        style={{
+          borderTop: `1px solid ${c.primary}10`,
+          backgroundColor: c.bg,
+        }}
+      >
+        <div className="mx-auto max-w-3xl">
+          {/* Error banner */}
+          {error && (
+            <div
+              className="mb-3 px-4 py-2 rounded-lg text-xs"
+              style={{ backgroundColor: "#E74C3C12", color: "#E74C3C", border: "1px solid #E74C3C20" }}
+            >
+              {error}
+            </div>
+          )}
+
+          <div className="flex items-end gap-3">
+            {/* Reset button */}
+            {hasMessages && (
+              <button
+                onClick={resetConversation}
+                className="flex-shrink-0 p-2.5 rounded-lg transition-all"
+                style={{ color: c.textMuted, border: `1px solid ${c.primary}10` }}
+                title="New conversation"
+                aria-label="New conversation"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+
+            {/* Input */}
+            <div
+              className="flex-1 flex items-end rounded-lg"
+              style={{
+                backgroundColor: `${c.primary}06`,
+                border: `1px solid ${c.primary}15`,
+              }}
+            >
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={`Ask ${currentPersona.name} anything...`}
+                rows={1}
+                className="flex-1 bg-transparent px-4 py-3 text-sm resize-none outline-none"
+                style={{ color: c.text }}
+              />
+            </div>
+
+            {/* Send button */}
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || isStreaming}
+              className="flex-shrink-0 p-2.5 rounded-lg transition-all"
+              style={{
+                backgroundColor: input.trim() && !isStreaming ? c.primary : `${c.primary}20`,
+                color: input.trim() && !isStreaming ? (currentTheme.isDark ? c.bg : "#FFFFFF") : c.textMuted,
+                cursor: input.trim() && !isStreaming ? "pointer" : "not-allowed",
+              }}
+              aria-label="Send message"
+            >
+              {isStreaming ? (
+                <Sparkles size={18} className="animate-spin" />
+              ) : (
+                <Send size={18} />
+              )}
+            </button>
+          </div>
+
+          {/* Hint */}
+          <p
+            className="text-[10px] mt-2 text-center"
+            style={{ color: c.textMuted }}
+          >
+            Press Enter to send · Shift+Enter for new line
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

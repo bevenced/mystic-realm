@@ -38,6 +38,9 @@ export default function Navbar() {
           <Link href="/dailyfortune" className="nav-link theme-transition hover:text-[var(--color-primary)]">
             Daily Fortune
           </Link>
+          <Link href="/chat" className="nav-link theme-transition hover:text-[var(--color-primary)]">
+            AI Chat
+          </Link>
           <Link href="/wish" className="nav-link theme-transition hover:text-[var(--color-primary)]">
             Daily Wish
           </Link>
