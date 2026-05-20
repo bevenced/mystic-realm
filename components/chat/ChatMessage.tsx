@@ -15,10 +15,12 @@ export default function ChatMessage({ role, content, isStreaming }: ChatMessageP
 
   return (
     <div
-      className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4 animate-fade-in`}
+      className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4 ${
+        isUser ? "animate-slide-in-right" : "animate-slide-in-left"
+      }`}
     >
       <div
-        className="max-w-[80%] md:max-w-[70%] px-4 py-3 rounded-lg text-sm leading-relaxed"
+        className="max-w-[80%] md:max-w-[70%] px-4 py-3 min-h-[44px] rounded-lg text-sm leading-relaxed"
         style={{
           backgroundColor: isUser ? `${c.primary}15` : `${c.surface}`,
           border: isUser ? "none" : `1px solid ${c.primary}10`,

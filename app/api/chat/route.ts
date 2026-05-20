@@ -9,6 +9,7 @@ import {
   createConversation,
   getConversation,
   addMessage,
+  searchKnowledge,
 } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -81,9 +82,19 @@ export async function POST(request: Request) {
       await addMessage(convId, "user", message.trim());
     }
 
+    // RAG: search knowledge base for relevant classical text chunks
+    const knowledgeChunks = await searchKnowledge(message.trim(), 3);
+    let systemPrompt = persona.systemPrompt;
+    if (knowledgeChunks.length > 0) {
+      const references = knowledgeChunks
+        .map((k) => `[${k.source}${k.chapter ? ` — ${k.chapter}` : ""}]\n${k.content}`)
+        .join("\n\n");
+      systemPrompt += `\n\nYou may reference the following classical texts when relevant to the user's question:\n${references}`;
+    }
+
     // Build message history
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
-      { role: "system", content: persona.systemPrompt },
+      { role: "system", content: systemPrompt },
     ];
 
     if (userId && convId && conversationId) {

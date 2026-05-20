@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useChat } from "@/hooks/useChat";
-import { getPersona, PERSONAS, type PersonaConfig } from "@/lib/personas";
+import { PERSONAS, type PersonaConfig } from "@/lib/personas";
 import ChatMessage from "@/components/chat/ChatMessage";
 import ChatWelcome from "@/components/chat/ChatWelcome";
 import PersonaSelector from "@/components/chat/PersonaSelector";
@@ -15,6 +15,7 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
   const [currentPersona, setCurrentPersona] = useState<PersonaConfig>(PERSONAS[0]);
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
+  const [transitioning, setTransitioning] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -29,11 +30,15 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
   }, [messages, isStreaming]);
 
   const handleSelectPersona = (p: PersonaConfig) => {
-    if (isStreaming) return;
-    setCurrentPersona(p);
-    setTheme(p.themeKey);
-    resetConversation();
-    setError("");
+    if (isStreaming || transitioning) return;
+    setTransitioning(true);
+    setTimeout(() => {
+      setCurrentPersona(p);
+      setTheme(p.themeKey);
+      resetConversation();
+      setError("");
+      setTimeout(() => setTransitioning(false), 100);
+    }, 250);
   };
 
   const handleSend = async () => {
@@ -55,12 +60,12 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
 
   return (
     <div
-      className="flex flex-col h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)]"
+      className="flex flex-col h-dvh max-h-dvh"
       style={{ backgroundColor: c.bg }}
     >
-      {/* Persona selector — fixed top */}
+      {/* Persona selector */}
       <div
-        className="flex-shrink-0 px-4 py-3"
+        className="flex-shrink-0 px-4 pt-3 pb-2"
         style={{
           borderBottom: `1px solid ${c.primary}10`,
           backgroundColor: c.bg,
@@ -69,7 +74,7 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
         <PersonaSelector selected={currentPersona.id} onSelect={handleSelectPersona} />
       </div>
 
-      {/* Messages area — scrollable */}
+      {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
         <div className="mx-auto max-w-3xl">
           {!hasMessages && !isStreaming ? (
@@ -96,16 +101,15 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
         </div>
       </div>
 
-      {/* Input area — fixed bottom */}
+      {/* Input area */}
       <div
-        className="flex-shrink-0 px-4 py-4"
+        className="flex-shrink-0 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
         style={{
           borderTop: `1px solid ${c.primary}10`,
           backgroundColor: c.bg,
         }}
       >
         <div className="mx-auto max-w-3xl">
-          {/* Error banner */}
           {error && (
             <div
               className="mb-3 px-4 py-2 rounded-lg text-xs"
@@ -116,20 +120,18 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
           )}
 
           <div className="flex items-end gap-3">
-            {/* Reset button */}
             {hasMessages && (
               <button
                 onClick={resetConversation}
-                className="flex-shrink-0 p-2.5 rounded-lg transition-all"
+                className="flex-shrink-0 w-[44px] h-[44px] flex items-center justify-center rounded-lg transition-all"
                 style={{ color: c.textMuted, border: `1px solid ${c.primary}10` }}
                 title="New conversation"
                 aria-label="New conversation"
               >
-                <Trash2 size={16} />
+                <Trash2 size={18} />
               </button>
             )}
 
-            {/* Input */}
             <div
               className="flex-1 flex items-end rounded-lg"
               style={{
@@ -144,16 +146,15 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
                 onKeyDown={handleKeyDown}
                 placeholder={`Ask ${currentPersona.name} anything...`}
                 rows={1}
-                className="flex-1 bg-transparent px-4 py-3 text-sm resize-none outline-none"
+                className="flex-1 bg-transparent px-4 py-[14px] text-sm resize-none outline-none"
                 style={{ color: c.text }}
               />
             </div>
 
-            {/* Send button */}
             <button
               onClick={handleSend}
               disabled={!input.trim() || isStreaming}
-              className="flex-shrink-0 p-2.5 rounded-lg transition-all"
+              className="flex-shrink-0 w-[44px] h-[44px] flex items-center justify-center rounded-lg transition-all"
               style={{
                 backgroundColor: input.trim() && !isStreaming ? c.primary : `${c.primary}20`,
                 color: input.trim() && !isStreaming ? (currentTheme.isDark ? c.bg : "#FFFFFF") : c.textMuted,
@@ -169,15 +170,22 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
             </button>
           </div>
 
-          {/* Hint */}
           <p
             className="text-[10px] mt-2 text-center"
             style={{ color: c.textMuted }}
           >
-            Press Enter to send · Shift+Enter for new line
+            Enter to send · Shift+Enter for new line
           </p>
         </div>
       </div>
+
+      {/* Persona transition overlay */}
+      {transitioning && (
+        <div
+          className="fixed inset-0 z-50 animate-fade-in"
+          style={{ backgroundColor: c.bg }}
+        />
+      )}
     </div>
   );
 }

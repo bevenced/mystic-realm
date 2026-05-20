@@ -144,6 +144,27 @@ export async function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_conversations_user_updated ON conversations(user_id, updated_at DESC);
   `;
 
+  // Enable pg_trgm extension for fuzzy text matching (RAG)
+  await sql`CREATE EXTENSION IF NOT EXISTS pg_trgm`;
+
+  // Knowledge base (classical Chinese texts for RAG — uses pg_trgm trigram similarity)
+  await sql`
+    CREATE TABLE IF NOT EXISTS knowledge_chunks (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      source VARCHAR(100) NOT NULL,
+      chapter VARCHAR(100),
+      content TEXT NOT NULL,
+      chunk_index INT NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_source ON knowledge_chunks(source);
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_trgm ON knowledge_chunks USING gin (content gin_trgm_ops);
+  `;
+
   // Point redemptions (one-time-use tokens for free readings)
   await sql`
     CREATE TABLE IF NOT EXISTS points_transactions (
@@ -1004,6 +1025,81 @@ export async function getPointsTransactions(userId: string, limit = 20) {
     return result.rows;
   } catch (error) {
     console.error("getPointsTransactions error:", error);
+    return [];
+  }
+}
+
+// ===== Knowledge Base Search (pg_trgm) =====
+
+export interface KnowledgeChunk {
+  id: string;
+  source: string;
+  chapter: string | null;
+  content: string;
+  chunk_index: number;
+  similarity: number;
+}
+
+/**
+ * Search classical Chinese texts using pg_trgm similarity.
+ * Falls back to ILIKE if the query is too short for trigrams.
+ */
+export async function searchKnowledge(
+  query: string,
+  limit = 5,
+  sourceFilter?: string,
+): Promise<KnowledgeChunk[]> {
+  if (!query || !query.trim()) return [];
+  const trimmed = query.trim();
+  try {
+    // Try trigram similarity first (works best with 3+ char queries)
+    if (trimmed.length >= 2) {
+      if (sourceFilter) {
+        const result = await sql`
+          SELECT id, source, chapter, content, chunk_index,
+                 similarity(content, ${trimmed}) AS sim
+          FROM knowledge_chunks
+          WHERE content % ${trimmed} AND source = ${sourceFilter}
+          ORDER BY sim DESC
+          LIMIT ${limit}
+        `;
+        if (result.rows.length > 0) return result.rows;
+      } else {
+        const result = await sql`
+          SELECT id, source, chapter, content, chunk_index,
+                 similarity(content, ${trimmed}) AS sim
+          FROM knowledge_chunks
+          WHERE content % ${trimmed}
+          ORDER BY sim DESC
+          LIMIT ${limit}
+        `;
+        if (result.rows.length > 0) return result.rows;
+      }
+    }
+
+    // Fallback: ILIKE search for short queries
+    const pattern = `%${trimmed}%`;
+    if (sourceFilter) {
+      const result = await sql`
+        SELECT id, source, chapter, content, chunk_index, 0 AS sim
+        FROM knowledge_chunks
+        WHERE content ILIKE ${pattern} AND source = ${sourceFilter}
+        ORDER BY chunk_index ASC
+        LIMIT ${limit}
+      `;
+      return result.rows;
+    } else {
+      const result = await sql`
+        SELECT id, source, chapter, content, chunk_index, 0 AS sim
+        FROM knowledge_chunks
+        WHERE content ILIKE ${pattern}
+        ORDER BY chunk_index ASC
+        LIMIT ${limit}
+      `;
+      return result.rows;
+    }
+  } catch (error) {
+    console.error("searchKnowledge error:", error);
     return [];
   }
 }
