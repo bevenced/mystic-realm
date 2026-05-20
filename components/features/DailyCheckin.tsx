@@ -32,11 +32,20 @@ interface CheckinToday {
   fortuneData?: StructuredFortune | null;
 }
 
+interface HistoryItem {
+  checkin_date: string;
+  streak: number;
+  points_earned: number;
+  fortune: string;
+  fortuneData?: StructuredFortune | null;
+}
+
 interface CheckinData {
   checkedIn: boolean;
   today: CheckinToday | null;
   baziContext?: BaziContext | null;
   totalPoints: number;
+  recentHistory?: HistoryItem[];
 }
 
 // ── Main Component ──
@@ -88,17 +97,8 @@ export default function DailyCheckin({
           setError(json.details ? `${json.error} (${json.details})` : json.error);
         }
       } else {
-        setData({
-          checkedIn: true,
-          today: {
-            streak: json.streak,
-            pointsEarned: json.pointsEarned,
-            fortune: json.fortune,
-            fortuneData: json.fortuneData || undefined,
-          },
-          baziContext: json.baziContext,
-          totalPoints: json.totalPoints,
-        });
+        // Re-fetch full status to get recentHistory
+        await fetchStatus();
       }
     } catch {
       setError("Network error. Please try again.");
@@ -262,6 +262,53 @@ export default function DailyCheckin({
                 🤖 AI-powered
               </span>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Check-in history ── */}
+      {data?.checkedIn && data.recentHistory && data.recentHistory.length > 0 && (
+        <div
+          className="px-6 py-4 space-y-2 animate-fade-in"
+          style={{ borderTop: `1px solid ${c.primary}10` }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+            <h4 className="text-[11px] font-bold tracking-wider uppercase" style={{ color: c.textMuted }}>
+              Check-in History
+            </h4>
+          </div>
+          <div className="space-y-1.5">
+            {data.recentHistory.map((h) => {
+              const dateStr = new Date(h.checkin_date).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              });
+              const hasFortuneData = !!h.fortuneData;
+              return (
+                <div
+                  key={h.checkin_date}
+                  className="flex items-center justify-between px-3 py-2 rounded-lg text-xs"
+                  style={{ background: `${c.primary}06` }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium" style={{ color: c.textMuted, minWidth: 56 }}>
+                      {dateStr}
+                    </span>
+                    <span className="flex items-center gap-1" style={{ color: c.text }}>
+                      <Flame size={11} style={{ color: "#FF6B35" }} />
+                      {h.streak}d
+                    </span>
+                    {hasFortuneData && (
+                      <span style={{ color: "#2ECC71" }}>✦</span>
+                    )}
+                  </div>
+                  <span className="font-semibold" style={{ color: c.primary }}>
+                    +{h.points_earned} pts
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

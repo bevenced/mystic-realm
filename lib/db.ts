@@ -115,6 +115,15 @@ export async function initDatabase() {
 
   // Point redemptions (one-time-use tokens for free readings)
   await sql`
+    CREATE TABLE IF NOT EXISTS points_transactions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      amount INTEGER NOT NULL,
+      type VARCHAR(50) NOT NULL,
+      description VARCHAR(255),
+      balance_after INTEGER NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
     CREATE TABLE IF NOT EXISTS point_redemptions (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -581,9 +590,14 @@ export async function getActiveSubscription(userId: string) {
 // ===== Points & Check-ins =====
 
 /**
- * Add points to a user and return the new total.
+ * Add points to a user and return the new total. Logs a transaction.
  */
-export async function addUserPoints(userId: string, points: number) {
+export async function addUserPoints(
+  userId: string,
+  points: number,
+  type = "earned",
+  description?: string,
+) {
   if (!userId) throw new Error("userId is required");
   try {
     const result = await sql`
@@ -591,7 +605,12 @@ export async function addUserPoints(userId: string, points: number) {
       WHERE id = ${userId}
       RETURNING points
     `;
-    return result.rows[0]?.points || 0;
+    const balanceAfter = result.rows[0]?.points || 0;
+    await sql`
+      INSERT INTO points_transactions (user_id, amount, type, description, balance_after)
+      VALUES (${userId}, ${points}, ${type}, ${description || null}, ${balanceAfter})
+    `;
+    return balanceAfter;
   } catch (error) {
     console.error("addUserPoints error:", error);
     throw error;
@@ -615,7 +634,11 @@ export async function getUserPoints(userId: string): Promise<number> {
 /**
  * Redeem points (deduct) if user has enough. Returns new balance or throws.
  */
-export async function redeemPoints(userId: string, points: number) {
+export async function redeemPoints(
+  userId: string,
+  points: number,
+  description?: string,
+) {
   if (!userId) throw new Error("userId is required");
   try {
     const result = await sql`
@@ -627,7 +650,12 @@ export async function redeemPoints(userId: string, points: number) {
       const current = await getUserPoints(userId);
       throw new Error(`Insufficient points (have ${current}, need ${points})`);
     }
-    return Number(result.rows[0]?.points || 0);
+    const balanceAfter = Number(result.rows[0]?.points || 0);
+    await sql`
+      INSERT INTO points_transactions (user_id, amount, type, description, balance_after)
+      VALUES (${userId}, ${-points}, 'redeem', ${description || null}, ${balanceAfter})
+    `;
+    return balanceAfter;
   } catch (error) {
     console.error("redeemPoints error:", error);
     throw error;
@@ -720,7 +748,7 @@ export async function performCheckin(userId: string, fortune: string): Promise<{
     `;
 
     // Add points to user
-    await addUserPoints(userId, pointsEarned);
+    await addUserPoints(userId, pointsEarned, "checkin", `Daily check-in (${streak}d streak)`);
 
     const row = result.rows[0] as {
       id: string;
@@ -857,6 +885,24 @@ export async function getRecentPublicWishes(limit = 50) {
     return result.rows;
   } catch (error) {
     console.error("getRecentPublicWishes error:", error);
+    return [];
+  }
+}
+
+/** Get recent points transactions for a user. */
+export async function getPointsTransactions(userId: string, limit = 20) {
+  if (!userId) return [];
+  try {
+    const result = await sql`
+      SELECT id, amount, type, description, balance_after, created_at
+      FROM points_transactions
+      WHERE user_id = ${userId}
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error("getPointsTransactions error:", error);
     return [];
   }
 }

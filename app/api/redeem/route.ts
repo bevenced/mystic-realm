@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Deduct points and create one-time redemption token
-    await redeemPoints(user.id, REDEEM_COST);
+    await redeemPoints(user.id, REDEEM_COST, `Redeem: ${service}`);
     const token = await createRedemption(user.id, service);
     const remainingPoints = await getUserPoints(user.id);
 

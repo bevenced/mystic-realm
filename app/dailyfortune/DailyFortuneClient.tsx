@@ -3,6 +3,7 @@
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import DailyCheckin from "@/components/features/DailyCheckin";
+import PointsActivity from "@/components/features/PointsActivity";
 import Link from "next/link";
 
 export default function DailyFortuneClient() {
@@ -59,6 +60,9 @@ export default function DailyFortuneClient() {
             </p>
           </div>
           <DailyCheckin isSignedIn={isSignedIn} />
+          <div className="mt-6">
+            <PointsActivity />
+          </div>
         </div>
       </div>
     </main>

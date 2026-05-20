@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     // Deduct points (redeemPoints atomically checks balance)
     let newPoints: number;
     try {
-      newPoints = await redeemPoints(user.id, limits.pointCost);
+      newPoints = await redeemPoints(user.id, limits.pointCost, `Wish: ${category}`);
     } catch {
       return NextResponse.json(
         { error: `Insufficient points. Each wish costs ${limits.pointCost} points.` },
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     if (emailSent) {
       const emailWishCount = wishes.filter(w => w.recipient_email).length;
       if (emailWishCount <= 3) {
-        newPoints = await addUserPoints(user.id, 5);
+        newPoints = await addUserPoints(user.id, 5, "wish_email_bonus", "Email blessing bonus");
         emailBonusEarned = 5;
       }
     }
