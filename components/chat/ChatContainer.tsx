@@ -65,13 +65,15 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
     >
       {/* Persona selector */}
       <div
-        className="flex-shrink-0 px-4 pt-3 pb-2"
+        className="flex-shrink-0 pt-3 pb-2"
         style={{
           borderBottom: `1px solid ${c.primary}10`,
           backgroundColor: c.bg,
         }}
       >
-        <PersonaSelector selected={currentPersona.id} onSelect={handleSelectPersona} />
+        <div className="mx-auto max-w-3xl">
+          <PersonaSelector selected={currentPersona.id} onSelect={handleSelectPersona} />
+        </div>
       </div>
 
       {/* Messages area */}

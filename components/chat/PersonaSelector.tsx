@@ -44,7 +44,7 @@ export default function PersonaSelector({ selected, onSelect }: PersonaSelectorP
       {/* Persona cards — horizontal scroll */}
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto px-8 py-2"
+        className="flex gap-3 overflow-x-auto px-0 py-2"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {PERSONAS.map((p) => {
