@@ -111,6 +111,7 @@ Rating meanings:
 
 Rules:
 - The "name" field for each aspect MUST be exactly one of these five English values: "Wealth", "Career", "Relationships", "Health", "Social". Do not translate them.
+- "luckyColor" MUST be a valid CSS color name in English (e.g. "Red", "Gold", "Green", "Blue", "Purple"). Do not translate it.
 - Keep each note under 120 characters
 - Always reference the Five Elements in your reasoning
 - Advice must be practical and specific to today, not generic
