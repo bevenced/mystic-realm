@@ -17,6 +17,7 @@ import FortuneShare from "@/components/features/FortuneShare";
 interface BaziContext {
   dayMaster: string;
   dayMasterElement: string;
+  dayMasterYinYang: string;
   zodiac: string;
   elementCounts: Record<string, number>;
   todayStem: string;

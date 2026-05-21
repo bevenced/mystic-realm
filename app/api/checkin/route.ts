@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
       baziContext = {
         dayMaster: `${bazi.dayMasterYinYang} ${bazi.dayMasterElement}`,
         dayMasterElement: bazi.dayMasterElement,
+        dayMasterYinYang: bazi.dayMasterYinYang,
         zodiac: bazi.day.zodiac,
         elementCounts: bazi.elementCounts,
         todayStem: todayPillar.stem,
@@ -152,6 +153,7 @@ export async function POST(request: NextRequest) {
     const baziContext = {
       dayMaster: `${bazi.dayMasterYinYang} ${bazi.dayMasterElement}`,
       dayMasterElement: bazi.dayMasterElement,
+      dayMasterYinYang: bazi.dayMasterYinYang,
       zodiac: bazi.day.zodiac,
       elementCounts: bazi.elementCounts,
       todayStem: todayPillar.stem,

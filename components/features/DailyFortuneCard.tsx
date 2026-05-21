@@ -7,6 +7,7 @@ import type { StructuredFortune, FortuneAspect } from "@/lib/ai-fortune";
 interface BaziContext {
   dayMaster: string;
   dayMasterElement: string;
+  dayMasterYinYang: string;
   zodiac: string;
   elementCounts: Record<string, number>;
   todayStem: string;
@@ -231,9 +232,11 @@ export default function DailyFortuneCard({
           {/* BaZi summary */}
           {baziCtx && (
             <p className="text-xs mt-1.5" style={{ color: c.textMuted }}>
-              {ELEMENT_EMOJI[baziCtx.dayMasterElement] || "★"} {baziCtx.dayMaster}
+              {ELEMENT_EMOJI[baziCtx.dayMasterElement] || "★"}{" "}
+              {t.dailyFortune.yinYang[baziCtx.dayMasterYinYang] || baziCtx.dayMasterYinYang}{" "}
+              {t.dailyFortune.elements[baziCtx.dayMasterElement] || baziCtx.dayMasterElement}
               <span className="mx-2">·</span>
-              {baziCtx.zodiac}
+              {t.dailyFortune.zodiacs[baziCtx.zodiac] || baziCtx.zodiac}
             </p>
           )}
         </div>
@@ -273,7 +276,7 @@ export default function DailyFortuneCard({
             <span className="font-medium" style={{ color: c.text }}>
               {t.dailyFortune.luckyColor}{" "}
               <span className="inline-block w-3 h-3 rounded-full align-middle mx-1" style={{ backgroundColor: fortuneData.luckyColor.toLowerCase() }} />
-              <span style={{ color: c.primary }}>{fortuneData.luckyColor}</span>
+              <span style={{ color: c.primary }}>{t.dailyFortune.colorNames[fortuneData.luckyColor] || fortuneData.luckyColor}</span>
             </span>
           </div>
           <div

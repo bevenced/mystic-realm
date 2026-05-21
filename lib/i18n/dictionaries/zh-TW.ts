@@ -201,6 +201,19 @@ export const dictionary: Dictionary = {
       Health: "健康",
       Social: "社交",
     },
+    yinYang: { Yin: "陰", Yang: "陽" },
+    elements: { Wood: "木", Fire: "火", Earth: "土", Metal: "金", Water: "水" },
+    zodiacs: {
+      Rat: "鼠", Ox: "牛", Tiger: "虎", Rabbit: "兔",
+      Dragon: "龍", Snake: "蛇", Horse: "馬", Goat: "羊",
+      Monkey: "猴", Rooster: "雞", Dog: "狗", Pig: "豬",
+    },
+    colorNames: {
+      Red: "紅色", Blue: "藍色", Green: "綠色", Gold: "金色",
+      Purple: "紫色", White: "白色", Black: "黑色", Yellow: "黃色",
+      Orange: "橙色", Pink: "粉色", Silver: "銀色", Brown: "棕色",
+      Gray: "灰色", Grey: "灰色", Cyan: "青色", Magenta: "品紅",
+    },
   },
   wish: {
     title: "每日許願",

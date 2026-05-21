@@ -203,6 +203,19 @@ export const dictionary: Dictionary = {
       Health: "Health",
       Social: "Social",
     },
+    yinYang: { Yin: "Yin", Yang: "Yang" },
+    elements: { Wood: "Wood", Fire: "Fire", Earth: "Earth", Metal: "Metal", Water: "Water" },
+    zodiacs: {
+      Rat: "Rat", Ox: "Ox", Tiger: "Tiger", Rabbit: "Rabbit",
+      Dragon: "Dragon", Snake: "Snake", Horse: "Horse", Goat: "Goat",
+      Monkey: "Monkey", Rooster: "Rooster", Dog: "Dog", Pig: "Pig",
+    },
+    colorNames: {
+      Red: "Red", Blue: "Blue", Green: "Green", Gold: "Gold",
+      Purple: "Purple", White: "White", Black: "Black", Yellow: "Yellow",
+      Orange: "Orange", Pink: "Pink", Silver: "Silver", Brown: "Brown",
+      Gray: "Gray", Grey: "Grey", Cyan: "Cyan", Magenta: "Magenta",
+    },
   },
   wish: {
     title: "Daily Wish",

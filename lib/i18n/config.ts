@@ -156,6 +156,10 @@ export interface Dictionary {
     aiPowered: string;
     brandFooter: string;
     aspectNames: Record<string, string>;
+    yinYang: Record<string, string>;
+    elements: Record<string, string>;
+    zodiacs: Record<string, string>;
+    colorNames: Record<string, string>;
   };
   wish: {
     title: string;
