@@ -475,4 +475,72 @@ export const dictionary: Dictionary = {
     securePayment: "通过 PayPal 安全支付",
     processing: "处理中...",
   },
+  personas: {
+    meditation: {
+      name: "冥想导师",
+      title: "正念与呼吸导师",
+      description: "平静、滋养的正念与冥想指导",
+      starterQuestions: [
+        "引导我进行一次 5 分钟的呼吸练习",
+        "如何平复焦虑的心绪？",
+        "一天中什么时间冥想最好？",
+        "帮我练习正念行走",
+      ],
+    },
+    healing: {
+      name: "疗愈导师",
+      title: "能量与自然疗愈导师",
+      description: "温暖、有同理心的能量疗愈与自然养生指导",
+      starterQuestions: [
+        "如何平衡我的脉轮？",
+        "哪种水晶最适合情绪疗愈？",
+        "给我讲讲海底轮",
+        "如何净化我的能量场？",
+      ],
+    },
+    fengshui: {
+      name: "风水大师",
+      title: "风水与空间和谐大师",
+      description: "关于风水、空间布局与能量流动的权威指导",
+      starterQuestions: [
+        "如何布置卧室才能有好风水？",
+        "大门朝东意味着什么？",
+        "如何通过风水招财进宝？",
+        "我的客厅缺少哪些元素？",
+      ],
+    },
+    bazi: {
+      name: "八字智者",
+      title: "四柱命理分析师",
+      description: "关于八字命理分析与人生周期的深刻智慧",
+      starterQuestions: [
+        "我的日主揭示了我的什么性格？",
+        "如何推算我的八字命盘？",
+        "解释我命盘中的五行",
+        "什么是大运，它如何影响我？",
+      ],
+    },
+    tarot: {
+      name: "塔罗师",
+      title: "神秘塔罗解读者",
+      description: "直觉敏锐、富有戏剧性的塔罗解读与牌义解释",
+      starterQuestions: [
+        "给我做一个今日三牌占卜",
+        "愚人牌在感情中代表什么？",
+        "解读我占卜中的大阿尔卡纳牌",
+        "如何通过塔罗连接我的直觉？",
+      ],
+    },
+    astrology: {
+      name: "占星师",
+      title: "宇宙星图分析师",
+      description: "基于行星运动与出生星盘的深度占星洞见",
+      starterQuestions: [
+        "我的出生星盘对我的职业道路有什么启示？",
+        "本周的水逆对我有什么影响？",
+        "解释我的太阳、月亮和上升星座的含义",
+        "现在有哪些行星过境？",
+      ],
+    },
+  },
 } as const;

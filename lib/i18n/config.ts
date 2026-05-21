@@ -368,4 +368,10 @@ export interface Dictionary {
     securePayment: string;
     processing: string;
   };
+  personas: Record<string, {
+    name: string;
+    title: string;
+    description: string;
+    starterQuestions: string[];
+  }>;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { CHAT_STYLES, type ChatStyle } from "@/lib/chat-styles";
 
 interface AgentStyleSelectorProps {
@@ -15,6 +16,7 @@ export default function AgentStyleSelector({
   disabled,
 }: AgentStyleSelectorProps) {
   const { currentTheme } = useTheme();
+  const { locale } = useLocale();
   const c = currentTheme.colors;
 
   if (CHAT_STYLES.length === 0) return null;
@@ -39,7 +41,7 @@ export default function AgentStyleSelector({
             title={style.description}
           >
             <span className="text-xs">{style.emoji}</span>
-            <span className="font-medium whitespace-nowrap">{style.name}</span>
+            <span className="font-medium whitespace-nowrap">{locale === "en" ? style.nameEn : style.name}</span>
           </button>
         );
       })}

@@ -477,4 +477,72 @@ export const dictionary: Dictionary = {
     securePayment: "Secure payment via PayPal",
     processing: "Processing...",
   },
+  personas: {
+    meditation: {
+      name: "Meditation Guide",
+      title: "Mindfulness & Breath Guide",
+      description: "Calm, nurturing guidance for mindfulness and meditation practice",
+      starterQuestions: [
+        "Guide me through a 5-minute breathing exercise",
+        "How can I calm my anxious mind?",
+        "What is the best time of day to meditate?",
+        "Help me practice mindful walking",
+      ],
+    },
+    healing: {
+      name: "Healing Guide",
+      title: "Energy & Natural Healing Guide",
+      description: "Warm, empathetic guidance for energy healing and natural wellness",
+      starterQuestions: [
+        "How can I balance my chakras?",
+        "Which crystal is best for emotional healing?",
+        "Tell me about the root chakra",
+        "How can I cleanse my energy field?",
+      ],
+    },
+    fengshui: {
+      name: "Feng Shui Master",
+      title: "Feng Shui & Space Harmony Master",
+      description: "Authoritative guidance on feng shui, space arrangement, and energy flow",
+      starterQuestions: [
+        "How should I arrange my bedroom for good energy?",
+        "What does my front door facing east mean?",
+        "How can I attract prosperity through Feng Shui?",
+        "Which elements are missing from my living room?",
+      ],
+    },
+    bazi: {
+      name: "BaZi Sage",
+      title: "Four Pillars Destiny Analyst",
+      description: "Profound wisdom on BaZi (Four Pillars) destiny analysis and life cycles",
+      starterQuestions: [
+        "What does my Day Master reveal about my personality?",
+        "How do I calculate my BaZi chart?",
+        "Explain the Five Elements in my chart",
+        "What is a Luck Cycle and how does it affect me?",
+      ],
+    },
+    tarot: {
+      name: "Tarot Reader",
+      title: "Mystical Tarot Interpreter",
+      description: "Intuitive, dramatic tarot readings and card interpretations",
+      starterQuestions: [
+        "Give me a three-card reading for today",
+        "What does The Fool card mean in relationships?",
+        "Interpret the Major Arcana in my reading",
+        "How do I connect with my intuition through tarot?",
+      ],
+    },
+    astrology: {
+      name: "Astrologer",
+      title: "Cosmic Pattern Analyst",
+      description: "Deep astrological insights based on planetary movements and birth charts",
+      starterQuestions: [
+        "What does my birth chart say about my career path?",
+        "How does this week's Mercury retrograde affect me?",
+        "Explain the meaning of my Sun, Moon, and Rising signs",
+        "What planetary transits are happening right now?",
+      ],
+    },
+  },
 } as const;

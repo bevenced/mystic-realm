@@ -64,7 +64,7 @@ export default function PersonaSelector({ selected, onSelect }: PersonaSelectorP
               }}
             >
               <span className="text-lg">{p.emoji}</span>
-              <span className="font-medium whitespace-nowrap">{p.name}</span>
+              <span className="font-medium whitespace-nowrap">{t.personas[p.id]?.name || p.name}</span>
             </button>
           );
         })}

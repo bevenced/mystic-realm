@@ -475,4 +475,72 @@ export const dictionary: Dictionary = {
     securePayment: "透過 PayPal 安全支付",
     processing: "處理中...",
   },
+  personas: {
+    meditation: {
+      name: "冥想導師",
+      title: "正念與呼吸導師",
+      description: "平靜、滋養的正念與冥想指導",
+      starterQuestions: [
+        "引導我進行一次 5 分鐘的呼吸練習",
+        "如何平復焦慮的心緒？",
+        "一天中什麼時間冥想最好？",
+        "幫我練習正念行走",
+      ],
+    },
+    healing: {
+      name: "療癒導師",
+      title: "能量與自然療癒導師",
+      description: "溫暖、有同理心的能量療癒與自然養生指導",
+      starterQuestions: [
+        "如何平衡我的脈輪？",
+        "哪種水晶最適合情緒療癒？",
+        "給我講講海底輪",
+        "如何淨化我的能量場？",
+      ],
+    },
+    fengshui: {
+      name: "風水大師",
+      title: "風水與空間和諧大師",
+      description: "關於風水、空間佈局與能量流動的權威指導",
+      starterQuestions: [
+        "如何佈置臥室才能有好風水？",
+        "大門朝東意味著什麼？",
+        "如何通過風水招財進寶？",
+        "我的客廳缺少哪些元素？",
+      ],
+    },
+    bazi: {
+      name: "八字智者",
+      title: "四柱命理分析師",
+      description: "關於八字命理分析與人生週期的深刻智慧",
+      starterQuestions: [
+        "我的日主揭示了我的什麼性格？",
+        "如何推算我的八字命盤？",
+        "解釋我命盤中的五行",
+        "什麼是大運，它如何影響我？",
+      ],
+    },
+    tarot: {
+      name: "塔羅師",
+      title: "神秘塔羅解讀者",
+      description: "直覺敏銳、富有戲劇性的塔羅解讀與牌義解釋",
+      starterQuestions: [
+        "給我做一個今日三牌占卜",
+        "愚人牌在感情中代表什麼？",
+        "解讀我占卜中的大阿爾卡納牌",
+        "如何通過塔羅連接我的直覺？",
+      ],
+    },
+    astrology: {
+      name: "占星師",
+      title: "宇宙星圖分析師",
+      description: "基於行星運動與出生星盤的深度占星洞見",
+      starterQuestions: [
+        "我的出生星盤對我的職業道路有什麼啟示？",
+        "本週的水逆對我有什麼影響？",
+        "解釋我的太陽、月亮和上升星座的含義",
+        "現在有哪些行星過境？",
+      ],
+    },
+  },
 } as const;

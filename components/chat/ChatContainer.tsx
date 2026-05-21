@@ -108,8 +108,8 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
           {!hasMessages && !isStreaming ? (
             <ChatWelcome
               personaEmoji={currentPersona.emoji}
-              personaName={currentPersona.name}
-              starterQuestions={currentPersona.starterQuestions}
+              personaName={t.personas[currentPersona.id]?.name || currentPersona.name}
+              starterQuestions={t.personas[currentPersona.id]?.starterQuestions || currentPersona.starterQuestions}
               onSelectQuestion={(q) => {
                 setInput(q);
                 inputRef.current?.focus();
@@ -167,8 +167,8 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
                 onClick={resetConversation}
                 className="flex-shrink-0 w-[44px] h-[44px] flex items-center justify-center rounded-lg transition-all"
                 style={{ color: c.textMuted, border: `1px solid ${c.primary}10` }}
-                title="New conversation"
-                aria-label="New conversation"
+                title={t.chat.newConversation}
+                aria-label={t.chat.newConversation}
               >
                 <Trash2 size={18} />
               </button>
@@ -193,7 +193,7 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
                   el.style.height = Math.min(el.scrollHeight, 200) + "px";
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={t.chat.placeholder.replace("{name}", currentPersona.name)}
+                placeholder={t.chat.placeholder.replace("{name}", t.personas[currentPersona.id]?.name || currentPersona.name)}
                 rows={1}
                 className="flex-1 bg-transparent px-4 py-[14px] text-sm resize-none outline-none"
                 style={{ color: c.text, minHeight: "48px" }}
@@ -217,7 +217,7 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "scale(1)";
               }}
-              aria-label="Send message"
+              aria-label={t.chat.send}
             >
               {isStreaming ? (
                 <Sparkles size={18} className="animate-spin" />
