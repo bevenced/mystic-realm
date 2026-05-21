@@ -38,10 +38,10 @@ export default function MobileMenu() {
 
       {open && (
         <div
-          className="fixed inset-0 z-40 animate-fade-in"
+          className="fixed inset-0 z-50 animate-fade-in overflow-y-auto"
           style={{ backgroundColor: "var(--color-bg)" }}
         >
-          <div className="flex flex-col items-center justify-center min-h-screen gap-8">
+          <div className="flex flex-col items-center justify-center min-h-screen gap-8 py-16">
             <button
               onClick={() => setOpen(false)}
               className="absolute top-4 right-4 p-2"
