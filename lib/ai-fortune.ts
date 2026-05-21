@@ -81,7 +81,7 @@ export interface StructuredFortune {
   luckyNumber: number;
 }
 
-const STRUCTURED_SYSTEM_PROMPT = `You are an expert in Chinese BaZi (Four Pillars of Destiny) metaphysics, writing for an English-speaking audience. Your task is to analyze how today's Heavenly Stem and Earthly Branch energy interacts with the user's natal BaZi chart, then produce a structured daily fortune covering five life aspects.
+const STRUCTURED_SYSTEM_PROMPT = `You are an expert in Chinese BaZi (Four Pillars of Destiny) metaphysics. Your task is to analyze how today's Heavenly Stem and Earthly Branch energy interacts with the user's natal BaZi chart, then produce a structured daily fortune covering five life aspects.
 
 Five Elements interaction rules for context:
 - Same element as the Day Master → supportive, harmonious
