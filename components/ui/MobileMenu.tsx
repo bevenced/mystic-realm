@@ -31,7 +31,7 @@ export default function MobileMenu() {
         onClick={() => setOpen(!open)}
         className="p-2"
         style={{ color: "var(--color-text)" }}
-        aria-label="Toggle menu"
+        aria-label={t.ui.toggleMenu}
       >
         {open ? <X size={22} /> : <Menu size={22} />}
       </button>
@@ -46,7 +46,7 @@ export default function MobileMenu() {
               onClick={() => setOpen(false)}
               className="absolute top-4 right-4 p-2"
               style={{ color: "var(--color-text)" }}
-              aria-label="Close menu"
+              aria-label={t.ui.closeMenu}
             >
               <X size={24} />
             </button>

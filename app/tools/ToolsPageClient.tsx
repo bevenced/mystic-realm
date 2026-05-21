@@ -298,7 +298,7 @@ export default function ToolsPageClient() {
                 {activeService === "tarot" && (
                   <div>
                     <label className="block text-sm font-medium mb-3" style={{ color: c.text }}>
-                      Choose Your Spread
+                      {t.tools.chooseSpread}
                     </label>
                     <TarotSpreadSelector selected={spreadKey} onSelect={setSpreadKey} />
                   </div>
@@ -378,18 +378,18 @@ export default function ToolsPageClient() {
                         {t.tools.homeType}
                       </label>
                       <div className="grid grid-cols-2 gap-2">
-                        {(["apartment", "house", "studio", "office"] as const).map((t) => (
+                        {(["apartment", "house", "studio", "office"] as const).map((ht) => (
                           <button
-                            key={t}
-                            onClick={() => setHomeType(t)}
+                            key={ht}
+                            onClick={() => setHomeType(ht)}
                             className="py-2.5 rounded-lg text-sm capitalize transition-all"
                             style={{
-                              backgroundColor: homeType === t ? c.primary : `${c.primary}08`,
-                              color: homeType === t ? activeTextColor : c.textMuted,
+                              backgroundColor: homeType === ht ? c.primary : `${c.primary}08`,
+                              color: homeType === ht ? activeTextColor : c.textMuted,
                               border: `1px solid ${c.primary}33`,
                             }}
                           >
-                            {t === "office" ? "🏢 Office" : t === "apartment" ? "🏢 Apartment" : t === "house" ? "🏠 House" : "🏡 Studio"}
+                            {t.tools.homeTypes[ht] || ht}
                           </button>
                         ))}
                       </div>
@@ -486,24 +486,18 @@ export default function ToolsPageClient() {
                         {t.tools.meditationType}
                       </label>
                       <div className="grid grid-cols-2 gap-2">
-                        {([
-                          { key: "stress", label: "😌 Stress Release" },
-                          { key: "sleep", label: "😴 Deep Sleep" },
-                          { key: "focus", label: "🎯 Mental Focus" },
-                          { key: "self-healing", label: "💚 Self-Healing" },
-                          { key: "gratitude", label: "🙏 Gratitude" },
-                        ] as const).map((opt) => (
+                        {(["stress", "sleep", "focus", "self-healing", "gratitude"] as const).map((key) => (
                           <button
-                            key={opt.key}
-                            onClick={() => setMeditationType(opt.key)}
+                            key={key}
+                            onClick={() => setMeditationType(key)}
                             className="py-2.5 rounded-lg text-sm transition-all"
                             style={{
-                              backgroundColor: meditationType === opt.key ? c.primary : `${c.primary}08`,
-                              color: meditationType === opt.key ? activeTextColor : c.textMuted,
+                              backgroundColor: meditationType === key ? c.primary : `${c.primary}08`,
+                              color: meditationType === key ? activeTextColor : c.textMuted,
                               border: `1px solid ${c.primary}33`,
                             }}
                           >
-                            {opt.label}
+                            {t.tools.meditationTypes[key] || key}
                           </button>
                         ))}
                       </div>
@@ -524,7 +518,7 @@ export default function ToolsPageClient() {
                               border: `1px solid ${c.primary}33`,
                             }}
                           >
-                            {d} min
+                            {d}{t.tools.minSuffix}
                           </button>
                         ))}
                       </div>
@@ -703,7 +697,7 @@ function ResultDisplay({
                 <span className="text-3xl">{card.emoji}</span>
                 <p className="text-xs font-semibold mt-1" style={{ color: c.primary }}>{card.name}</p>
                 <p className="text-xs mt-0.5" style={{ color: card.isReversed ? "#E74C3C" : c.textMuted }}>
-                  {card.isReversed ? "Reversed" : "Upright"}
+                  {card.isReversed ? t.tools.tarotReversed : t.tools.tarotUpright}
                 </p>
               </div>
             ))}
@@ -718,7 +712,7 @@ function ResultDisplay({
               if (!p) return null;
               return (
                 <div key={pillar} className="rounded-xl p-4 text-center" style={{ background: c.surface, border: `1px solid ${c.primary}22` }}>
-                  <p className="text-xs uppercase tracking-wider mb-2" style={{ color: c.textMuted }}>{pillar} Pillar</p>
+                  <p className="text-xs uppercase tracking-wider mb-2" style={{ color: c.textMuted }}>{(t.dashboard as Record<string,string>)[pillar] || pillar}{t.tools.pillarSuffix}</p>
                   <p className="text-2xl font-bold" style={{ color: c.primary }}>{p.stem}{p.branch}</p>
                   <p className="text-xs mt-1" style={{ color: c.textMuted }}>{p.stemEn} / {p.branchEn}</p>
                   <p className="text-xs mt-0.5" style={{ color: c.textMuted }}>{p.stemElement} / {p.branchElement}</p>
@@ -732,9 +726,9 @@ function ResultDisplay({
         {service === "astrology" && "sunSign" in extraData && (
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: "☀ Sun", value: `${(extraData as Record<string, string>).sunSign} ${(extraData as Record<string, string>).sunSymbol}`, sub: (extraData as Record<string, string>).element },
-              { label: "☽ Moon", value: `${(extraData as Record<string, string>).moonSign} ${(extraData as Record<string, string>).moonSymbol}`, sub: "Emotions" },
-              { label: "⬆ Rising", value: `${(extraData as Record<string, string>).risingSign} ${(extraData as Record<string, string>).risingSymbol}`, sub: (extraData as Record<string, string>).modality },
+              { label: t.tools.astrologySun, value: `${(extraData as Record<string, string>).sunSign} ${(extraData as Record<string, string>).sunSymbol}`, sub: (extraData as Record<string, string>).element },
+              { label: t.tools.astrologyMoon, value: `${(extraData as Record<string, string>).moonSign} ${(extraData as Record<string, string>).moonSymbol}`, sub: t.tools.astrologyEmotions },
+              { label: t.tools.astrologyRising, value: `${(extraData as Record<string, string>).risingSign} ${(extraData as Record<string, string>).risingSymbol}`, sub: (extraData as Record<string, string>).modality },
             ].map((item) => (
               <div key={item.label} className="rounded-xl p-4 text-center" style={{ background: c.surface, border: `1px solid ${c.primary}22` }}>
                 <p className="text-xs" style={{ color: c.textMuted }}>{item.label}</p>
@@ -766,7 +760,7 @@ function ResultDisplay({
               <span className="text-3xl">{card.emoji}</span>
               <p className="text-xs font-semibold mt-1" style={{ color: c.primary }}>{card.name}</p>
               <p className="text-xs mt-0.5" style={{ color: card.isReversed ? "#E74C3C" : c.textMuted }}>
-                {card.isReversed ? "Reversed" : "Upright"}
+                {card.isReversed ? t.tools.tarotReversed : t.tools.tarotUpright}
               </p>
             </div>
           ))}
@@ -787,7 +781,7 @@ function ResultDisplay({
             if (!p) return null;
             return (
               <div key={pillar} className="rounded-xl p-4 text-center" style={{ background: c.surface, border: `1px solid ${c.primary}22` }}>
-                <p className="text-xs uppercase tracking-wider mb-2" style={{ color: c.textMuted }}>{pillar} Pillar</p>
+                <p className="text-xs uppercase tracking-wider mb-2" style={{ color: c.textMuted }}>{(t.dashboard as Record<string,string>)[pillar] || pillar}{t.tools.pillarSuffix}</p>
                 <p className="text-2xl font-bold" style={{ color: c.primary }}>{p.stem}{p.branch}</p>
                 <p className="text-xs mt-1" style={{ color: c.textMuted }}>{p.stemEn} / {p.branchEn}</p>
                 <p className="text-xs mt-0.5" style={{ color: c.textMuted }}>{p.stemElement} / {p.branchElement}</p>
@@ -807,9 +801,9 @@ function ResultDisplay({
       <div className="space-y-6 animate-fade-in">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "☀ Sun", value: `${ed.sunSign} ${ed.sunSymbol}`, sub: ed.element },
-            { label: "☽ Moon", value: `${ed.moonSign} ${ed.moonSymbol}`, sub: "Emotions" },
-            { label: "⬆ Rising", value: `${ed.risingSign} ${ed.risingSymbol}`, sub: ed.modality },
+            { label: t.tools.astrologySun, value: `${ed.sunSign} ${ed.sunSymbol}`, sub: ed.element },
+            { label: t.tools.astrologyMoon, value: `${ed.moonSign} ${ed.moonSymbol}`, sub: t.tools.astrologyEmotions },
+            { label: t.tools.astrologyRising, value: `${ed.risingSign} ${ed.risingSymbol}`, sub: ed.modality },
           ].map((item) => (
             <div key={item.label} className="rounded-xl p-4 text-center" style={{ background: c.surface, border: `1px solid ${c.primary}22` }}>
               <p className="text-xs" style={{ color: c.textMuted }}>{item.label}</p>
@@ -852,6 +846,7 @@ function renderContent(value: unknown): string {
 // ===== Full Reading Sections =====
 function FullReadingSections({ reading }: { reading: Record<string, unknown> }) {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
 
   if (!reading) return null;
@@ -871,17 +866,17 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
   const sections: Array<{ title: string; content: string | unknown; isHighlight?: boolean }> = [];
 
   // Overview
-  if (reading.overview) sections.push({ title: "Overview", content: renderContent(reading.overview), isHighlight: true });
+  if (reading.overview) sections.push({ title: t.tools.readingSections.overview, content: renderContent(reading.overview), isHighlight: true });
 
   // Title (Meditation)
   if (reading.title && typeof reading.title === "string") {
     sections.push({ title: "✨ " + reading.title, content: reading.introduction ? renderContent(reading.introduction) : "", isHighlight: true });
   } else if (reading.introduction) {
-    sections.push({ title: "Introduction", content: renderContent(reading.introduction) });
+    sections.push({ title: t.tools.readingSections.introduction, content: renderContent(reading.introduction) });
   }
 
   // Day Master (BaZi)
-  if (reading.dayMaster) sections.push({ title: "Day Master", content: renderContent(reading.dayMaster) });
+  if (reading.dayMaster) sections.push({ title: t.tools.readingSections.dayMaster, content: renderContent(reading.dayMaster) });
 
   // Element Analysis (BaZi) — structured instead of JSON
   if (reading.elementAnalysis) {
@@ -893,7 +888,7 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
           return `**${label}:** ${typeof v === "string" ? v : Array.isArray(v) ? v.join(", ") : JSON.stringify(v)}`;
         })
         .join("\n");
-      sections.push({ title: "Element Analysis", content: parts });
+      sections.push({ title: t.tools.readingSections.elementAnalysis, content: parts });
     }
   }
 
@@ -901,9 +896,9 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
   if (reading.bigThree) {
     const bt = reading.bigThree as Record<string, unknown>;
     if (typeof bt === "object") {
-      if (bt.sun) sections.push({ title: "☀ Sun Sign", content: renderContent(bt.sun) });
-      if (bt.moon) sections.push({ title: "☽ Moon Sign", content: renderContent(bt.moon) });
-      if (bt.rising) sections.push({ title: "⬆ Rising Sign", content: renderContent(bt.rising) });
+      if (bt.sun) sections.push({ title: t.tools.readingSections.sunSign, content: renderContent(bt.sun) });
+      if (bt.moon) sections.push({ title: t.tools.readingSections.moonSign, content: renderContent(bt.moon) });
+      if (bt.rising) sections.push({ title: t.tools.readingSections.risingSign, content: renderContent(bt.rising) });
     }
   }
 
@@ -911,25 +906,26 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
   if (reading.planetaryInfluences && Array.isArray(reading.planetaryInfluences)) {
     const pi = reading.planetaryInfluences as Array<{ planet?: string; influence?: string }>;
     const parts = pi.map((p) => `**${p.planet || "Planet"}:** ${p.influence || ""}`).join("\n\n");
-    if (parts) sections.push({ title: "🪐 Planetary Influences", content: parts });
+    if (parts) sections.push({ title: t.tools.readingSections.planetaryInfluences, content: parts });
   }
 
   // Current Transits (Astrology)
   if (reading.currentTransits) {
-    sections.push({ title: "🌌 Current Transits", content: renderContent(reading.currentTransits) });
+    sections.push({ title: t.tools.readingSections.currentTransits, content: renderContent(reading.currentTransits) });
   }
 
   // Life Aspects
   if (reading.lifeAspects) {
     const la = reading.lifeAspects as Record<string, unknown>;
     if (typeof la === "object") {
+      const sectionTitles = t.tools.readingSections as Record<string, string>;
       const aspectLabels: Record<string, string> = {
-        personality: "👤 Personality",
-        career: "💼 Career",
-        relationships: "💕 Relationships",
-        health: "🏥 Health",
-        love: "❤️ Love",
-        growth: "🌱 Growth",
+        personality: sectionTitles.personality,
+        career: sectionTitles.career,
+        relationships: sectionTitles.relationships,
+        health: sectionTitles.health,
+        love: sectionTitles.love,
+        growth: sectionTitles.growth,
       };
       Object.entries(la).forEach(([key, value]) => {
         if (value) {
@@ -954,18 +950,18 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
         return line;
       })
       .join("\n\n");
-    sections.push({ title: "Pillar Analysis", content: parts });
+    sections.push({ title: t.tools.readingSections.pillarAnalysis, content: parts });
   }
 
   // Lucky Elements (BaZi)
   if (Array.isArray(reading.luckyElements)) {
     const le = reading.luckyElements as string[];
-    sections.push({ title: "🍀 Lucky Elements", content: le.map((e) => `• ${e}`).join("\n") });
+    sections.push({ title: t.tools.readingSections.luckyElements, content: le.map((e) => `• ${e}`).join("\n") });
   }
 
   // Overall Score (Feng Shui)
   if (reading.overallScore) {
-    sections.push({ title: "📊 Overall Score", content: `${reading.overallScore} / 10`, isHighlight: true });
+    sections.push({ title: t.tools.readingSections.overallScore, content: `${reading.overallScore} / 10`, isHighlight: true });
   }
 
   // Areas (Feng Shui)
@@ -989,7 +985,7 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
       const parts = Object.entries(el)
         .map(([k, v]) => `**${k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())}:** ${typeof v === "string" ? v : Array.isArray(v) ? v.join(", ") : JSON.stringify(v)}`)
         .join("\n");
-      sections.push({ title: "🔮 Elements", content: parts });
+      sections.push({ title: t.tools.readingSections.elements, content: parts });
     }
   }
 
@@ -997,16 +993,16 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
   if (reading.colors) {
     const cols = reading.colors as Record<string, unknown>;
     if (Array.isArray(cols.recommended)) {
-      sections.push({ title: "🎨 Recommended Colors", content: (cols.recommended as string[]).join(", ") });
+      sections.push({ title: t.tools.readingSections.recommendedColors, content: (cols.recommended as string[]).join(", ") });
     }
     if (Array.isArray(cols.avoid)) {
-      sections.push({ title: "⚠️ Colors to Avoid", content: (cols.avoid as string[]).join(", ") });
+      sections.push({ title: t.tools.readingSections.colorsToAvoid, content: (cols.avoid as string[]).join(", ") });
     }
   }
 
   // Top Improvements (Feng Shui)
   if (Array.isArray(reading.topImprovements)) {
-    sections.push({ title: "Top Improvements", content: (reading.topImprovements as string[]).map((i, idx) => `${idx + 1}. ${i}`).join("\n") });
+    sections.push({ title: t.tools.readingSections.topImprovements, content: (reading.topImprovements as string[]).map((i, idx) => `${idx + 1}. ${i}`).join("\n") });
   }
 
   // Meditation script
@@ -1025,35 +1021,35 @@ function FullReadingSections({ reading }: { reading: Record<string, unknown> }) 
     if (hold) parts.push(hold);
     parts.push(`Exhale ${bp.exhale}`);
     if (bp.description) parts.push(`\n${bp.description}`);
-    sections.push({ title: "🌬 Breathing Pattern", content: parts.join(", ") });
+    sections.push({ title: t.tools.readingSections.breathingPattern, content: parts.join(", ") });
   }
 
   // Affirmations
   if (Array.isArray(reading.affirmations)) {
     sections.push({
-      title: "✨ Affirmations",
+      title: t.tools.readingSections.affirmations,
       content: (reading.affirmations as string[]).map((a) => `• "${a}"`).join("\n"),
     });
   }
 
   // Single affirmation
   if (reading.affirmation && !Array.isArray(reading.affirmations)) {
-    sections.push({ title: "Your Affirmation", content: reading.affirmation as string, isHighlight: true });
+    sections.push({ title: t.tools.readingSections.yourAffirmation, content: reading.affirmation as string, isHighlight: true });
   }
 
   // Tips (Meditation)
   if (Array.isArray(reading.tips)) {
     sections.push({
-      title: "💡 Tips",
+      title: t.tools.readingSections.tips,
       content: (reading.tips as string[]).map((t) => `• ${t}`).join("\n"),
     });
   }
 
   // Advice
-  if (reading.advice) sections.push({ title: "Advice", content: renderContent(reading.advice) });
+  if (reading.advice) sections.push({ title: t.tools.readingSections.advice, content: renderContent(reading.advice) });
 
   // Summary
-  if (reading.summary) sections.push({ title: "Summary", content: renderContent(reading.summary) });
+  if (reading.summary) sections.push({ title: t.tools.readingSections.summary, content: renderContent(reading.summary) });
 
   // ===== CATCH-ALL: if no sections were extracted, display the whole reading =====
   if (sections.length === 0) {

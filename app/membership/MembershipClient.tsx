@@ -36,7 +36,7 @@ const PLANS = [
     popular: false,
     features: ["unlimitedReadings", "fullInterpretations", "readingHistory", "exportPdf"] as const,
     cta: "Subscribe $2.99/week",
-    badge: "Best Value",
+    badge: "bestValue" as const,
   },
   {
     id: "mystic",
@@ -46,7 +46,7 @@ const PLANS = [
     popular: true,
     features: ["unlimitedReadings", "fullInterpretations", "readingHistory", "exportPdf", "prioritySupport"] as const,
     cta: "Subscribe $9.99/month",
-    badge: "Most Popular",
+    badge: "mostPopular" as const,
   },
   {
     id: "mystic-yearly",
@@ -56,7 +56,7 @@ const PLANS = [
     popular: false,
     features: ["unlimitedReadings", "fullInterpretations", "readingHistory", "exportPdf", "prioritySupport"] as const,
     cta: "Subscribe $99.99/year",
-    badge: "Save 17%",
+    badge: "savePercent" as const,
     saveAmount: "$19.89",
   },
 ];
@@ -76,7 +76,7 @@ export default function MembershipClient() {
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
   const { isSignedIn } = useAuth();
-  const { t } = useLocale();
+  const { t, tf, locale } = useLocale();
 
   const [subStatus, setSubStatus] = useState<SubStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,13 +119,13 @@ export default function MembershipClient() {
         });
       }
     } catch {
-      setError("Failed to activate subscription. Please contact support.");
+      setError(t.common.networkError);
     }
   };
 
   const formatDate = (d: string | null) => {
     if (!d) return "";
-    return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    return new Date(d).toLocaleDateString(locale === "zh-TW" ? "zh-TW" : locale === "zh-CN" ? "zh-CN" : "en-US", { year: "numeric", month: "long", day: "numeric" });
   };
 
   const getFeatureText = (key: string) => {
@@ -153,7 +153,7 @@ export default function MembershipClient() {
               <Sparkles size={24} style={{ color: c.primary }} />
             </div>
             <p className="text-sm max-w-md mx-auto" style={{ color: c.textMuted }}>
-              One monthly pass. Unlimited mystical guidance. Your personal oracle, always available.
+              {t.membership.subtitle}
             </p>
           </div>
 
@@ -166,7 +166,7 @@ export default function MembershipClient() {
               <div className="flex items-center justify-center gap-2">
                 <Zap size={16} style={{ color: c.primary }} />
                 <span className="text-sm font-semibold" style={{ color: c.primary }}>
-                  Limited Time: Yearly plan saves $19.89 compared to monthly
+                  {t.membership.limitedOfferBanner}
                 </span>
                 <Zap size={16} style={{ color: c.primary }} />
               </div>
@@ -184,11 +184,11 @@ export default function MembershipClient() {
                   className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-3"
                   style={{ background: "#2ECC9915", color: "#2ECC99" }}
                 >
-                  <Check size={14} /> Active
+                  <Check size={14} /> {t.membership.active}
                 </div>
-                <h2 className="text-lg font-bold mb-1" style={{ color: c.text }}>You're a Mystic Member</h2>
+                <h2 className="text-lg font-bold mb-1" style={{ color: c.text }}>{t.membership.mysticMember}</h2>
                 <p className="text-sm" style={{ color: c.textMuted }}>
-                  Unlimited readings until {formatDate(subStatus.expiresAt)}
+                  {t.membership.readingsUntil} {formatDate(subStatus.expiresAt)}
                 </p>
               </div>
               <div className="text-center mt-6">
@@ -202,7 +202,7 @@ export default function MembershipClient() {
                   }}
                 >
                   <Sparkles size={18} />
-                  Start a Reading
+                  {t.membership.startReading}
                 </Link>
               </div>
             </div>
@@ -229,7 +229,7 @@ export default function MembershipClient() {
                       className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase whitespace-nowrap"
                       style={{ background: c.primary, color: isDark ? c.bg : "#FFFFFF" }}
                     >
-                      {plan.badge}
+                      {(t.membership as unknown as Record<string,string>)[plan.badge] || plan.badge}
                     </div>
                   )}
 
@@ -243,19 +243,19 @@ export default function MembershipClient() {
                     </span>
                     {plan.period && (
                       <span className="text-xs ml-1" style={{ color: c.textMuted }}>
-                        /{plan.period === "weekly" ? "week" : plan.period === "yearly" ? "year" : "month"}
+                        {plan.period === "weekly" ? t.membership.weekly : plan.period === "yearly" ? t.membership.yearly : t.membership.monthly}
                       </span>
                     )}
                   </div>
 
                   {plan.saveAmount && (
                     <p className="text-xs mb-3" style={{ color: "#4CAF50" }}>
-                      Save {plan.saveAmount} vs monthly
+                      {tf("membership.saveVsMonthly", { amount: plan.saveAmount })}
                     </p>
                   )}
 
                   <div className="text-xs mb-4" style={{ color: c.textMuted }}>
-                    {plan.id === "free" ? "No sign-up needed" : "Cancel anytime"}
+                    {plan.id === "free" ? t.membership.noSignup : t.membership.cancelAnytime}
                   </div>
 
                   <ul className="space-y-2 mb-5 flex-1">
@@ -272,7 +272,7 @@ export default function MembershipClient() {
 
                   {plan.id === "free" ? (
                     <div className="text-center text-xs" style={{ color: c.textMuted }}>
-                      Always free
+                      {t.membership.alwaysFree}
                     </div>
                   ) : isSignedIn ? (
                     <PayPalButton
@@ -291,7 +291,7 @@ export default function MembershipClient() {
                         color: isDark ? c.bg : "#FFFFFF",
                       }}
                     >
-                      Sign Up to Subscribe
+                      {t.membership.signUpToSubscribe}
                     </Link>
                   )}
                 </div>
@@ -303,7 +303,7 @@ export default function MembershipClient() {
           {!isSignedIn && !subStatus?.isActive && (
             <div className="text-center mt-10 animate-fade-in">
               <p className="text-sm mb-4" style={{ color: c.textMuted }}>
-                Sign in to manage your membership or check your subscription status.
+                {t.membership.signInToManage}
               </p>
               <Link
                 href="/sign-in"
@@ -313,7 +313,7 @@ export default function MembershipClient() {
                   color: isDark ? c.bg : "#FFFFFF",
                 }}
               >
-                Sign In
+                {t.nav.signIn}
               </Link>
             </div>
           )}

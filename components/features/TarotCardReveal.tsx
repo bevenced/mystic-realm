@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export interface RevealedCard {
   name: string;
@@ -26,6 +27,7 @@ interface TarotCardRevealProps {
 
 export default function TarotCardReveal({ cards, reading, isPaid, isRevealed }: TarotCardRevealProps) {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
 
@@ -114,7 +116,7 @@ export default function TarotCardReveal({ cards, reading, isPaid, isRevealed }: 
                         fontSize: "10px",
                       }}
                     >
-                      {card.isReversed ? "Reversed" : "Upright"}
+                      {card.isReversed ? t.tools.tarotReversed : t.tools.tarotUpright}
                     </p>
                   </div>
                 </div>
@@ -155,7 +157,7 @@ export default function TarotCardReveal({ cards, reading, isPaid, isRevealed }: 
                   className="text-sm font-semibold tracking-wider uppercase mb-3"
                   style={{ color: c.primary }}
                 >
-                  Overview
+                  {t.tools.readingSections.overview}
                 </h3>
                 <p className="text-sm leading-relaxed" style={{ color: c.text }}>
                   {reading.overview}
@@ -209,7 +211,7 @@ export default function TarotCardReveal({ cards, reading, isPaid, isRevealed }: 
                     className="text-sm font-semibold tracking-wider uppercase mb-3"
                     style={{ color: c.accent }}
                   >
-                    Summary
+                    {t.tools.readingSections.summary}
                   </h3>
                   <p className="text-sm leading-relaxed" style={{ color: c.text }}>
                     {reading.summary}
@@ -227,7 +229,7 @@ export default function TarotCardReveal({ cards, reading, isPaid, isRevealed }: 
                     className="text-xs tracking-wider uppercase mb-2"
                     style={{ color: c.textMuted }}
                   >
-                    Your Affirmation
+                    {t.tools.readingSections.yourAffirmation}
                   </p>
                   <p className="text-base italic font-medium" style={{ color: c.primary }}>
                     &ldquo;{reading.affirmation}&rdquo;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useRef, useEffect } from "react";
 
 interface DaYunCycle {
@@ -28,6 +29,7 @@ const ELEMENT_COLORS: Record<string, string> = {
 
 export default function DestinyChart({ cycles, currentAge }: DestinyChartProps) {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDark = currentTheme.isDark;
@@ -122,15 +124,15 @@ export default function DestinyChart({ cycles, currentAge }: DestinyChartProps) 
         ctx.fillStyle = c.primary;
         ctx.font = "9px system-ui, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText(`Now (${currentAge})`, ageX, pad.top - 8);
+        ctx.fillText(`${t.dashboard.nowAge} (${currentAge})`, ageX, pad.top - 8);
       }
     }
-  }, [cycles, currentAge, c.primary, isDark]);
+  }, [cycles, currentAge, c.primary, isDark, t]);
 
   if (cycles.length === 0) {
     return (
       <div className="p-6 rounded-xl text-center text-sm" style={{ color: c.textMuted, backgroundColor: c.surface, border: `1px solid ${c.primary}10` }}>
-        Complete your BaZi profile to see your destiny chart.
+        {t.dashboard.noDestinyChart}
       </div>
     );
   }
@@ -139,7 +141,7 @@ export default function DestinyChart({ cycles, currentAge }: DestinyChartProps) 
     <div>
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg">📈</span>
-        <span className="text-sm font-semibold" style={{ color: c.text }}>Da Yun — Decade Luck Cycles</span>
+        <span className="text-sm font-semibold" style={{ color: c.text }}>{t.dashboard.daYunTitle}</span>
       </div>
       <canvas
         ref={canvasRef}

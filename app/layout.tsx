@@ -65,7 +65,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL("https://mystic-realm.wentchine.shop"),
     title: {
       default: meta.title,
-      template: "%s — Orient Wisdom",
+      template: locale === "zh-CN" ? "%s — 东方智慧" : locale === "zh-TW" ? "%s — 東方智慧" : "%s — Orient Wisdom",
     },
     description: meta.description,
     keywords: [
@@ -90,20 +90,20 @@ export async function generateMetadata(): Promise<Metadata> {
     appleWebApp: {
       capable: true,
       statusBarStyle: "black-translucent",
-      title: "Orient Wisdom",
+      title: locale === "zh-CN" ? "东方智慧" : locale === "zh-TW" ? "東方智慧" : "Orient Wisdom",
     },
     openGraph: {
       title: meta.title,
       description: meta.description,
       url: "https://mystic-realm.wentchine.shop",
-      siteName: "Orient Wisdom",
+      siteName: locale === "zh-CN" ? "东方智慧" : locale === "zh-TW" ? "東方智慧" : "Orient Wisdom",
       type: "website",
       locale: locale === "zh-CN" ? "zh_CN" : locale === "zh-TW" ? "zh_TW" : "en_US",
       images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Orient Wisdom",
+      title: locale === "zh-CN" ? "东方智慧" : locale === "zh-TW" ? "東方智慧" : "Orient Wisdom",
       description: meta.description,
       images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
     },

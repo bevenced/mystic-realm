@@ -65,9 +65,11 @@ export interface Dictionary {
     invalidImageType: string;
     imageTooLarge: string;
     failedProcessImage: string;
+    cards: string;
   };
   membership: {
     title: string;
+    subtitle: string;
     free: string;
     mystic: string;
     monthly: string;
@@ -79,6 +81,17 @@ export interface Dictionary {
     mostPopular: string;
     savePercent: string;
     limitedOffer: string;
+    limitedOfferBanner: string;
+    active: string;
+    mysticMember: string;
+    readingsUntil: string;
+    startReading: string;
+    saveVsMonthly: string;
+    noSignup: string;
+    cancelAnytime: string;
+    alwaysFree: string;
+    signUpToSubscribe: string;
+    signInToManage: string;
   };
   points: {
     title: string;
@@ -188,6 +201,9 @@ export interface Dictionary {
     upgradeToMystic: string;
     planLabel: string;
     freePlan: string;
+    daYunTitle: string;
+    noDestinyChart: string;
+    nowAge: string;
   };
   compatibility: {
     title: string;
@@ -261,6 +277,18 @@ export interface Dictionary {
     failedSubmitReview: string;
     fullReading: string;
     comingSoonBadge: string;
+    chooseSpread: string;
+    homeTypes: Record<string, string>;
+    meditationTypes: Record<string, string>;
+    minSuffix: string;
+    tarotReversed: string;
+    tarotUpright: string;
+    pillarSuffix: string;
+    astrologySun: string;
+    astrologyMoon: string;
+    astrologyRising: string;
+    astrologyEmotions: string;
+    readingSections: Record<string, string>;
   };
   shop: {
     title: string;
@@ -346,6 +374,10 @@ export interface Dictionary {
     moreShare: string;
     prevPersona: string;
     nextPersona: string;
+    toggleMenu: string;
+    closeMenu: string;
+    switchLanguage: string;
+    dismiss: string;
   };
   userMenu: {
     profile: string;
@@ -374,4 +406,14 @@ export interface Dictionary {
     description: string;
     starterQuestions: string[];
   }>;
+  privacy: {
+    title: string;
+    lastUpdated: string;
+    sections: Record<string, { heading: string; body: string }>;
+  };
+  terms: {
+    title: string;
+    lastUpdated: string;
+    sections: Record<string, { heading: string; body: string }>;
+  };
 }

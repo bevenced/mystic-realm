@@ -2,6 +2,7 @@
 
 import { spreads, type SpreadConfig } from "@/lib/tarot";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 interface TarotSpreadSelectorProps {
   selected: string;
@@ -10,6 +11,7 @@ interface TarotSpreadSelectorProps {
 
 export default function TarotSpreadSelector({ selected, onSelect }: TarotSpreadSelectorProps) {
   const { currentTheme } = useTheme();
+  const { t, tf } = useLocale();
   const c = currentTheme.colors;
 
   return (
@@ -57,7 +59,7 @@ export default function TarotSpreadSelector({ selected, onSelect }: TarotSpreadS
                 className="text-xs mb-2 theme-transition"
                 style={{ color: c.textMuted, opacity: 0.6 }}
               >
-                <span lang="zh">{spread.nameZh}</span> &middot; {spread.cardCount} Cards
+                <span lang="zh">{spread.nameZh}</span> &middot; {spread.cardCount} {t.common.cards}
               </p>
 
               {/* Positions preview */}
@@ -88,7 +90,7 @@ export default function TarotSpreadSelector({ selected, onSelect }: TarotSpreadS
                     className="text-xs px-2 py-0.5 rounded-full"
                     style={{ color: c.textMuted, opacity: 0.5, fontSize: "10px" }}
                   >
-                    +{spread.positions.length - 4} more
+                    {tf("common.more", { n: spread.positions.length - 4 })}
                   </span>
                 )}
               </div>

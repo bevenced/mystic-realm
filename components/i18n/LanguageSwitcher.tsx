@@ -7,7 +7,7 @@ import { Globe } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 export default function LanguageSwitcher() {
-  const { locale, setLocale } = useLocale();
+  const { locale, setLocale, t } = useLocale();
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
   const [open, setOpen] = useState(false);
@@ -31,7 +31,7 @@ export default function LanguageSwitcher() {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-all"
         style={{ color: c.textMuted, border: `1px solid ${c.primary}12` }}
-        aria-label="Switch language"
+        aria-label={t.ui.switchLanguage}
       >
         <Globe size={14} />
         <span>{current.nativeName}</span>

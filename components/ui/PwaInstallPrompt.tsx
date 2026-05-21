@@ -72,7 +72,7 @@ export default function PwaInstallPrompt() {
         onClick={() => setShow(false)}
         className="p-1 rounded-full"
         style={{ color: c.textMuted }}
-        aria-label="Dismiss"
+        aria-label={t.ui.dismiss}
       >
         <X size={16} />
       </button>
