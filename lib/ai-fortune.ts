@@ -1,6 +1,7 @@
 // ===== Personalized AI Fortune Prompts =====
 
 import { getDeepSeek } from "@/lib/deepseek";
+import { getLocaleInstruction } from "@/lib/ai-locale";
 import type { BaZiResult, BaZiPillar } from "@/lib/bazi";
 
 // ── Legacy single-sentence fortune (fallback) ──
@@ -42,7 +43,7 @@ Elements: ${elements}
 ${streakPart}`;
 }
 
-export async function generateFortune(ctx: FortuneContext): Promise<string | null> {
+export async function generateFortune(ctx: FortuneContext, locale?: string): Promise<string | null> {
   const deepseek = getDeepSeek();
   if (!deepseek) return null;
 
@@ -50,7 +51,7 @@ export async function generateFortune(ctx: FortuneContext): Promise<string | nul
     const completion = await deepseek.chat.completions.create({
       model: "deepseek-chat",
       messages: [
-        { role: "system", content: FORTUNE_SYSTEM_PROMPT },
+        { role: "system", content: FORTUNE_SYSTEM_PROMPT + "\n\n" + getLocaleInstruction(locale || "en") },
         { role: "user", content: buildFortunePrompt(ctx) },
       ],
       max_tokens: 80,
@@ -109,6 +110,7 @@ Rating meanings:
 - "neutral" = neither strongly supportive nor conflicting
 
 Rules:
+- The "name" field for each aspect MUST be exactly one of these five English values: "Wealth", "Career", "Relationships", "Health", "Social". Do not translate them.
 - Keep each note under 120 characters
 - Always reference the Five Elements in your reasoning
 - Advice must be practical and specific to today, not generic
@@ -140,6 +142,7 @@ Analyze how today's ${todayPillar.stemElement} (stem) / ${todayPillar.branchElem
 export async function generateStructuredFortune(
   ctx: FortuneContext,
   todayPillar: BaZiPillar,
+  locale?: string,
 ): Promise<StructuredFortune | null> {
   const deepseek = getDeepSeek();
   if (!deepseek) return null;
@@ -148,7 +151,7 @@ export async function generateStructuredFortune(
     const completion = await deepseek.chat.completions.create({
       model: "deepseek-chat",
       messages: [
-        { role: "system", content: STRUCTURED_SYSTEM_PROMPT },
+        { role: "system", content: STRUCTURED_SYSTEM_PROMPT + "\n\n" + getLocaleInstruction(locale || "en") },
         { role: "user", content: buildEnhancedPrompt(ctx, todayPillar) },
       ],
       max_tokens: 600,

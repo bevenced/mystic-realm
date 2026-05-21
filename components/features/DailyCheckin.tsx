@@ -90,7 +90,11 @@ export default function DailyCheckin({
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/checkin", { method: "POST" });
+      const res = await fetch("/api/checkin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale }),
+      });
       const json = await res.json();
       if (json.error) {
         if (json.code === "PROFILE_REQUIRED") {

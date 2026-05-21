@@ -194,6 +194,13 @@ export const dictionary: Dictionary = {
     shareLuckyNumLabel: "幸运数字：",
     aiPowered: "AI 驱动",
     brandFooter: "东方智慧 ✦",
+    aspectNames: {
+      Wealth: "财运",
+      Career: "事业",
+      Relationships: "感情",
+      Health: "健康",
+      Social: "社交",
+    },
   },
   wish: {
     title: "每日许愿",

@@ -155,6 +155,7 @@ export interface Dictionary {
     shareLuckyNumLabel: string;
     aiPowered: string;
     brandFooter: string;
+    aspectNames: Record<string, string>;
   };
   wish: {
     title: string;

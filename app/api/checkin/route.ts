@@ -84,6 +84,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   }
 
+  let locale: string | undefined;
+  try {
+    const body = await request.json();
+    locale = body.locale;
+  } catch {
+    // no body or invalid JSON — proceed without locale
+  }
+
   try {
     // If user hasn't set birth info, require profile completion first
     if (!user.birth_date) {
@@ -122,14 +130,14 @@ export async function POST(request: NextRequest) {
     let fortuneData: StructuredFortune | null = null;
     let aiGenerated = false;
 
-    const structured = await generateStructuredFortune(fortuneContext, todayPillar);
+    const structured = await generateStructuredFortune(fortuneContext, todayPillar, locale);
     if (structured) {
       fortuneData = structured;
       fortune = JSON.stringify(structured);
       aiGenerated = true;
     } else {
       // Fallback to single-sentence AI fortune
-      const single = await generateFortune(fortuneContext);
+      const single = await generateFortune(fortuneContext, locale);
       if (single) {
         fortune = single;
         aiGenerated = true;

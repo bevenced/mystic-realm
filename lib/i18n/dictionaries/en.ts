@@ -196,6 +196,13 @@ export const dictionary: Dictionary = {
     shareLuckyNumLabel: "Lucky #:",
     aiPowered: "AI-powered",
     brandFooter: "Orient Wisdom ✦",
+    aspectNames: {
+      Wealth: "Wealth",
+      Career: "Career",
+      Relationships: "Relationships",
+      Health: "Health",
+      Social: "Social",
+    },
   },
   wish: {
     title: "Daily Wish",

@@ -50,9 +50,11 @@ function ratingColor(rating: "strong" | "neutral" | "weak"): string {
 function FortuneRadar({
   aspects,
   colors,
+  aspectLabels,
 }: {
   aspects: FortuneAspect[];
   colors: Record<string, string>;
+  aspectLabels: Record<string, string>;
 }) {
   const sz = 280;
   const cx = sz / 2;
@@ -139,7 +141,7 @@ function FortuneRadar({
                 textAnchor="middle" dominantBaseline="middle"
                 fill={colors.text} fontSize="11" fontWeight="600"
               >
-                {aspects[i].name}
+                {aspectLabels[aspects[i].name] || aspects[i].name}
               </text>
             </g>
           );
@@ -241,7 +243,7 @@ export default function DailyFortuneCard({
           <p className="text-xs font-semibold tracking-wider text-center mb-3" style={{ color: c.textMuted }}>
             ✦ {t.dailyFortune.fortuneTitle}
           </p>
-          <FortuneRadar aspects={fortuneData.aspects} colors={c} />
+          <FortuneRadar aspects={fortuneData.aspects} colors={c} aspectLabels={t.dailyFortune.aspectNames as unknown as Record<string, string>} />
         </div>
 
         {/* Advice */}
