@@ -220,7 +220,7 @@ export default function DailyFortuneCard({
             className="text-2xl md:text-3xl font-bold tracking-wide"
             style={{ color: c.primary }}
           >
-            {userName || "Your"}
+            {userName || t.dailyFortune.shareNameFallback}
             <span className="ml-2 font-normal" style={{ color: c.text, opacity: 0.7 }}>
               {t.dailyFortune.todayFortune}
             </span>
@@ -298,7 +298,7 @@ export default function DailyFortuneCard({
         }}
       >
         <span className="text-[11px] font-medium tracking-wider" style={{ color: c.textMuted }}>
-          Orient Wisdom ✦
+          {t.dailyFortune.brandFooter}
         </span>
         <div className="flex items-center gap-3">
           <span className="text-xs" style={{ color: c.textMuted }}>

@@ -178,6 +178,11 @@ export const dictionary: Dictionary = {
     signInPrompt: "Sign in to view your daily fortune",
     emailSubject: "{name} sent you a {category} blessing from Orient Wisdom",
     shareTemplate: "I received my daily fortune reading and wanted to share it with you!\\n\\n{fortune}\\n\\nDiscover your own at Orient Wisdom",
+    shareNameFallback: "Your",
+    shareLuckyLabel: "Lucky:",
+    shareLuckyNumLabel: "Lucky #:",
+    aiPowered: "AI-powered",
+    brandFooter: "Orient Wisdom ✦",
   },
   wish: {
     title: "Daily Wish",

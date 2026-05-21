@@ -157,7 +157,7 @@ export default function DailyCheckin({
               }}
             >
               <Flame size={12} />
-              {data.today.streak} {t.dailyFortune.dayStreak}
+              {tf("dailyFortune.dayStreak", { n: data.today.streak })}
             </div>
           )}
         </div>
@@ -233,9 +233,11 @@ export default function DailyCheckin({
                 checkinDate={new Date().toISOString()}
               />
               <FortuneShare
-                text={tf("dailyFortune.shareTemplate", {
-                  fortune: `${user?.name || "Your"} Daily Fortune\n${fortuneData.advice}\n🍀 Lucky: ${fortuneData.luckyColor} | 🔢 Lucky #: ${fortuneData.luckyNumber}\n—— Orient Wisdom`,
-                })}
+                text={(() => {
+                  const name = user?.name || t.dailyFortune.shareNameFallback;
+                  const fortune = `${name} ${t.dailyFortune.todayFortune}\n${fortuneData.advice}\n🍀 ${t.dailyFortune.shareLuckyLabel} ${fortuneData.luckyColor} | 🔢 ${t.dailyFortune.shareLuckyNumLabel} ${fortuneData.luckyNumber}`;
+                  return tf("dailyFortune.shareTemplate", { fortune });
+                })()}
               />
             </>
           ) : (
@@ -259,11 +261,11 @@ export default function DailyCheckin({
               <Sparkles size={12} />+{data.today.pointsEarned} {t.dailyFortune.pts}
             </span>
             <span className="text-xs flex items-center gap-1" style={{ color: c.textMuted }}>
-              <Flame size={12} /> {data.today.streak} {t.dailyFortune.dayStreak}
+              <Flame size={12} /> {tf("dailyFortune.dayStreak", { n: data.today.streak })}
             </span>
             {fortuneData && (
               <span className="text-xs flex items-center gap-1" style={{ color: c.textMuted }}>
-                🤖 AI-powered
+                🤖 {t.dailyFortune.aiPowered}
               </span>
             )}
           </div>
@@ -301,7 +303,7 @@ export default function DailyCheckin({
                     </span>
                     <span className="flex items-center gap-1" style={{ color: c.text }}>
                       <Flame size={11} style={{ color: "#FF6B35" }} />
-                      {h.streak}d
+                      {tf("dailyFortune.dayStreak", { n: h.streak })}
                     </span>
                     {hasFortuneData && (
                       <span style={{ color: "#2ECC71" }}>✦</span>

@@ -137,6 +137,11 @@ export interface Dictionary {
     signInPrompt: string;
     emailSubject: string;
     shareTemplate: string;
+    shareNameFallback: string;
+    shareLuckyLabel: string;
+    shareLuckyNumLabel: string;
+    aiPowered: string;
+    brandFooter: string;
   };
   wish: {
     title: string;

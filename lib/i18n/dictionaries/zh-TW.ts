@@ -176,6 +176,11 @@ export const dictionary: Dictionary = {
     signInPrompt: "登入後查看每日運勢",
     emailSubject: "{name}從東方智慧給你發送了一份{category}祝福",
     shareTemplate: "我收到了我的每日運勢解讀，想與你分享！\\n\\n{fortune}\\n\\n在東方智慧發現你自己的運勢",
+    shareNameFallback: "你的",
+    shareLuckyLabel: "幸運：",
+    shareLuckyNumLabel: "幸運數字：",
+    aiPowered: "AI 驅動",
+    brandFooter: "東方智慧 ✦",
   },
   wish: {
     title: "每日許願",
