@@ -7,6 +7,7 @@ import { calculateBaZi, type BaZiResult } from "@/lib/bazi";
 import { BAZI_SYSTEM_PROMPT, buildBaZiUserPrompt, buildBaZiPreviewPrompt } from "@/lib/ai-prompts-bazi";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
+import { getLocaleInstruction } from "@/lib/ai-locale";
 import { checkSubscriptionAndRateLimit } from "@/lib/subscription-check";
 import { recordAiUsage, consumeRedemption } from "@/lib/db";
 
@@ -25,6 +26,7 @@ const requestSchema = z.object({
   gender: z.enum(["male", "female"]),
   orderId: z.string().optional(),
   redeemed: z.string().optional(),
+  locale: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { birthDate, birthHour, gender, orderId, redeemed } = parsed.data;
+    const { birthDate, birthHour, gender, orderId, redeemed, locale } = parsed.data;
     const authUser = await getAuthUser(req);
     const userId = authUser?.id || null;
 
@@ -170,7 +172,7 @@ export async function POST(req: NextRequest) {
     const completion = await deepseek.chat.completions.create({
       model: "deepseek-chat",
       messages: [
-        { role: "system", content: BAZI_SYSTEM_PROMPT },
+        { role: "system", content: BAZI_SYSTEM_PROMPT + "\n\n" + getLocaleInstruction(locale || "en") },
         { role: "user", content: prompt },
       ],
       max_tokens: isPaid ? 2000 : 150,

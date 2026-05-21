@@ -7,6 +7,7 @@ import { calculateBaZi } from "@/lib/bazi";
 import { COMPATIBILITY_SYSTEM_PROMPT, buildCompatibilityPrompt, type CompatibilityResult } from "@/lib/ai-prompts-compatibility";
 import { checkSubscriptionAndRateLimit } from "@/lib/subscription-check";
 import { saveCompatibilityReading } from "@/lib/db";
+import { getLocaleInstruction } from "@/lib/ai-locale";
 
 const requestSchema = z.object({
   birthDate1: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -16,6 +17,7 @@ const requestSchema = z.object({
   birthHour2: z.number().int().min(0).max(23),
   gender2: z.enum(["male", "female"]),
   partnerName: z.string().optional(),
+  locale: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -26,7 +28,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const { birthDate1, birthHour1, gender1, birthDate2, birthHour2, gender2, partnerName } = parsed.data;
+    const { birthDate1, birthHour1, gender1, birthDate2, birthHour2, gender2, partnerName, locale } = parsed.data;
     const authUser = await getAuthUser(req);
     const userId = authUser?.id || null;
 
@@ -56,7 +58,7 @@ export async function POST(req: NextRequest) {
     const completion = await deepseek.chat.completions.create({
       model: "deepseek-chat",
       messages: [
-        { role: "system", content: COMPATIBILITY_SYSTEM_PROMPT },
+        { role: "system", content: COMPATIBILITY_SYSTEM_PROMPT + "\n\n" + getLocaleInstruction(locale || "en") },
         { role: "user", content: prompt },
       ],
       max_tokens: 2000,

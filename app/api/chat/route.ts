@@ -6,6 +6,7 @@ import { streamDeepSeek } from "@/lib/deepseek";
 import { sseEvent } from "@/lib/stream-utils";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/rate-limit";
+import { getLocaleInstruction } from "@/lib/ai-locale";
 import {
   createConversation,
   getConversation,
@@ -23,7 +24,7 @@ const RATE_LIMITS = {
 
 export async function POST(request: Request) {
   try {
-    const { conversationId, message, persona: personaId, subPersona } = await request.json();
+    const { conversationId, message, persona: personaId, subPersona, locale } = await request.json();
 
     if (!message || typeof message !== "string" || !message.trim()) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -110,6 +111,9 @@ export async function POST(request: Request) {
         systemPrompt += `\n\n${memoryCtx}`;
       }
     }
+
+    // Append locale instruction
+    systemPrompt += "\n\n" + getLocaleInstruction(locale || "en");
 
     // Build message history
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [

@@ -7,6 +7,7 @@ import { calculateZodiac, type ZodiacInfo } from "@/lib/astrology";
 import { ASTROLOGY_SYSTEM_PROMPT, buildAstrologyUserPrompt, buildAstrologyPreviewPrompt } from "@/lib/ai-prompts-astrology";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
+import { getLocaleInstruction } from "@/lib/ai-locale";
 import { checkSubscriptionAndRateLimit } from "@/lib/subscription-check";
 import { recordAiUsage, consumeRedemption } from "@/lib/db";
 
@@ -15,6 +16,7 @@ const requestSchema = z.object({
   birthHour: z.number().int().min(0).max(23),
   orderId: z.string().optional(),
   redeemed: z.string().optional(),
+  locale: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -29,7 +31,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { birthDate, birthHour, orderId, redeemed } = parsed.data;
+    const { birthDate, birthHour, orderId, redeemed, locale } = parsed.data;
     const authUser = await getAuthUser(req);
     const userId = authUser?.id || null;
 
@@ -85,7 +87,7 @@ export async function POST(req: NextRequest) {
     const completion = await deepseek.chat.completions.create({
       model: "deepseek-chat",
       messages: [
-        { role: "system", content: ASTROLOGY_SYSTEM_PROMPT },
+        { role: "system", content: ASTROLOGY_SYSTEM_PROMPT + "\n\n" + getLocaleInstruction(locale || "en") },
         { role: "user", content: prompt },
       ],
       max_tokens: isPaid ? 2000 : 150,

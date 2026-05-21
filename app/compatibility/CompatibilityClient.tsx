@@ -44,7 +44,7 @@ function ScoreRing({ score, size = 120 }: { score: number; size?: number }) {
 export default function CompatibilityClient() {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -63,7 +63,7 @@ export default function CompatibilityClient() {
       const res = await fetch("/api/ai-compatibility", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, locale }),
       });
       if (!res.ok) throw new Error("Analysis failed");
       const data = await res.json();

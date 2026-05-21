@@ -6,6 +6,7 @@ import { parseAiJsonResponse } from "@/lib/ai-response";
 import { MEDITATION_SYSTEM_PROMPT, buildMeditationUserPrompt, buildMeditationPreviewPrompt } from "@/lib/ai-prompts-meditation";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
+import { getLocaleInstruction } from "@/lib/ai-locale";
 import { checkSubscriptionAndRateLimit } from "@/lib/subscription-check";
 import { recordAiUsage, consumeRedemption } from "@/lib/db";
 
@@ -15,6 +16,7 @@ const requestSchema = z.object({
   mood: z.string().max(500).default(""),
   orderId: z.string().optional(),
   redeemed: z.string().optional(),
+  locale: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -29,7 +31,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { type, duration, mood, orderId, redeemed } = parsed.data;
+    const { type, duration, mood, orderId, redeemed, locale } = parsed.data;
     const authUser = await getAuthUser(req);
     const userId = authUser?.id || null;
 
@@ -82,7 +84,7 @@ export async function POST(req: NextRequest) {
     const completion = await deepseek.chat.completions.create({
       model: "deepseek-chat",
       messages: [
-        { role: "system", content: MEDITATION_SYSTEM_PROMPT },
+        { role: "system", content: MEDITATION_SYSTEM_PROMPT + "\n\n" + getLocaleInstruction(locale || "en") },
         { role: "user", content: prompt },
       ],
       max_tokens: isPaid ? 2500 : 150,

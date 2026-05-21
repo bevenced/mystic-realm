@@ -22,7 +22,7 @@ export default function ToolsPageClient() {
   const isDark = currentTheme.isDark;
   const searchParams = useSearchParams();
   const themeParam = searchParams.get("theme");
-  const { t, tf } = useLocale();
+  const { locale, t, tf } = useLocale();
 
   // State
   const [step, setStep] = useState<Step>(1);
@@ -84,26 +84,26 @@ export default function ToolsPageClient() {
       switch (activeService) {
         case "tarot":
           endpoint = "/api/ai-reading";
-          body = { spreadKey, question: "General reading", ...(orderId && { orderId }) };
+          body = { spreadKey, question: "General reading", locale, ...(orderId && { orderId }) };
           break;
         case "bazi":
           if (!baziDate) { setError(t.tools.enterBirthDate); setLoading(false); return; }
           endpoint = "/api/ai-bazi";
-          body = { birthDate: baziDate, birthHour: baziHour, gender: baziGender, ...(orderId && { orderId }) };
+          body = { birthDate: baziDate, birthHour: baziHour, gender: baziGender, locale, ...(orderId && { orderId }) };
           break;
         case "fengshui":
           if (roomDesc.length < 10) { setError(t.tools.describeSpaceMin); setLoading(false); return; }
           endpoint = "/api/ai-fengshui";
-          body = { homeType, roomDescription: roomDesc, concerns: fengShuiConcerns, ...(orderId && { orderId }) };
+          body = { homeType, roomDescription: roomDesc, concerns: fengShuiConcerns, locale, ...(orderId && { orderId }) };
           break;
         case "astrology":
           if (!astroDate) { setError(t.tools.enterBirthDate); setLoading(false); return; }
           endpoint = "/api/ai-astrology";
-          body = { birthDate: astroDate, birthHour: astroHour, ...(orderId && { orderId }) };
+          body = { birthDate: astroDate, birthHour: astroHour, locale, ...(orderId && { orderId }) };
           break;
         case "meditation":
           endpoint = "/api/ai-meditation";
-          body = { type: meditationType, duration: meditationDuration, mood: meditationMood, ...(orderId && { orderId }) };
+          body = { type: meditationType, duration: meditationDuration, mood: meditationMood, locale, ...(orderId && { orderId }) };
           break;
       }
 

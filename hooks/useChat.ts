@@ -11,6 +11,7 @@ export interface ChatMessage {
 interface UseChatOptions {
   persona: string;
   subPersona?: string;
+  locale?: string;
   onError?: (error: string) => void;
 }
 
@@ -25,7 +26,7 @@ interface UseChatReturn {
 let msgCounter = 0;
 const nextId = () => `msg_${++msgCounter}`;
 
-export function useChat({ persona, subPersona, onError }: UseChatOptions): UseChatReturn {
+export function useChat({ persona, subPersona, locale, onError }: UseChatOptions): UseChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export function useChat({ persona, subPersona, onError }: UseChatOptions): UseCh
             message: text.trim(),
             persona,
             subPersona,
+            locale,
           }),
           signal: controller.signal,
         });

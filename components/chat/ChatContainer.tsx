@@ -14,7 +14,7 @@ import { Send, Sparkles, Trash2 } from "lucide-react";
 
 export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
   const { currentTheme, setTheme } = useTheme();
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const c = currentTheme.colors;
   const [currentPersona, setCurrentPersona] = useState<PersonaConfig>(PERSONAS[0]);
   const [currentStyle, setCurrentStyle] = useState<string>("gentle");
@@ -27,6 +27,7 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
   const { messages, isStreaming, sendMessage, resetConversation } = useChat({
     persona: currentPersona.id,
     subPersona: currentStyle,
+    locale,
     onError: (msg) => setError(msg),
   });
 
