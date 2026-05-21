@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export default function SignInClient() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ export default function SignInClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { refreshUser } = useAuth();
+  const { t } = useLocale();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,7 +30,7 @@ export default function SignInClient() {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Login failed");
+        setError(data.error || t.common.error);
         return;
       }
 
@@ -36,7 +38,7 @@ export default function SignInClient() {
       router.push(searchParams.get("redirect_url") || "/dashboard");
       router.refresh();
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t.common.error);
     } finally {
       setLoading(false);
     }
@@ -55,10 +57,10 @@ export default function SignInClient() {
         }}
       >
         <h1 className="text-2xl font-bold text-center mb-2" style={{ color: "var(--color-text)" }}>
-          Sign In
+          {t.signIn.title}
         </h1>
         <p className="text-sm text-center mb-6" style={{ color: "var(--color-text-muted)" }}>
-          Welcome back to Orient Wisdom
+          {t.signIn.subtitle}
         </p>
 
         {error && (
@@ -73,7 +75,7 @@ export default function SignInClient() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-muted)" }}>
-              Email
+              {t.signIn.email}
             </label>
             <input
               type="email"
@@ -90,7 +92,7 @@ export default function SignInClient() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-muted)" }}>
-              Password
+              {t.signIn.password}
             </label>
             <input
               type="password"
@@ -116,14 +118,14 @@ export default function SignInClient() {
               opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? t.signIn.signingIn : t.signIn.title}
           </button>
         </form>
 
         <p className="text-sm text-center mt-6" style={{ color: "var(--color-text-muted)" }}>
-          Don&apos;t have an account?{" "}
+          {t.signIn.noAccount}{" "}
           <Link href="/sign-up" style={{ color: "var(--color-primary)" }}>
-            Sign Up
+            {t.signIn.signUp}
           </Link>
         </p>
       </div>

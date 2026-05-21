@@ -26,6 +26,7 @@ export function getDeepSeek(): OpenAI | null {
  */
 export async function* streamDeepSeek(
   messages: { role: "system" | "user" | "assistant"; content: string }[],
+  options?: { temperature?: number },
 ): AsyncGenerator<string> {
   const ai = getClient();
   if (!ai) throw new Error("DeepSeek API key not configured");
@@ -34,6 +35,7 @@ export async function* streamDeepSeek(
     model: "deepseek-chat",
     messages,
     stream: true,
+    temperature: options?.temperature,
   });
 
   for await (const chunk of stream) {

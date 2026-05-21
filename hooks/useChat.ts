@@ -10,6 +10,7 @@ export interface ChatMessage {
 
 interface UseChatOptions {
   persona: string;
+  subPersona?: string;
   onError?: (error: string) => void;
 }
 
@@ -24,7 +25,7 @@ interface UseChatReturn {
 let msgCounter = 0;
 const nextId = () => `msg_${++msgCounter}`;
 
-export function useChat({ persona, onError }: UseChatOptions): UseChatReturn {
+export function useChat({ persona, subPersona, onError }: UseChatOptions): UseChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -50,6 +51,7 @@ export function useChat({ persona, onError }: UseChatOptions): UseChatReturn {
             conversationId: convIdRef.current,
             message: text.trim(),
             persona,
+            subPersona,
           }),
           signal: controller.signal,
         });
@@ -139,7 +141,7 @@ export function useChat({ persona, onError }: UseChatOptions): UseChatReturn {
         abortRef.current = null;
       }
     },
-    [persona, isStreaming, onError],
+    [persona, subPersona, isStreaming, onError],
   );
 
   const resetConversation = useCallback(() => {

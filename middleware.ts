@@ -18,6 +18,10 @@ const publicRoutes = [
   "/api/db/init",
   "/privacy",
   "/terms",
+  "/compatibility",
+  "/about",
+  "/faq",
+  "/changelog",
 ];
 
 function isPublicRoute(pathname: string): boolean {
@@ -38,7 +42,6 @@ export function middleware(request: NextRequest) {
   }
 
   // Page routes: redirect to sign-in if not authenticated
-  // (JWT verification happens in the API routes via @/lib/auth, which uses Node.js crypto)
   const session = request.cookies.get("session");
   if (!session?.value) {
     const signInUrl = new URL("/sign-in", request.url);

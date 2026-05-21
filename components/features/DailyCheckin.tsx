@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { StructuredFortune } from "@/lib/ai-fortune";
 import {
   Sparkles, CheckCircle, Loader2, Flame, UserCircle,
@@ -61,6 +62,7 @@ export default function DailyCheckin({
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
   const { user } = useAuth();
+  const { t, tf, locale } = useLocale();
 
   const [data, setData] = useState<CheckinData | null>(initialData ?? null);
   const [loading, setLoading] = useState(false);
@@ -94,14 +96,14 @@ export default function DailyCheckin({
         if (json.code === "PROFILE_REQUIRED") {
           setError(json.code);
         } else {
-          setError(json.details ? `${json.error} (${json.details})` : json.error);
+          setError(json.details ? `${json.error} (${json.details})` : t.common.error);
         }
       } else {
         // Re-fetch full status to get recentHistory
         await fetchStatus();
       }
     } catch {
-      setError("Network error. Please try again.");
+      setError(t.common.networkError);
     } finally {
       setLoading(false);
     }
@@ -142,7 +144,7 @@ export default function DailyCheckin({
               />
             </div>
             <h3 className="text-sm font-bold tracking-wider uppercase" style={{ color: c.text }}>
-              Daily Fortune
+              {t.dailyFortune.title}
             </h3>
           </div>
           {data?.today && (
@@ -155,7 +157,7 @@ export default function DailyCheckin({
               }}
             >
               <Flame size={12} />
-              {data.today.streak} day streak
+              {data.today.streak} {t.dailyFortune.dayStreak}
             </div>
           )}
         </div>
@@ -168,7 +170,7 @@ export default function DailyCheckin({
             <div className="animate-fade-in space-y-4">
               <div className="text-3xl mb-2">🔮</div>
               <p className="text-sm" style={{ color: c.textMuted }}>
-                Complete your birth profile to receive personalized daily fortunes based on your BaZi chart.
+                {t.dailyFortune.setProfile}
               </p>
               <Link
                 href="/profile"
@@ -180,14 +182,14 @@ export default function DailyCheckin({
                 }}
               >
                 <UserCircle size={16} />
-                Set Up Profile
+                {t.dailyFortune.completeProfile}
               </Link>
             </div>
           ) : (
             <div className="animate-fade-in space-y-4">
               <div className="text-3xl mb-2">✨</div>
               <p className="text-sm" style={{ color: c.textMuted }}>
-                Check in to receive your AI-powered BaZi fortune of the day
+                {t.dailyFortune.checkInPrompt}
               </p>
               <button
                 onClick={handleCheckin}
@@ -205,7 +207,7 @@ export default function DailyCheckin({
                 ) : (
                   <Sparkles size={16} />
                 )}
-                {loading ? "Consulting the stars..." : "Check In ✨"}
+                {loading ? t.dailyFortune.checkingIn : `${t.dailyFortune.checkIn} ✨`}
               </button>
               {error && error !== "PROFILE_REQUIRED" && (
                 <p className="text-xs mt-2" style={{ color: "#E74C3C" }}>
@@ -231,7 +233,9 @@ export default function DailyCheckin({
                 checkinDate={new Date().toISOString()}
               />
               <FortuneShare
-                text={`✨ ${user?.name || "Your"} Daily Fortune\n${fortuneData.advice}\n🍀 Lucky: ${fortuneData.luckyColor} | 🔢 Lucky #: ${fortuneData.luckyNumber}\n—— Orient Wisdom`}
+                text={tf("dailyFortune.shareTemplate", {
+                  fortune: `${user?.name || "Your"} Daily Fortune\n${fortuneData.advice}\n🍀 Lucky: ${fortuneData.luckyColor} | 🔢 Lucky #: ${fortuneData.luckyNumber}\n—— Orient Wisdom`,
+                })}
               />
             </>
           ) : (
@@ -252,10 +256,10 @@ export default function DailyCheckin({
             style={{ borderTop: `1px solid ${c.primary}10` }}
           >
             <span className="text-xs flex items-center gap-1" style={{ color: c.textMuted }}>
-              <Sparkles size={12} />+{data.today.pointsEarned} pts
+              <Sparkles size={12} />+{data.today.pointsEarned} {t.dailyFortune.pts}
             </span>
             <span className="text-xs flex items-center gap-1" style={{ color: c.textMuted }}>
-              <Flame size={12} /> {data.today.streak} day streak
+              <Flame size={12} /> {data.today.streak} {t.dailyFortune.dayStreak}
             </span>
             {fortuneData && (
               <span className="text-xs flex items-center gap-1" style={{ color: c.textMuted }}>
@@ -275,12 +279,12 @@ export default function DailyCheckin({
           <div className="flex items-center gap-2 mb-3">
             <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
             <h4 className="text-[11px] font-bold tracking-wider uppercase" style={{ color: c.textMuted }}>
-              Check-in History
+              {t.dailyFortune.checkInHistory}
             </h4>
           </div>
           <div className="space-y-1.5">
             {data.recentHistory.map((h) => {
-              const dateStr = new Date(h.checkin_date).toLocaleDateString("en-US", {
+              const dateStr = new Date(h.checkin_date).toLocaleDateString(locale, {
                 month: "short",
                 day: "numeric",
               });
@@ -304,7 +308,7 @@ export default function DailyCheckin({
                     )}
                   </div>
                   <span className="font-semibold" style={{ color: c.primary }}>
-                    +{h.points_earned} pts
+                    +{h.points_earned} {t.dailyFortune.pts}
                   </span>
                 </div>
               );
@@ -323,10 +327,10 @@ export default function DailyCheckin({
           }}
         >
           <span className="text-xs" style={{ color: c.textMuted }}>
-            Points balance
+            {t.dailyFortune.pointsBalance}
           </span>
           <span className="text-sm font-bold" style={{ color: c.primary }}>
-            {data.totalPoints} pts
+            {data.totalPoints} {t.dailyFortune.pts}
           </span>
         </div>
       )}

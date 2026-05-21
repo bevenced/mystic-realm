@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 interface PayPalButtonProps {
@@ -21,6 +22,7 @@ export default function PayPalButton({
   onError,
 }: PayPalButtonProps) {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
 
@@ -34,10 +36,10 @@ export default function PayPalButton({
         style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}22` }}
       >
         <p className="text-xs tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>
-          Full Reading
+          {t.tools.fullReading}
         </p>
         <p className="text-sm" style={{ color: c.textMuted }}>
-          ${discountPrice.toFixed(2)} — coming soon
+          ${discountPrice.toFixed(2)} — {t.tools.comingSoonBadge}
         </p>
       </div>
     );
@@ -59,9 +61,7 @@ export default function PayPalButton({
         }}
       >
         {isFirstReading && (
-          <div
-            className="text-center mb-2"
-          >
+          <div className="text-center mb-2">
             <span
               className="inline-block text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-full mb-2"
               style={{
@@ -69,14 +69,14 @@ export default function PayPalButton({
                 color: isDark ? c.bg : "#FFFFFF",
               }}
             >
-              🎉 First Reading Special
+              🎉 {t.tools.firstReadingSpecial}
             </span>
           </div>
         )}
 
         <div className="text-center mb-4">
           <p className="text-xs tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>
-            {isFirstReading ? "Your first full reading — just" : "Unlock Full Reading"}
+            {isFirstReading ? t.tools.firstReading : t.tools.unlockFullReading}
           </p>
           <div className="flex items-center justify-center gap-2">
             {isFirstReading && (
@@ -93,7 +93,7 @@ export default function PayPalButton({
           </div>
           {isFirstReading && (
             <p className="text-[10px] mt-1" style={{ color: c.textMuted }}>
-              Limited to one first-time reading per user
+              {t.tools.limitedOne}
             </p>
           )}
         </div>
@@ -125,7 +125,7 @@ export default function PayPalButton({
               }
               return data.orderId;
             } catch (err) {
-              onError("Failed to create payment. Please try again.");
+              onError(t.tools.paymentError);
               return "";
             }
           }}
@@ -140,14 +140,14 @@ export default function PayPalButton({
               if (result.success) {
                 onSuccess(data.orderID);
               } else {
-                onError(result.error || "Payment failed.");
+                onError(result.error || t.tools.paymentFailed);
               }
             } catch (err) {
-              onError("Failed to process payment. Please try again.");
+              onError(t.tools.paymentFailed);
             }
           }}
           onError={() => {
-            onError("An error occurred with PayPal. Please try again.");
+            onError(t.tools.paypalError);
           }}
         />
       </div>

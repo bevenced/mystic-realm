@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 interface ChatWelcomeProps {
   personaEmoji: string;
@@ -16,12 +17,12 @@ export default function ChatWelcome({
   onSelectQuestion,
 }: ChatWelcomeProps) {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
 
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center animate-fade-in">
-      {/* Emoji with glow backdrop */}
       <div className="relative mb-5">
         <div
           className="absolute inset-0 flex items-center justify-center"
@@ -56,7 +57,7 @@ export default function ChatWelcome({
         className="text-sm max-w-md mb-10 leading-relaxed"
         style={{ color: c.textMuted }}
       >
-        Ask me anything. I&apos;m here to guide you with wisdom and insight.
+        {t.chat.welcomeDesc}
       </p>
 
       <div className="w-full max-w-lg space-y-2.5">

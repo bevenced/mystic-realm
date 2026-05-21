@@ -1,0 +1,366 @@
+export type Locale = "en" | "zh-CN" | "zh-TW";
+
+export const LOCALES: { code: Locale; name: string; nativeName: string }[] = [
+  { code: "en", name: "English", nativeName: "English" },
+  { code: "zh-CN", name: "Chinese (Simplified)", nativeName: "简体中文" },
+  { code: "zh-TW", name: "Chinese (Traditional)", nativeName: "繁體中文" },
+];
+
+export const DEFAULT_LOCALE: Locale = "en";
+
+export function getLocaleFromBrowser(acceptLanguage?: string): Locale {
+  if (!acceptLanguage) return DEFAULT_LOCALE;
+  if (acceptLanguage.startsWith("zh-CN") || acceptLanguage.startsWith("zh-Hans")) return "zh-CN";
+  if (acceptLanguage.startsWith("zh-TW") || acceptLanguage.startsWith("zh-HK") || acceptLanguage.startsWith("zh-Hant")) return "zh-TW";
+  if (acceptLanguage.startsWith("zh")) return "zh-CN";
+  return DEFAULT_LOCALE;
+}
+
+export interface Dictionary {
+  nav: Record<string, string>;
+  home: {
+    title: string;
+    subtitle: string;
+    tagline: string;
+    startJourney: string;
+    exploreTools: string;
+    features: Record<string, string>;
+    metaTitle: string;
+    metaDescription: string;
+    featureAiReadingsDesc: string;
+    featureCuratedProductsDesc: string;
+    featureGuidedArticlesDesc: string;
+  };
+  chat: {
+    placeholder: string;
+    newConversation: string;
+    send: string;
+    enterHint: string;
+    styleLabel: string;
+    welcomeTitle: string;
+    welcomeDesc: string;
+  };
+  common: {
+    loading: string;
+    error: string;
+    retry: string;
+    save: string;
+    cancel: string;
+    confirm: string;
+    search: string;
+    noResults: string;
+    comingSoon: string;
+    back: string;
+    continue_: string;
+    home: string;
+    all: string;
+    readMore: string;
+    avatar: string;
+    addToCart: string;
+    more: string;
+    saving: string;
+    saveFailed: string;
+    savedSuccess: string;
+    networkError: string;
+    invalidImageType: string;
+    imageTooLarge: string;
+    failedProcessImage: string;
+  };
+  membership: {
+    title: string;
+    free: string;
+    mystic: string;
+    monthly: string;
+    yearly: string;
+    subscribe: string;
+    features: Record<string, string>;
+    weekly: string;
+    bestValue: string;
+    mostPopular: string;
+    savePercent: string;
+    limitedOffer: string;
+  };
+  points: {
+    title: string;
+    last: string;
+    checkin: string;
+    wish: string;
+    emailBonus: string;
+    redeem: string;
+  };
+  profile: Record<string, string>;
+  footer: Record<string, string>;
+
+  signIn: {
+    title: string;
+    subtitle: string;
+    email: string;
+    emailPlaceholder: string;
+    password: string;
+    passwordPlaceholder: string;
+    signingIn: string;
+    noAccount: string;
+    signUp: string;
+  };
+  signUp: {
+    title: string;
+    subtitle: string;
+    name: string;
+    namePlaceholder: string;
+    email: string;
+    emailPlaceholder: string;
+    password: string;
+    passwordPlaceholder: string;
+    creatingAccount: string;
+    hasAccount: string;
+    signIn: string;
+  };
+  dailyFortune: {
+    title: string;
+    subtitle: string;
+    checkIn: string;
+    checkingIn: string;
+    fortuneTitle: string;
+    chartTitle: string;
+    luckyColor: string;
+    luckyNumber: string;
+    todayFortune: string;
+    checkInHistory: string;
+    pointsBalance: string;
+    dayStreak: string;
+    pts: string;
+    costPerWish: string;
+    needPts: string;
+    completeProfile: string;
+    setProfile: string;
+    checkInPrompt: string;
+    signInPrompt: string;
+    emailSubject: string;
+    shareTemplate: string;
+  };
+  wish: {
+    title: string;
+    subtitle: string;
+    chooseCategory: string;
+    categories: Record<string, string>;
+    wishExamples: Record<string, string>;
+    recipientEmail: string;
+    blessing: string;
+    makeWish: string;
+    todayWishes: string;
+    recentWishes: string;
+    signInPrompt: string;
+    checkInFirst: string;
+    maxWishesReached: string;
+    wishPlaceholder: string;
+    selectCategoryHint: string;
+    emailSent: string;
+    notifyEmail: string;
+    wishesLeft: string;
+    emailSubjectExternal: string;
+    emailBodyExternal: string;
+  };
+  dashboard: {
+    title: string;
+    subtitle: string;
+    loading: string;
+    welcomeBack: string;
+    cosmicDashboard: string;
+    signInPrompt: string;
+    completeProfile: string;
+    yourTools: string;
+    recentReadings: string;
+    todayFortune: string;
+    noBirthInfo: string;
+    calculatingChart: string;
+    yourBaziChart: string;
+    year: string;
+    month: string;
+    day: string;
+    hour: string;
+    noReadings: string;
+    getFirstReading: string;
+    upgradeToMystic: string;
+    planLabel: string;
+    freePlan: string;
+  };
+  compatibility: {
+    title: string;
+    subtitle: string;
+    person1: string;
+    person2: string;
+    birthDate: string;
+    birthHour: string;
+    gender: string;
+    male: string;
+    female: string;
+    partnerName: string;
+    analyze: string;
+    analyzing: string;
+    overallScore: string;
+    dimensions: Record<string, string>;
+    strengths: string;
+    challenges: string;
+    advice: string;
+  };
+  tools: {
+    title: string;
+    subtitle: string;
+    chooseService: string;
+    serviceDesc: string;
+    continue_: string;
+    back: string;
+    freePreview: string;
+    generating: string;
+    newReading: string;
+    preview: string;
+    wantFullReading: string;
+    unlockFullReading: string;
+    firstReading: string;
+    firstReadingSpecial: string;
+    limitedOne: string;
+    birthDate: string;
+    birthHour: string;
+    birthHourHelp: string;
+    gender: string;
+    male: string;
+    female: string;
+    homeType: string;
+    describeSpace: string;
+    spacePlaceholder: string;
+    concerns: string;
+    concernsPlaceholder: string;
+    meditationType: string;
+    duration: string;
+    currentMood: string;
+    moodPlaceholder: string;
+    services: Record<string, string>;
+    serviceDescs: Record<string, string>;
+    downloadPdf: string;
+    generatingPdf: string;
+    pdfExportFailed: string;
+    enterBirthDate: string;
+    describeSpaceMin: string;
+    networkError: string;
+    paymentFailed: string;
+    paymentError: string;
+    paypalError: string;
+    enhanceYourPractice: string;
+    productSubtitle: string;
+    howWasReading: string;
+    shareExperience: string;
+    submitReview: string;
+    submitting: string;
+    thankYouFeedback: string;
+    reviewHelps: string;
+    failedSubmitReview: string;
+    fullReading: string;
+    comingSoonBadge: string;
+  };
+  shop: {
+    title: string;
+    subtitle: string;
+    breadcrumbHome: string;
+    noProducts: string;
+    addedToCart: string;
+  };
+  blog: {
+    title: string;
+    subtitle: string;
+    allTab: string;
+    noArticles: string;
+    viewAll: string;
+    backToBlog: string;
+    minRead: string;
+    relatedArticles: string;
+  };
+  about: Record<string, string>;
+  faq: Record<string, string>;
+  changelog: {
+    title: string;
+    subtitle: string;
+    versions: Record<string, string>;
+  };
+  notFound: {
+    title: string;
+    description: string;
+    returnHome: string;
+  };
+  error: {
+    title: string;
+    description: string;
+    retry: string;
+  };
+  offline: {
+    title: string;
+    description: string;
+    reconnect: string;
+  };
+  ui: {
+    coreFeatures: string;
+    whatYouCanDo: string;
+    explore: string;
+    heroTitle: string;
+    heroSubtitle: string;
+    exploreFeatures: string;
+    trustReadings: string;
+    trustReadingLabel: string;
+    trustRating: string;
+    trustRatingLabel: string;
+    trustAI: string;
+    trustAILabel: string;
+    trustPrivacy: string;
+    trustPrivacyLabel: string;
+    whatAwaitsYou: string;
+    threePaths: string;
+    aiReadings: string;
+    curatedProducts: string;
+    guidedArticles: string;
+    community: string;
+    blessings: string;
+    blessingDesc: string;
+    featureDailyFortune: string;
+    featureDailyFortuneDesc: string;
+    featureDailyWish: string;
+    featureDailyWishDesc: string;
+    featureProfile: string;
+    featureProfileDesc: string;
+    switchRealm: string;
+    enter: string;
+    aiReading: string;
+    products: string;
+    articles: string;
+    featured: string;
+    gettingStarted: string;
+    featuredCollection: string;
+    beginJourney: string;
+    handpickedItems: string;
+    shareTitle: string;
+    copied: string;
+    copyToClipboard: string;
+    moreShare: string;
+    prevPersona: string;
+    nextPersona: string;
+  };
+  userMenu: {
+    profile: string;
+    membership: string;
+    signOut: string;
+    menuLabel: string;
+  };
+  pwa: {
+    title: string;
+    description: string;
+    install: string;
+  };
+  cart: {
+    title: string;
+    empty: string;
+    continueShopping: string;
+    each: string;
+    subtotal: string;
+    checkout: string;
+    securePayment: string;
+    processing: string;
+  };
+}

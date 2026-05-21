@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 interface BlogCardProps {
   slug: string;
@@ -26,6 +27,7 @@ export default function BlogCard({
   tags,
 }: BlogCardProps) {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
 
   return (
@@ -100,7 +102,7 @@ export default function BlogCard({
             className="text-xs font-medium transition-colors"
             style={{ color: c.primary }}
           >
-            Read more →
+            {t.common.readMore}
           </span>
         </div>
       </div>

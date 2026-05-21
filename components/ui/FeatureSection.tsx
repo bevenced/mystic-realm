@@ -1,26 +1,29 @@
 "use client";
 
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Sparkles, ShoppingBag, BookOpen } from "lucide-react";
 
-const features = [
-  {
-    icon: Sparkles,
-    title: "AI Readings",
-    desc: "Get personalized tarot, astrology, and BaZi readings powered by advanced AI.",
-  },
-  {
-    icon: ShoppingBag,
-    title: "Curated Products",
-    desc: "Discover handpicked crystals, incense, tarot decks, and mystical tools.",
-  },
-  {
-    icon: BookOpen,
-    title: "Guided Articles",
-    desc: "Deepen your practice with expert guides, meditations, and cosmic insights.",
-  },
-];
-
 export default function FeatureSection() {
+  const { t } = useLocale();
+
+  const features = [
+    {
+      icon: Sparkles,
+      title: t.ui.aiReadings,
+      desc: t.home.featureAiReadingsDesc,
+    },
+    {
+      icon: ShoppingBag,
+      title: t.ui.curatedProducts,
+      desc: t.home.featureCuratedProductsDesc,
+    },
+    {
+      icon: BookOpen,
+      title: t.ui.guidedArticles,
+      desc: t.home.featureGuidedArticlesDesc,
+    },
+  ];
+
   return (
     <section className="py-20 px-6">
       <div className="mx-auto max-w-5xl">
@@ -30,13 +33,13 @@ export default function FeatureSection() {
             className="text-sm tracking-widest uppercase mb-3"
             style={{ color: "var(--color-text-muted)" }}
           >
-            What Awaits You
+            {t.ui.whatAwaitsYou}
           </p>
           <h2
             className="text-3xl md:text-4xl font-bold"
             style={{ color: "var(--color-primary)" }}
           >
-            Three Paths, One Destination
+            {t.ui.threePaths}
           </h2>
         </div>
 

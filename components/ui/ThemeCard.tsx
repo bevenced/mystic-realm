@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { type ThemeConfig } from "@/lib/themes";
 
 export default function ThemeCard({
@@ -10,6 +11,7 @@ export default function ThemeCard({
   theme: ThemeConfig;
   index: number;
 }) {
+  const { t } = useLocale();
   const c = theme.colors;
 
   return (
@@ -74,7 +76,7 @@ export default function ThemeCard({
           style={{ color: c.primary, opacity: 0.8 }}
         >
           <span className="group-hover:translate-x-1 transition-transform duration-300">
-            Enter
+            {t.ui.enter}
           </span>
           <span className="group-hover:translate-x-2 transition-transform duration-300">
             →

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export default function ErrorPage({
   error,
@@ -9,6 +10,8 @@ export default function ErrorPage({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useLocale();
+
   useEffect(() => {
     console.error("Page error:", error);
   }, [error]);
@@ -26,13 +29,13 @@ export default function ErrorPage({
           className="text-2xl font-semibold mb-3"
           style={{ color: "var(--color-text)" }}
         >
-          Something went wrong
+          {t.error.title}
         </h1>
         <p
           className="text-sm mb-8 max-w-md mx-auto"
           style={{ color: "var(--color-text-muted)" }}
         >
-          An unexpected cosmic disturbance occurred. Please try again.
+          {t.error.description}
         </p>
         <button
           onClick={reset}
@@ -42,7 +45,7 @@ export default function ErrorPage({
             color: "var(--color-bg)",
           }}
         >
-          Try Again
+          {t.error.retry}
         </button>
       </div>
     </main>

@@ -2,32 +2,34 @@
 
 import Link from "next/link";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Flame, Sparkles, UserCircle } from "lucide-react";
-
-const features = [
-  {
-    icon: Flame,
-    title: "Daily Fortune",
-    desc: "AI-powered BaZi fortune card every day. Check in to reveal life aspect ratings, lucky colors, and personalized advice.",
-    href: "/dailyfortune",
-  },
-  {
-    icon: Sparkles,
-    title: "Daily Wish",
-    desc: "Make up to 3 wishes per day across five categories — health, wealth, luck, friendship, love. Send blessings via email.",
-    href: "/wish",
-  },
-  {
-    icon: UserCircle,
-    title: "Your Profile",
-    desc: "Set your birth date and hour to unlock your BaZi chart. Powers personalized daily fortunes and cosmic insights.",
-    href: "/profile",
-  },
-];
 
 export default function CoreFeatures() {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
+
+  const features = [
+    {
+      icon: Flame,
+      title: t.ui.featureDailyFortune,
+      desc: t.ui.featureDailyFortuneDesc,
+      href: "/dailyfortune",
+    },
+    {
+      icon: Sparkles,
+      title: t.ui.featureDailyWish,
+      desc: t.ui.featureDailyWishDesc,
+      href: "/wish",
+    },
+    {
+      icon: UserCircle,
+      title: t.ui.featureProfile,
+      desc: t.ui.featureProfileDesc,
+      href: "/profile",
+    },
+  ];
 
   return (
     <section id="features" className="py-20 px-6">
@@ -37,13 +39,13 @@ export default function CoreFeatures() {
             className="text-sm tracking-widest uppercase mb-3"
             style={{ color: "var(--color-text-muted)" }}
           >
-            Core Features
+            {t.ui.coreFeatures}
           </p>
           <h2
             className="text-3xl md:text-4xl font-bold"
             style={{ color: "var(--color-primary)" }}
           >
-            What You Can Do Here
+            {t.ui.whatYouCanDo}
           </h2>
         </div>
 
@@ -107,7 +109,7 @@ export default function CoreFeatures() {
                     style={{ color: c.primary, opacity: 0.8 }}
                   >
                     <span className="group-hover:translate-x-1 transition-transform duration-300">
-                      Explore
+                      {t.ui.explore}
                     </span>
                     <span className="group-hover:translate-x-2 transition-transform duration-300">
                       →

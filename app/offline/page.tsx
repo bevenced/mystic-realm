@@ -1,9 +1,11 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export default function OfflinePage() {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
 
   return (
@@ -22,14 +24,13 @@ export default function OfflinePage() {
           className="text-3xl font-bold mb-4"
           style={{ color: c.text }}
         >
-          You Are Offline
+          {t.offline.title}
         </h1>
         <p
           className="text-sm leading-relaxed mb-8"
           style={{ color: c.textMuted }}
         >
-          The cosmic connection has been temporarily interrupted.
-          Please check your network connection and try again.
+          {t.offline.description}
         </p>
         <button
           onClick={() => window.location.reload()}
@@ -39,7 +40,7 @@ export default function OfflinePage() {
             color: currentTheme.isDark ? c.bg : "#FFFFFF",
           }}
         >
-          Reconnect
+          {t.offline.reconnect}
         </button>
       </div>
     </div>

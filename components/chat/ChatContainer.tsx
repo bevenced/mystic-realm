@@ -3,16 +3,21 @@
 import { useRef, useEffect, useState } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useChat } from "@/hooks/useChat";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { PERSONAS, type PersonaConfig } from "@/lib/personas";
+import { type ChatStyle } from "@/lib/chat-styles";
 import ChatMessage from "@/components/chat/ChatMessage";
 import ChatWelcome from "@/components/chat/ChatWelcome";
 import PersonaSelector from "@/components/chat/PersonaSelector";
+import AgentStyleSelector from "@/components/chat/AgentStyleSelector";
 import { Send, Sparkles, Trash2 } from "lucide-react";
 
 export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
   const { currentTheme, setTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
   const [currentPersona, setCurrentPersona] = useState<PersonaConfig>(PERSONAS[0]);
+  const [currentStyle, setCurrentStyle] = useState<string>("gentle");
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [transitioning, setTransitioning] = useState(false);
@@ -21,6 +26,7 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
 
   const { messages, isStreaming, sendMessage, resetConversation } = useChat({
     persona: currentPersona.id,
+    subPersona: currentStyle,
     onError: (msg) => setError(msg),
   });
 
@@ -39,6 +45,11 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
       setError("");
       setTimeout(() => setTransitioning(false), 100);
     }, 250);
+  };
+
+  const handleSelectStyle = (style: ChatStyle) => {
+    if (isStreaming) return;
+    setCurrentStyle(style.id);
   };
 
   const handleSend = async () => {
@@ -136,6 +147,20 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
             </div>
           )}
 
+          {/* Chat style selector */}
+          {hasMessages && (
+            <div
+              className="mb-3 rounded-lg"
+              style={{ backgroundColor: `${c.primary}04`, border: `1px solid ${c.primary}08` }}
+            >
+              <AgentStyleSelector
+                selected={currentStyle}
+                onSelect={handleSelectStyle}
+                disabled={isStreaming}
+              />
+            </div>
+          )}
+
           <div className="flex items-end gap-3">
             {hasMessages && (
               <button
@@ -168,7 +193,7 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
                   el.style.height = Math.min(el.scrollHeight, 200) + "px";
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={`Ask ${currentPersona.name} anything...`}
+                placeholder={t.chat.placeholder.replace("{name}", currentPersona.name)}
                 rows={1}
                 className="flex-1 bg-transparent px-4 py-[14px] text-sm resize-none outline-none"
                 style={{ color: c.text, minHeight: "48px" }}
@@ -206,7 +231,7 @@ export default function ChatContainer({ isSignedIn }: { isSignedIn: boolean }) {
             className="text-[10px] mt-2 text-center"
             style={{ color: c.textMuted }}
           >
-            Enter to send · Shift+Enter for new line
+            {t.chat.enterHint}
           </p>
         </div>
       </div>

@@ -1,9 +1,11 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export default function HeroSection() {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
 
   return (
@@ -56,14 +58,14 @@ export default function HeroSection() {
           className="text-5xl md:text-7xl font-bold tracking-wider animate-slide-up"
           style={{ color: c.primary }}
         >
-          Orient Wisdom
+          {t.ui.heroTitle}
         </h1>
 
         <p
           className="mt-5 text-xl md:text-2xl animate-slide-up delay-200 leading-relaxed"
           style={{ color: c.textMuted }}
         >
-          AI-powered BaZi fortune, daily wishes, and cosmic insights.
+          {t.ui.heroSubtitle}
         </p>
 
         {/* CTA 按钮 — 无脉冲呼吸灯 */}
@@ -77,7 +79,7 @@ export default function HeroSection() {
               border: `1px solid ${c.primary}40`,
             }}
           >
-            Explore Features
+            {t.ui.exploreFeatures}
           </a>
         </div>
 

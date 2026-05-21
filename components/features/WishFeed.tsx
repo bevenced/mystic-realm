@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Sparkles } from "lucide-react";
 
 interface FeedWish {
@@ -27,6 +28,7 @@ function truncate(text: string, max = 70): string {
 
 export default function WishFeed() {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
   const [wishes, setWishes] = useState<FeedWish[]>([]);
 
@@ -62,10 +64,10 @@ export default function WishFeed() {
       >
         <Sparkles size={14} style={{ color: c.primary }} />
         <h3 className="text-xs font-bold tracking-wider uppercase" style={{ color: c.text }}>
-          Recent Wishes
+          {t.wish.recentWishes}
         </h3>
         <span className="text-[10px] ml-auto" style={{ color: c.textMuted }}>
-          {wishes.length} wishes
+          {wishes.length}
         </span>
       </div>
 

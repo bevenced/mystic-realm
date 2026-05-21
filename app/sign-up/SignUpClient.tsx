@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export default function SignUpClient() {
   const [name, setName] = useState("");
@@ -13,6 +14,7 @@ export default function SignUpClient() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { refreshUser } = useAuth();
+  const { t } = useLocale();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,7 +30,7 @@ export default function SignUpClient() {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Registration failed");
+        setError(data.error || t.common.error);
         return;
       }
 
@@ -36,7 +38,7 @@ export default function SignUpClient() {
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t.common.error);
     } finally {
       setLoading(false);
     }
@@ -55,10 +57,10 @@ export default function SignUpClient() {
         }}
       >
         <h1 className="text-2xl font-bold text-center mb-2" style={{ color: "var(--color-text)" }}>
-          Create Account
+          {t.signUp.title}
         </h1>
         <p className="text-sm text-center mb-6" style={{ color: "var(--color-text-muted)" }}>
-          Begin your mystical journey
+          {t.signUp.subtitle}
         </p>
 
         {error && (
@@ -73,7 +75,7 @@ export default function SignUpClient() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-muted)" }}>
-              Name
+              {t.signUp.name}
             </label>
             <input
               type="text"
@@ -90,7 +92,7 @@ export default function SignUpClient() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-muted)" }}>
-              Email
+              {t.signUp.email}
             </label>
             <input
               type="email"
@@ -107,7 +109,7 @@ export default function SignUpClient() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-text-muted)" }}>
-              Password
+              {t.signUp.password}
             </label>
             <input
               type="password"
@@ -133,14 +135,14 @@ export default function SignUpClient() {
               opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? "Creating account..." : "Sign Up"}
+            {loading ? t.signUp.creatingAccount : t.signIn.signUp}
           </button>
         </form>
 
         <p className="text-sm text-center mt-6" style={{ color: "var(--color-text-muted)" }}>
-          Already have an account?{" "}
+          {t.signUp.hasAccount}{" "}
           <Link href="/sign-in" style={{ color: "var(--color-primary)" }}>
-            Sign In
+            {t.signUp.signIn}
           </Link>
         </p>
       </div>

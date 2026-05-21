@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Home, ChevronRight, Clock, ArrowLeft } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { BlogPost } from "@/lib/blog-posts";
 import SafeHtml from "@/components/features/SafeHtml";
 
@@ -14,6 +15,7 @@ interface Props {
 export default function BlogDetailClient({ post, relatedPosts }: Props) {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
+  const { t } = useLocale();
 
   return (
     <main className="min-h-screen">
@@ -33,11 +35,11 @@ export default function BlogDetailClient({ post, relatedPosts }: Props) {
           >
             <Link href="/" className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors">
               <Home size={14} />
-              Home
+              {t.common.home}
             </Link>
             <ChevronRight size={14} />
             <Link href="/blog" className="hover:text-[var(--color-primary)] transition-colors">
-              Blog
+              {t.blog.title}
             </Link>
             <ChevronRight size={14} />
             <span style={{ color: c.primary }} className="truncate max-w-[200px]">
@@ -52,7 +54,7 @@ export default function BlogDetailClient({ post, relatedPosts }: Props) {
             style={{ color: c.textMuted }}
           >
             <ArrowLeft size={14} />
-            Back to Blog
+            {t.blog.backToBlog}
           </Link>
 
           {/* Article header */}
@@ -124,7 +126,7 @@ export default function BlogDetailClient({ post, relatedPosts }: Props) {
               />
 
               <h2 className="text-xl font-semibold mb-6" style={{ color: c.primary }}>
-                Related Articles
+                {t.blog.relatedArticles}
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

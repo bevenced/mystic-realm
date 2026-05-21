@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { X } from "lucide-react";
 
 export default function PwaInstallPrompt() {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
   const [show, setShow] = useState(false);
@@ -20,7 +22,6 @@ export default function PwaInstallPrompt() {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  // Hide if already installed
   useEffect(() => {
     if (window.matchMedia("(display-mode: standalone)").matches) {
       setShow(false);
@@ -51,10 +52,10 @@ export default function PwaInstallPrompt() {
     >
       <div className="flex-1">
         <p className="text-sm font-semibold" style={{ color: c.text }}>
-          Install Orient Wisdom
+          {t.pwa.title}
         </p>
         <p className="text-xs mt-0.5" style={{ color: c.textMuted }}>
-          Add to your home screen for the best experience
+          {t.pwa.description}
         </p>
       </div>
       <button
@@ -65,7 +66,7 @@ export default function PwaInstallPrompt() {
           color: currentTheme.isDark ? c.bg : "#FFFFFF",
         }}
       >
-        Install
+        {t.pwa.install}
       </button>
       <button
         onClick={() => setShow(false)}

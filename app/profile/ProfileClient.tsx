@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import Link from "next/link";
 import { Sparkles, Save, Loader2, Camera } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
@@ -31,6 +32,7 @@ export default function ProfileClient() {
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
   const { isSignedIn, isLoaded, user: authUser } = useAuth();
+  const { t, tf } = useLocale();
 
   const [profile, setProfile] = useState<ProfileData>({ name: "", email: "", birthDate: null, birthHour: null, gender: "" });
   const [loading, setLoading] = useState(true);
@@ -66,17 +68,17 @@ export default function ProfileClient() {
       });
       const data = await res.json();
       if (data.error) {
-        setMessage({ type: "error", text: `Save failed: ${data.error}${data.details ? " — " + JSON.stringify(data.details) : ""}` });
+        setMessage({ type: "error", text: tf("common.saveFailed", { error: data.error + (data.details ? " — " + JSON.stringify(data.details) : "") }) });
       } else {
         // Update local state from server response so UI reflects saved data immediately
         if (data.birthDate) {
           setProfile((prev) => ({ ...prev, birthDate: data.birthDate }));
         }
-        setMessage({ type: "success", text: "Profile saved successfully" });
+        setMessage({ type: "success", text: t.common.savedSuccess });
         setTimeout(() => setMessage(null), 3000);
       }
     } catch {
-      setMessage({ type: "error", text: "Network error. Please try again." });
+      setMessage({ type: "error", text: t.common.networkError });
     } finally {
       setSaving(false);
     }
@@ -109,11 +111,11 @@ export default function ProfileClient() {
     if (!file) return;
 
     if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(file.type)) {
-      setMessage({ type: "error", text: "Invalid image type. Allowed: JPEG, PNG, GIF, WebP" });
+      setMessage({ type: "error", text: t.common.invalidImageType });
       return;
     }
     if (file.size > 512_000) {
-      setMessage({ type: "error", text: "Image too large. Maximum 500KB." });
+      setMessage({ type: "error", text: t.common.imageTooLarge });
       return;
     }
 
@@ -122,7 +124,7 @@ export default function ProfileClient() {
       setAvatarPreview(dataUrl);
       setMessage(null);
     } catch {
-      setMessage({ type: "error", text: "Failed to process image" });
+      setMessage({ type: "error", text: t.common.failedProcessImage });
     }
   };
 
@@ -151,7 +153,7 @@ export default function ProfileClient() {
         window.location.reload();
       }
     } catch {
-      setMessage({ type: "error", text: "Network error" });
+      setMessage({ type: "error", text: t.common.networkError });
     } finally {
       setAvatarSaving(false);
     }
@@ -174,7 +176,7 @@ export default function ProfileClient() {
         window.location.reload();
       }
     } catch {
-      setMessage({ type: "error", text: "Network error" });
+      setMessage({ type: "error", text: t.common.networkError });
     } finally {
       setAvatarSaving(false);
     }
@@ -183,7 +185,7 @@ export default function ProfileClient() {
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-sm" style={{ color: "var(--color-text-muted)" }}>Loading...</div>
+        <div className="text-sm" style={{ color: "var(--color-text-muted)" }}>{t.common.loading}</div>
       </div>
     );
   }
@@ -192,13 +194,13 @@ export default function ProfileClient() {
     return (
       <main className="min-h-screen">
         <div className="relative mx-auto max-w-4xl px-6 pt-24 pb-20 text-center">
-          <h1 className="text-2xl font-bold mb-4" style={{ color: c.text }}>Sign in to view your profile</h1>
+          <h1 className="text-2xl font-bold mb-4" style={{ color: c.text }}>{t.profile.signInPrompt}</h1>
           <Link
             href="/sign-in"
             className="inline-block px-8 py-3 rounded-full text-base font-semibold transition-all"
             style={{ backgroundColor: c.primary, color: isDark ? c.bg : "#FFFFFF" }}
           >
-            Sign In
+            {t.nav.signIn}
           </Link>
         </div>
       </main>
@@ -208,7 +210,7 @@ export default function ProfileClient() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-sm" style={{ color: "var(--color-text-muted)" }}>Loading profile...</div>
+        <div className="text-sm" style={{ color: "var(--color-text-muted)" }}>{t.profile.loading}</div>
       </div>
     );
   }
@@ -225,9 +227,9 @@ export default function ProfileClient() {
 
         <div className="relative mx-auto max-w-2xl px-6 pt-24 pb-20">
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-bold" style={{ color: c.primary }}>Your Profile</h1>
+            <h1 className="text-3xl font-bold" style={{ color: c.primary }}>{t.profile.title}</h1>
             <p className="text-sm mt-2" style={{ color: c.textMuted }}>
-              Set your birth details for personalized daily fortunes
+              {t.profile.subtitle}
             </p>
           </div>
 
@@ -270,7 +272,7 @@ export default function ProfileClient() {
                       color: isDark ? c.bg : "#FFFFFF",
                     }}
                   >
-                    {avatarSaving ? "Saving..." : "Save Avatar"}
+                    {avatarSaving ? t.common.saving : t.profile.saveAvatar}
                   </button>
                 )}
                 {(authUser?.avatar || avatarPreview) && (
@@ -283,7 +285,7 @@ export default function ProfileClient() {
                       color: "#E74C3C",
                     }}
                   >
-                    Remove
+                    {t.profile.remove}
                   </button>
                 )}
               </div>
@@ -292,13 +294,13 @@ export default function ProfileClient() {
             {/* Name */}
             <div>
               <label className="text-xs font-semibold tracking-wider uppercase mb-1.5 block" style={{ color: c.textMuted }}>
-                Display Name
+                {t.profile.displayName}
               </label>
               <input
                 type="text"
                 value={profile.name}
                 onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                placeholder={authUser?.name || "Your name"}
+                placeholder={authUser?.name || t.profile.namePlaceholder}
                 className="w-full px-3 py-2 rounded-lg text-sm border outline-none transition-colors"
                 style={{
                   background: isDark ? "#1a1a2e" : "#fafafa",
@@ -311,7 +313,7 @@ export default function ProfileClient() {
             {/* Birth Date */}
             <div>
               <label className="text-xs font-semibold tracking-wider uppercase mb-1.5 block" style={{ color: c.textMuted }}>
-                Birth Date
+                {t.profile.birthDate}
               </label>
               <input
                 type="date"
@@ -325,14 +327,14 @@ export default function ProfileClient() {
                 }}
               />
               {age !== null && (
-                <p className="text-xs mt-1" style={{ color: c.textMuted }}>Age: {age}</p>
+                <p className="text-xs mt-1" style={{ color: c.textMuted }}>{tf("profile.age", { age })}</p>
               )}
             </div>
 
             {/* Birth Hour */}
             <div>
               <label className="text-xs font-semibold tracking-wider uppercase mb-1.5 block" style={{ color: c.textMuted }}>
-                Birth Hour (0-23)
+                {t.profile.birthHour}
               </label>
               <select
                 value={profile.birthHour ?? ""}
@@ -356,13 +358,13 @@ export default function ProfileClient() {
             {/* Gender */}
             <div>
               <label className="text-xs font-semibold tracking-wider uppercase mb-1.5 block" style={{ color: c.textMuted }}>
-                Gender
+                {t.profile.gender}
               </label>
               <div className="flex gap-3">
                 {[
-                  { value: "male", label: "Male" },
-                  { value: "female", label: "Female" },
-                  { value: "other", label: "Other" },
+                  { value: "male", label: t.profile.male },
+                  { value: "female", label: t.profile.female },
+                  { value: "other", label: t.profile.other },
                 ].map((opt) => (
                   <button
                     key={opt.value}
@@ -394,7 +396,7 @@ export default function ProfileClient() {
                 }}
               >
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                {saving ? "Saving..." : "Save Profile"}
+                {saving ? t.common.saving : t.profile.save}
               </button>
               {message && (
                 <span
@@ -414,7 +416,7 @@ export default function ProfileClient() {
               style={{ color: c.textMuted }}
             >
               <Sparkles size={14} />
-              Back to Dashboard — try your personalized check-in
+              {t.profile.backToDashboard}
             </Link>
           </div>
         </div>

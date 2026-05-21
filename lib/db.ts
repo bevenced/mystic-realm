@@ -194,6 +194,63 @@ export async function initDatabase() {
       recipient_email VARCHAR(255),
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    -- Phase 1: Professional BaZi readings
+    CREATE TABLE IF NOT EXISTS bazi_readings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      birth_date DATE NOT NULL,
+      birth_hour INTEGER NOT NULL,
+      gender VARCHAR(10) NOT NULL,
+      year_pillar JSONB NOT NULL,
+      month_pillar JSONB NOT NULL,
+      day_pillar JSONB NOT NULL,
+      hour_pillar JSONB NOT NULL,
+      hidden_stems JSONB,
+      ten_gods JSONB,
+      day_master_strength VARCHAR(50),
+      yong_shen VARCHAR(50),
+      da_yun JSONB,
+      nayin JSONB,
+      shensha JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Phase 1: Compatibility readings
+    CREATE TABLE IF NOT EXISTS compatibility_readings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      partner_name VARCHAR(100),
+      partner_birth_date DATE NOT NULL,
+      partner_birth_hour INTEGER NOT NULL,
+      partner_gender VARCHAR(10) NOT NULL,
+      score INTEGER,
+      analysis JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Phase 3: Reading reports (PDF exports)
+    CREATE TABLE IF NOT EXISTS reading_reports (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      reading_type VARCHAR(50) NOT NULL,
+      pdf_size INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Phase 4: User long-term memory
+    CREATE TABLE IF NOT EXISTS user_memory (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      key VARCHAR(100) NOT NULL,
+      value TEXT NOT NULL,
+      category VARCHAR(50) NOT NULL DEFAULT 'general',
+      confidence REAL NOT NULL DEFAULT 0.5,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, key)
+    );
+    CREATE INDEX IF NOT EXISTS idx_user_memory_user ON user_memory(user_id);
   `;
 
   // Insert default plans
@@ -212,6 +269,12 @@ export async function initDatabase() {
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10)`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT`;
+
+  // Phase 4: Chat sub-persona style column
+  await sql`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS sub_persona VARCHAR(50)`;
+
+  // Phase 5: Language preference
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS language VARCHAR(10) DEFAULT 'en'`;
 
   return { success: true, message: "Database initialized" };
 }
@@ -235,6 +298,16 @@ export async function createUser(email: string, name: string, passwordHash: stri
 export async function getUserByEmail(email: string) {
   const result = await sql`
     SELECT * FROM users WHERE email = ${email}
+  `;
+  return result.rows[0] || null;
+}
+
+/**
+ * Get user profile by user ID (includes birth info)
+ */
+export async function getUserProfile(userId: string) {
+  const result = await sql`
+    SELECT id, email, name, plan, points, birth_date, birth_hour, gender, avatar FROM users WHERE id = ${userId}
   `;
   return result.rows[0] || null;
 }
@@ -1102,4 +1175,80 @@ export async function searchKnowledge(
     console.error("searchKnowledge error:", error);
     return [];
   }
+}
+
+/**
+ * Save a BaZi reading to the database.
+ */
+export async function saveBaZiReading(data: {
+  userId: string;
+  birthDate: string;
+  birthHour: number;
+  gender: string;
+  baziData: any;
+  hiddenStems?: any;
+  tenGods?: any;
+  dayMasterStrength?: string;
+  yongShen?: string;
+  daYun?: any;
+  nayin?: any;
+  shensha?: any;
+}) {
+  const id = crypto.randomUUID();
+  await sql`
+    INSERT INTO bazi_readings (id, user_id, birth_date, birth_hour, gender,
+      year_pillar, month_pillar, day_pillar, hour_pillar,
+      hidden_stems, ten_gods, day_master_strength, yong_shen, da_yun, nayin, shensha)
+    VALUES (${id}, ${data.userId}, ${data.birthDate}, ${data.birthHour}, ${data.gender},
+      ${JSON.stringify(data.baziData.year)}, ${JSON.stringify(data.baziData.month)},
+      ${JSON.stringify(data.baziData.day)}, ${JSON.stringify(data.baziData.hour)},
+      ${data.hiddenStems ? JSON.stringify(data.hiddenStems) : null},
+      ${data.tenGods ? JSON.stringify(data.tenGods) : null},
+      ${data.dayMasterStrength || null},
+      ${data.yongShen || null},
+      ${data.daYun ? JSON.stringify(data.daYun) : null},
+      ${data.nayin ? JSON.stringify(data.nayin) : null},
+      ${data.shensha ? JSON.stringify(data.shensha) : null})
+    RETURNING id, created_at
+  `;
+  return id;
+}
+
+/**
+ * Get BaZi reading history for a user.
+ */
+export async function getUserBaZiReadings(userId: string, limit: number = 10) {
+  const result = await sql`
+    SELECT id, birth_date, birth_hour, gender, day_master_strength, yong_shen,
+           year_pillar, month_pillar, day_pillar, hour_pillar, created_at
+    FROM bazi_readings
+    WHERE user_id = ${userId}
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `;
+  return result.rows;
+}
+
+/**
+ * Save a compatibility reading to the database.
+ */
+export async function saveCompatibilityReading(data: {
+  userId: string;
+  partnerName?: string;
+  partnerBirthDate: string;
+  partnerBirthHour: number;
+  partnerGender: string;
+  score: number;
+  analysis: any;
+}) {
+  const id = crypto.randomUUID();
+  await sql`
+    INSERT INTO compatibility_readings (id, user_id, partner_name, partner_birth_date,
+      partner_birth_hour, partner_gender, score, analysis)
+    VALUES (${id}, ${data.userId}, ${data.partnerName || null},
+      ${data.partnerBirthDate}, ${data.partnerBirthHour}, ${data.partnerGender},
+      ${data.score}, ${JSON.stringify(data.analysis)})
+    RETURNING id, created_at
+  `;
+  return id;
 }

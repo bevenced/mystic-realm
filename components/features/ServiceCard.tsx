@@ -1,13 +1,14 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export interface ServiceOption {
   key: string;
   name: string;
   emoji: string;
   desc: string;
-  themeKey: string; // which theme this service primarily belongs to
+  themeKey: string;
   price: number;
 }
 
@@ -52,6 +53,14 @@ export const SERVICES: ServiceOption[] = [
     themeKey: "meditation",
     price: 3.99,
   },
+  {
+    key: "compatibility",
+    name: "BaZi Compatibility",
+    emoji: "💞",
+    desc: "Compare two birth charts to discover relationship harmony and elemental chemistry.",
+    themeKey: "bazi",
+    price: 0,
+  },
 ];
 
 interface ServiceCardProps {
@@ -62,8 +71,12 @@ interface ServiceCardProps {
 
 export default function ServiceCard({ service, isSelected, onSelect }: ServiceCardProps) {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
+
+  const displayName = t.tools.services[service.key] || service.name;
+  const displayDesc = t.tools.serviceDescs[service.key] || service.desc;
 
   return (
     <button
@@ -80,7 +93,6 @@ export default function ServiceCard({ service, isSelected, onSelect }: ServiceCa
     >
       <div className="p-5">
         <div className="flex items-start gap-4">
-          {/* Emoji */}
           <div
             className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
             style={{
@@ -90,26 +102,26 @@ export default function ServiceCard({ service, isSelected, onSelect }: ServiceCa
             <span className="text-2xl">{service.emoji}</span>
           </div>
 
-          {/* Content */}
           <div className="flex-1 min-w-0">
             <h3
               className="text-base font-semibold mb-1"
               style={{ color: isSelected ? c.primary : c.text }}
             >
-              {service.name}
+              {displayName}
             </h3>
             <p
               className="text-xs leading-relaxed"
               style={{ color: c.textMuted }}
             >
-              {service.desc}
+              {displayDesc}
             </p>
-            <p className="text-xs mt-2 font-medium" style={{ color: c.primary }}>
-              Full reading from ${service.price.toFixed(2)}
-            </p>
+            {service.price > 0 && (
+              <p className="text-xs mt-2 font-medium" style={{ color: c.primary }}>
+                {t.tools.fullReading} ${service.price.toFixed(2)}
+              </p>
+            )}
           </div>
 
-          {/* Selected indicator */}
           {isSelected && (
             <div
               className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"

@@ -1,6 +1,11 @@
+"use client";
+
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import Link from "next/link";
 
 export default function NotFound() {
+  const { t } = useLocale();
+
   return (
     <main className="min-h-[60vh] flex items-center justify-center px-6">
       <div className="text-center">
@@ -14,13 +19,13 @@ export default function NotFound() {
           className="text-2xl font-semibold mb-3"
           style={{ color: "var(--color-text)" }}
         >
-          This realm does not exist
+          {t.notFound.title}
         </h1>
         <p
           className="text-sm mb-8 max-w-md mx-auto"
           style={{ color: "var(--color-text-muted)" }}
         >
-          The path you seek has vanished into the cosmic void. Return to familiar ground.
+          {t.notFound.description}
         </p>
         <Link
           href="/"
@@ -30,7 +35,7 @@ export default function NotFound() {
             color: "var(--color-bg)",
           }}
         >
-          Return Home
+          {t.notFound.returnHome}
         </Link>
       </div>
     </main>

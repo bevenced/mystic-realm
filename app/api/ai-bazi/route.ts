@@ -10,6 +10,15 @@ import { extractPreviewText, PREVIEW_FIELDS } from "@/lib/extract-preview";
 import { checkSubscriptionAndRateLimit } from "@/lib/subscription-check";
 import { recordAiUsage, consumeRedemption } from "@/lib/db";
 
+// Professional engine imports
+import { getAllTenGods } from "@/lib/bazi-engine/ten-gods";
+import { calculateElementStrength } from "@/lib/bazi-engine/elements";
+import { getAllHiddenStems } from "@/lib/bazi-engine/hidden-stems";
+import { calculateShenSha } from "@/lib/bazi-engine/shensha";
+import { calculateDaYun, getCurrentDaYun } from "@/lib/bazi-engine/luck";
+import { getCurrentYearFortune } from "@/lib/bazi-engine/annual";
+import { getNaYin } from "@/lib/bazi-engine/nayin";
+
 const requestSchema = z.object({
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   birthHour: z.number().int().min(0).max(23),
@@ -45,7 +54,6 @@ export async function POST(req: NextRequest) {
       isPaid = await verifyPayPalOrder(orderId, "bazi");
     }
 
-    // Points redemption: validate one-time token
     if (redeemed && userId) {
       const redemption = await consumeRedemption(redeemed);
       if (redemption) {
@@ -79,8 +87,84 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Build extended professional analysis data
+    let professionalData = null;
+    if (isPaid) {
+      const pillarStems = [
+        baziData.year.stemIndex,
+        baziData.month.stemIndex,
+        baziData.day.stemIndex,
+        baziData.hour.stemIndex,
+      ];
+      const pillarBranches = [
+        baziData.year.branchIndex,
+        baziData.month.branchIndex,
+        baziData.day.branchIndex,
+        baziData.hour.branchIndex,
+      ];
+
+      const tenGods = getAllTenGods(baziData.dayMasterIndex, pillarStems);
+      const elementStrength = calculateElementStrength(
+        pillarStems, pillarBranches, baziData.dayMasterIndex, true
+      );
+      const hiddenStems = getAllHiddenStems(pillarBranches);
+      const shensha = calculateShenSha(
+        pillarStems[0], pillarBranches[0],
+        pillarStems[1], pillarBranches[1],
+        pillarStems[2], pillarBranches[2],
+        pillarStems[3], pillarBranches[3],
+        gender
+      );
+      const daYun = calculateDaYun(
+        new Date(year, month - 1, day, birthHour),
+        baziData.year.stemIndex,
+        pillarStems[1], pillarBranches[1],
+        gender
+      );
+      const currentYearFortune = getCurrentYearFortune(
+        baziData.dayMasterIndex,
+        baziData.year.stemIndex,
+        baziData.year.branchIndex
+      );
+      const nayin = ["Year", "Month", "Day", "Hour"].map((name, i) => ({
+        pillar: name,
+        ...getNaYin(pillarStems[i], pillarBranches[i]),
+      }));
+
+      professionalData = {
+        tenGods: tenGods.map(tg => ({
+          stem: tg.stem,
+          tenGodName: tg.tenGodName,
+          tenGodEn: tg.tenGodEn,
+          element: tg.element,
+          relationship: tg.relationship,
+        })),
+        elementStrength,
+        hiddenStems: hiddenStems.map(hs => ({
+          branchIndex: hs.branchIndex,
+          stems: hs.stems.map(s => ({ stem: s.stem, element: s.element, qi: s.qi })),
+        })),
+        shensha: shensha.map(ss => ({
+          name: ss.name,
+          nameEn: ss.nameEn,
+          type: ss.type,
+          description: ss.description,
+          locations: ss.locations,
+        })),
+        daYun,
+        currentYearFortune,
+        nayin,
+      };
+    }
+
     const prompt = isPaid
-      ? buildBaZiUserPrompt({ birthDate, birthHour, gender, baziData })
+      ? buildBaZiUserPrompt({
+          birthDate,
+          birthHour,
+          gender,
+          baziData,
+          ...(professionalData || {}),
+        })
       : buildBaZiPreviewPrompt({ birthDate, birthHour, gender, baziData });
 
     const completion = await deepseek.chat.completions.create({
@@ -98,7 +182,6 @@ export async function POST(req: NextRequest) {
       ? parseAiJsonResponse(content) || buildBaZiFallback(content, baziData)
       : { preview: extractPreviewText(content, [...PREVIEW_FIELDS.bazi]) };
 
-    // Record AI usage for analytics
     const tokensUsed = completion.usage?.total_tokens || 0;
     if (dbUserId) {
       recordAiUsage(dbUserId, "bazi", tokensUsed).catch(() => {});
@@ -107,6 +190,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       baziData,
       reading,
+      professionalData, // Full professional analysis data for paid users
       birthDate,
       birthHour,
       gender,
@@ -127,10 +211,10 @@ function buildBaZiFallback(content: string, baziData: BaZiResult) {
     dayMaster: `Your Day Master is ${baziData.dayMasterYinYang} ${baziData.dayMasterElement}.`,
     elementAnalysis: { dominant: baziData.dayMasterElement, lacking: "N/A", balance: "See full analysis." },
     pillars: [
-      { name: "Year Pillar", meaning: "Ancestral and social influences." },
-      { name: "Month Pillar", meaning: "Career and parental influences." },
-      { name: "Day Pillar", meaning: "Self and spousal relationships." },
-      { name: "Hour Pillar", meaning: "Hidden talents and aspirations." },
+      { name: "Year Pillar", stem: baziData.year.stem, branch: baziData.year.branch, hiddenStems: "", tenGod: "", meaning: "Ancestral and social influences." },
+      { name: "Month Pillar", stem: baziData.month.stem, branch: baziData.month.branch, hiddenStems: "", tenGod: "", meaning: "Career and parental influences." },
+      { name: "Day Pillar", stem: baziData.day.stem, branch: baziData.day.branch, hiddenStems: "", tenGod: "", meaning: "Self and spousal relationships." },
+      { name: "Hour Pillar", stem: baziData.hour.stem, branch: baziData.hour.branch, hiddenStems: "", tenGod: "", meaning: "Hidden talents and aspirations." },
     ],
     lifeAspects: { personality: content.slice(0, 200), career: "Full analysis requires payment.", relationships: "Full analysis requires payment.", health: "Full analysis requires payment." },
     advice: "Consider the full reading for detailed guidance.",

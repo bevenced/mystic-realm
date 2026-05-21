@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Sparkles, ShoppingBag, BookOpen, ChevronRight, Home } from "lucide-react";
 import { themes } from "@/lib/themes";
 import Footer from "@/components/ui/Footer";
+import { getServerTranslation } from "@/lib/i18n/server";
 
 // 生成静态参数（六主题预渲染）
 export function generateStaticParams() {
@@ -30,6 +31,7 @@ export default function ThemeChannelPage({
   const theme = themes[params.slug];
   if (!theme) notFound();
 
+  const t = getServerTranslation();
   const c = theme.colors;
 
   return (
@@ -51,7 +53,7 @@ export default function ThemeChannelPage({
           >
             <Link href="/" className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors">
               <Home size={14} />
-              Home
+              {t.common.home}
             </Link>
             <ChevronRight size={14} />
             <span style={{ color: c.primary }}>{theme.name}</span>
@@ -106,27 +108,30 @@ export default function ThemeChannelPage({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <ChannelCard
             icon={Sparkles}
-            title="AI Reading"
+            title={t.ui.aiReading}
             desc={`Get a personalized ${theme.name.toLowerCase()} reading powered by AI.`}
             href={`/tools?theme=${theme.key}`}
             c={c}
             delay={0}
+            exploreText={t.ui.explore}
           />
           <ChannelCard
             icon={ShoppingBag}
-            title="Products"
+            title={t.ui.products}
             desc={`Explore curated ${theme.name.toLowerCase()} products and mystical tools.`}
             href={`/shop?theme=${theme.key}`}
             c={c}
             delay={100}
+            exploreText={t.ui.explore}
           />
           <ChannelCard
             icon={BookOpen}
-            title="Articles"
+            title={t.ui.articles}
             desc={`Deepen your knowledge with ${theme.name.toLowerCase()} guides and insights.`}
             href={`/blog?theme=${theme.key}`}
             c={c}
             delay={200}
+            exploreText={t.ui.explore}
           />
         </div>
 
@@ -136,7 +141,7 @@ export default function ThemeChannelPage({
             className="text-xl font-semibold mb-6"
             style={{ color: c.primary }}
           >
-            Featured
+            {t.ui.featured}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[1, 2].map((i) => (
@@ -156,12 +161,12 @@ export default function ThemeChannelPage({
                 />
                 <div className="p-5" style={{ backgroundColor: c.surface }}>
                   <h3 className="font-semibold mb-2" style={{ color: c.text }}>
-                    {i === 1 ? "Getting Started Guide" : "Featured Collection"}
+                    {i === 1 ? t.ui.gettingStarted : t.ui.featuredCollection}
                   </h3>
                   <p className="text-sm" style={{ color: c.textMuted }}>
                     {i === 1
-                      ? "Begin your journey into the world of " + theme.name.toLowerCase() + "."
-                      : "Handpicked items to enhance your " + theme.name.toLowerCase() + " practice."}
+                      ? t.ui.beginJourney.replace("{name}", theme.name.toLowerCase())
+                      : t.ui.handpickedItems.replace("{name}", theme.name.toLowerCase())}
                   </p>
                 </div>
               </div>
@@ -182,6 +187,7 @@ function ChannelCard({
   href,
   c,
   delay,
+  exploreText,
 }: {
   icon: React.ComponentType<{ size?: number | string }>;
   title: string;
@@ -189,6 +195,7 @@ function ChannelCard({
   href: string;
   c: { primary: string; surface: string; text: string; textMuted: string };
   delay: number;
+  exploreText: string;
 }) {
   return (
     <Link
@@ -227,7 +234,7 @@ function ChannelCard({
           className="inline-flex items-center gap-1 text-sm font-medium"
           style={{ color: c.primary }}
         >
-          Explore
+          {exploreText}
           <ChevronRight
             size={14}
             className="group-hover:translate-x-1 transition-transform duration-300"

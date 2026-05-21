@@ -3,15 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Sparkles, ChevronDown, Mail } from "lucide-react";
-
-const CATEGORIES = [
-  { value: "health", label: "Health", emoji: "💚" },
-  { value: "wealth", label: "Wealth", emoji: "💰" },
-  { value: "luck", label: "Luck", emoji: "🍀" },
-  { value: "friendship", label: "Friendship", emoji: "🤝" },
-  { value: "love", label: "Love", emoji: "❤️" },
-] as const;
 
 interface WishItem {
   id: string;
@@ -30,18 +23,27 @@ interface WishData {
   pointCost: number;
 }
 
-const WISH_EXAMPLES: Record<string, string> = {
-  health: `"Wishing my mother a speedy recovery from her surgery."`,
-  wealth: `"May my business bring prosperity and growth this year."`,
-  luck: `"Hoping for good luck on my upcoming job interview."`,
-  friendship: `"Wishing my best friend happiness in their new journey."`,
-  love: `"May my relationship grow deeper with love and understanding."`,
-};
-
 export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
   const { user } = useAuth();
+  const { t, tf } = useLocale();
+
+  const CATEGORIES = [
+    { value: "health", label: t.wish.categories.health, emoji: "💚" },
+    { value: "wealth", label: t.wish.categories.wealth, emoji: "💰" },
+    { value: "luck", label: t.wish.categories.luck, emoji: "🍀" },
+    { value: "friendship", label: t.wish.categories.friendship, emoji: "🤝" },
+    { value: "love", label: t.wish.categories.love, emoji: "❤️" },
+  ] as const;
+
+  const WISH_EXAMPLES: Record<string, string> = {
+    health: t.wish.wishExamples.health,
+    wealth: t.wish.wishExamples.wealth,
+    luck: t.wish.wishExamples.luck,
+    friendship: t.wish.wishExamples.friendship,
+    love: t.wish.wishExamples.love,
+  };
 
   const [data, setData] = useState<WishData | null>(null);
   const [category, setCategory] = useState<string>("");
@@ -96,7 +98,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
         setCategory("");
       }
     } catch {
-      setError("Failed to create wish. Please try again.");
+      setError(t.common.error);
     } finally {
       setLoading(false);
     }
@@ -115,7 +117,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold tracking-wider uppercase" style={{ color: c.primary }}>
-          ✨ Today&apos;s Wish
+          ✨ {t.wish.title}
         </h3>
         {data && (
           <span
@@ -125,20 +127,20 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
               color: remaining > 0 ? c.primary : c.textMuted,
             }}
           >
-            {Math.max(0, remaining)} left
+            {tf("wish.wishesLeft", { n: Math.max(0, remaining) })}
           </span>
         )}
       </div>
 
       {!data ? (
-        <div className="text-xs" style={{ color: c.textMuted }}>Loading...</div>
+        <div className="text-xs" style={{ color: c.textMuted }}>{t.common.loading}</div>
       ) : !data.checkedInToday ? (
         <p className="text-xs leading-relaxed" style={{ color: c.textMuted }}>
-          🌙 Check in first to make a wish today.
+          🌙 {t.wish.checkInFirst}
         </p>
       ) : remaining <= 0 ? (
         <p className="text-xs leading-relaxed" style={{ color: c.textMuted }}>
-          ✨ You&apos;ve made all {data.maxWishes} wishes for today. Come back tomorrow!
+          ✨ {tf("wish.maxWishesReached", { n: data.maxWishes })}
         </p>
       ) : (
         <>
@@ -154,7 +156,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
                 border: `1px solid ${c.primary}15`,
               }}
             >
-              <option value="" disabled>Choose a category...</option>
+              <option value="" disabled>{t.wish.chooseCategory}</option>
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
                   {cat.emoji} {cat.label}
@@ -176,8 +178,8 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
                 onChange={(e) => setWishText(e.target.value.slice(0, 300))}
                 placeholder={
                   cat
-                    ? `Write your ${cat.label.toLowerCase()} wish here...\ne.g. ${WISH_EXAMPLES[cat.value]}`
-                    : "Write your wish here..."
+                    ? `${tf("wish.wishPlaceholder", { category: cat.label })}\n${WISH_EXAMPLES[cat.value]}`
+                    : t.wish.wishPlaceholder
                 }
                 rows={3}
                 maxLength={300}
@@ -204,7 +206,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
                 type="email"
                 value={recipientEmail}
                 onChange={(e) => setRecipientEmail(e.target.value)}
-                placeholder="Recipient's email (optional)"
+                placeholder={t.wish.recipientEmail}
                 className="w-full px-3 py-2.5 rounded-lg text-sm mb-4"
                 style={{
                   backgroundColor: c.primary + "06",
@@ -234,10 +236,10 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="inline-block w-3.5 h-3.5 border-2 rounded-full animate-spin" style={{ borderColor: `${currentTheme.isDark ? c.bg : "#FFFFFF"}40`, borderTopColor: currentTheme.isDark ? c.bg : "#FFFFFF" }} />
-                    Blessing...
+                    {t.wish.blessing}
                   </span>
                 ) : (
-                  <span>✨ Make a Wish (-{data?.pointCost || 3} pts)</span>
+                  <span>✨ {t.wish.makeWish} (-{data?.pointCost || 3} {t.dailyFortune.pts})</span>
                 )}
               </button>
             </>
@@ -245,7 +247,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
 
           {!category && (
             <p className="text-xs" style={{ color: c.textMuted }}>
-              ↑ Select a category above to start writing your wish.
+              ↑ {t.wish.selectCategoryHint}
             </p>
           )}
         </>
@@ -258,7 +260,7 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
             className="text-[10px] font-semibold uppercase tracking-wider mb-3"
             style={{ color: c.textMuted }}
           >
-            Today&apos;s Wishes
+            {t.wish.todayWishes}
           </div>
           <div className="space-y-2">
             {data.wishes.map((wish) => {
@@ -283,18 +285,18 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
                   {wish.recipient_email && (
                     lastEmailSent === wish.recipient_email ? (
                       <span className="inline-flex items-center gap-1 mt-1.5 ml-6 text-[10px] font-medium" style={{ color: "#2ECC71" }}>
-                        ✓ Email sent to {wish.recipient_email} +5 pts
+                        ✓ {tf("wish.emailSent", { email: wish.recipient_email })}
                       </span>
                     ) : (
                       <a
-                        href={`mailto:${wish.recipient_email}?subject=${encodeURIComponent(`You've received a blessing from ${user?.name || "Someone"}`)}&body=${encodeURIComponent(`✨ A wish for you from ${user?.name || "Someone"} at Orient Wisdom:\n\n${wish.wish_text}\n\n—— Sent with ❤️ via Orient Wisdom`)}`}
+                        href={`mailto:${wish.recipient_email}?subject=${encodeURIComponent(tf("wish.emailSubjectExternal", { name: user?.name || t.common.avatar }))}&body=${encodeURIComponent(tf("wish.emailBodyExternal", { name: user?.name || t.common.avatar, text: wish.wish_text }))}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 mt-1.5 ml-6 text-[10px] font-medium hover:underline"
                         style={{ color: c.primary }}
                       >
                         <Mail size={10} />
-                        Notify {wish.recipient_email}
+                        {tf("wish.notifyEmail", { email: wish.recipient_email })}
                       </a>
                     )
                   )}
@@ -309,8 +311,8 @@ export default function DailyWish({ isSignedIn }: { isSignedIn: boolean }) {
       {data && data.checkedInToday && remaining > 0 && !data.wishes.length && (
         <p className="text-[10px] mt-4 text-center" style={{ color: c.textMuted }}>
           {data.userPoints >= (data.pointCost || 3)
-            ? `You have ${data.userPoints} pts — each wish costs ${data.pointCost || 3} pts`
-            : `Need ${data.pointCost || 3} pts to make a wish`}
+            ? tf("dailyFortune.costPerWish", { points: data.userPoints, cost: data.pointCost || 3 })
+            : tf("dailyFortune.needPts", { cost: data.pointCost || 3 })}
         </p>
       )}
     </div>

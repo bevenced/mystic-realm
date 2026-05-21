@@ -5,9 +5,12 @@ import MobileMenu from "@/components/ui/MobileMenu";
 import StreakBadge from "@/components/features/StreakBadge";
 import { useAuth } from "@/components/auth/AuthProvider";
 import UserMenu from "@/components/ui/UserMenu";
+import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export default function Navbar() {
   const { isSignedIn } = useAuth();
+  const { t } = useLocale();
 
   return (
     <nav
@@ -27,7 +30,7 @@ export default function Navbar() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
           </svg>
-          <span>Orient Wisdom</span>
+          <span>{t.home.title}</span>
         </Link>
 
         {/* Desktop nav links */}
@@ -35,22 +38,26 @@ export default function Navbar() {
           className="hidden md:flex items-center gap-8"
           style={{ color: "var(--color-text-muted)" }}
         >
+          <Link href="/dashboard" className="nav-link theme-transition hover:text-[var(--color-primary)]">
+            {t.nav.dashboard}
+          </Link>
           <Link href="/dailyfortune" className="nav-link theme-transition hover:text-[var(--color-primary)]">
-            Daily Fortune
+            {t.nav.dailyFortune}
           </Link>
           <Link href="/chat" className="nav-link theme-transition hover:text-[var(--color-primary)]">
-            AI Chat
+            {t.nav.aiChat}
           </Link>
           <Link href="/wish" className="nav-link theme-transition hover:text-[var(--color-primary)]">
-            Daily Wish
+            {t.nav.dailyWish}
           </Link>
           <Link href="/blog" className="nav-link theme-transition hover:text-[var(--color-primary)]">
-            Blog
+            {t.nav.blog}
           </Link>
         </div>
 
         {/* User menu */}
         <div className="hidden md:flex items-center gap-3 ml-6">
+          <LanguageSwitcher />
           {isSignedIn && (
             <>
               <StreakBadge isSignedIn={isSignedIn} />
@@ -59,7 +66,7 @@ export default function Navbar() {
                 className="text-sm nav-link theme-transition hover:text-[var(--color-primary)]"
                 style={{ color: "var(--color-text-muted)" }}
               >
-                Profile
+                {t.nav.profile}
               </Link>
             </>
           )}
@@ -67,12 +74,12 @@ export default function Navbar() {
             <>
               <Link href="/sign-in">
                 <button className="px-5 py-2.5 rounded-full theme-transition" style={{ color: "var(--color-text-muted)", border: "1px solid color-mix(in srgb, var(--color-text-muted) 20%, transparent)" }}>
-                  Sign In
+                  {t.nav.signIn}
                 </button>
               </Link>
               <Link href="/sign-up">
                 <button className="px-5 py-2.5 rounded-full ml-2 theme-transition" style={{ backgroundColor: "var(--color-primary)", color: "var(--color-bg)", border: "none" }}>
-                  Sign Up
+                  {t.nav.signUp}
                 </button>
               </Link>
             </>

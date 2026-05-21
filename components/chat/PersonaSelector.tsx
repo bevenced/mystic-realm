@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { PERSONAS, type PersonaConfig } from "@/lib/personas";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -11,6 +12,7 @@ interface PersonaSelectorProps {
 }
 
 export default function PersonaSelector({ selected, onSelect }: PersonaSelectorProps) {
+  const { t } = useLocale();
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -28,7 +30,7 @@ export default function PersonaSelector({ selected, onSelect }: PersonaSelectorP
         onClick={() => scroll("left")}
         className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full flex items-center justify-center"
         style={{ backgroundColor: c.surface, border: `1px solid ${c.primary}15` }}
-        aria-label="Previous persona"
+        aria-label={t.ui.prevPersona}
       >
         <ChevronLeft size={14} style={{ color: c.textMuted }} />
       </button>
@@ -36,7 +38,7 @@ export default function PersonaSelector({ selected, onSelect }: PersonaSelectorP
         onClick={() => scroll("right")}
         className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full flex items-center justify-center"
         style={{ backgroundColor: c.surface, border: `1px solid ${c.primary}15` }}
-        aria-label="Next persona"
+        aria-label={t.ui.nextPersona}
       >
         <ChevronRight size={14} style={{ color: c.textMuted }} />
       </button>

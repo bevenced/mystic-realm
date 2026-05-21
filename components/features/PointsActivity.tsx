@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Sparkles, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 interface Transaction {
@@ -20,20 +21,21 @@ function typeIcon(type: string) {
   return type.startsWith("wish") || type.startsWith("redeem") ? "−" : "+";
 }
 
-function typeLabel(type: string): string {
-  switch (type) {
-    case "checkin": return "Daily check-in";
-    case "wish": return "Wish";
-    case "wish_email_bonus": return "Email bonus";
-    case "redeem": return "Redemption";
-    default: return type;
-  }
-}
-
 export default function PointsActivity() {
   const { currentTheme } = useTheme();
+  const { t, tf } = useLocale();
   const c = currentTheme.colors;
   const [txns, setTxns] = useState<Transaction[]>([]);
+
+  const typeLabel = (type: string): string => {
+    switch (type) {
+      case "checkin": return t.points.checkin;
+      case "wish": return t.points.wish;
+      case "wish_email_bonus": return t.points.emailBonus;
+      case "redeem": return t.points.redeem;
+      default: return type;
+    }
+  };
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -66,10 +68,10 @@ export default function PointsActivity() {
       >
         <Sparkles size={14} style={{ color: c.primary }} />
         <h3 className="text-xs font-bold tracking-wider uppercase" style={{ color: c.text }}>
-          Points Activity
+          {t.points.title}
         </h3>
         <span className="text-[10px] ml-auto" style={{ color: c.textMuted }}>
-          Last {txns.length}
+          {tf("points.last", { n: txns.length })}
         </span>
       </div>
 
@@ -100,7 +102,7 @@ export default function PointsActivity() {
                     {t.description || typeLabel(t.type)}
                   </p>
                   <p className="text-[10px]" style={{ color: c.textMuted }}>
-                    {new Date(t.createdAt).toLocaleDateString("en-US", {
+                    {new Date(t.createdAt).toLocaleDateString(undefined, {
                       month: "short",
                       day: "numeric",
                       hour: "2-digit",

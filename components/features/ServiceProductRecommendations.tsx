@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { products, type Product } from "@/lib/products";
 
@@ -21,6 +22,7 @@ interface ServiceProductRecommendationsProps {
 }
 
 export default function ServiceProductRecommendations({ service }: ServiceProductRecommendationsProps) {
+  const { t } = useLocale();
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
@@ -38,10 +40,10 @@ export default function ServiceProductRecommendations({ service }: ServiceProduc
       <div className="w-12 h-px mx-auto mb-6" style={{ background: `${c.primary}33` }} />
 
       <h3 className="text-sm font-semibold tracking-wider uppercase text-center mb-2" style={{ color: c.primary }}>
-        Enhance Your Practice
+        {t.tools.enhanceYourPractice}
       </h3>
       <p className="text-xs text-center mb-6" style={{ color: c.textMuted }}>
-        Handpicked products to complement your {service} journey
+        {t.tools.productSubtitle}
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

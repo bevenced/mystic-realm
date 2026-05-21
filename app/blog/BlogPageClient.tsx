@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { getBlogThemes, getPostsByTheme } from "@/lib/blog-posts";
 import BlogCard from "@/components/features/BlogCard";
 import Link from "next/link";
@@ -10,6 +11,7 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 export default function BlogPageClient() {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
+  const { t } = useLocale();
   const searchParams = useSearchParams();
   const themeFilter = searchParams.get("theme") || "all";
 
@@ -37,10 +39,10 @@ export default function BlogPageClient() {
           >
             <Link href="/" className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors">
               <Home size={14} />
-              Home
+              {t.common.home}
             </Link>
             <ChevronRight size={14} />
-            <span style={{ color: c.primary }}>Blog</span>
+            <span style={{ color: c.primary }}>{t.blog.title}</span>
           </nav>
 
           {/* Header */}
@@ -52,11 +54,11 @@ export default function BlogPageClient() {
                 className="text-3xl md:text-4xl font-bold tracking-wider"
                 style={{ color: c.primary }}
               >
-                Mystical Blog
+                {t.blog.title}
               </h1>
             </div>
             <p className="text-sm" style={{ color: c.textMuted }}>
-              Deepen your knowledge with guides, insights, and wisdom from across the mystical arts.
+              {t.blog.subtitle}
             </p>
           </div>
 
@@ -71,7 +73,7 @@ export default function BlogPageClient() {
                 border: `1px solid ${c.primary}33`,
               }}
             >
-              All
+              {t.blog.allTab}
             </Link>
             {blogThemes.map((t) => (
               <Link
@@ -115,14 +117,14 @@ export default function BlogPageClient() {
           {posts.length === 0 && (
             <div className="text-center py-20">
               <p className="text-lg" style={{ color: c.textMuted }}>
-                No articles found for this category yet.
+                {t.blog.noArticles}
               </p>
               <Link
                 href="/blog"
                 className="inline-block mt-4 text-sm font-medium"
                 style={{ color: c.primary }}
               >
-                ← View all articles
+                ← {t.blog.viewAll}
               </Link>
             </div>
           )}

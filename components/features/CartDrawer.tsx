@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { X, ShoppingBag, Minus, Plus, Trash2 } from "lucide-react";
 import type { Product } from "@/lib/products";
 
@@ -30,13 +31,13 @@ export default function CartDrawer({
   checkoutLoading = false,
 }: CartDrawerProps) {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
 
   const total = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Prevent body scroll when drawer is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -52,13 +53,11 @@ export default function CartDrawer({
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
 
-      {/* Drawer */}
       <div
         className="fixed top-0 right-0 z-[70] h-full w-full max-w-md shadow-2xl animate-slide-down"
         style={{
@@ -67,7 +66,6 @@ export default function CartDrawer({
           transform: "translateX(0)",
         }}
       >
-        {/* Header */}
         <div
           className="flex items-center justify-between px-6 py-4"
           style={{
@@ -77,7 +75,7 @@ export default function CartDrawer({
           <div className="flex items-center gap-2">
             <ShoppingBag size={20} style={{ color: c.primary }} />
             <h2 className="text-lg font-semibold" style={{ color: c.text }}>
-              Cart ({itemCount})
+              {t.cart.title} ({itemCount})
             </h2>
           </div>
           <button
@@ -92,20 +90,19 @@ export default function CartDrawer({
           </button>
         </div>
 
-        {/* Cart items */}
         <div className="flex-1 overflow-y-auto px-6 py-4" style={{ maxHeight: "calc(100vh - 200px)" }}>
           {cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20">
               <ShoppingBag size={48} style={{ color: c.textMuted, opacity: 0.3 }} />
               <p className="mt-4 text-sm" style={{ color: c.textMuted }}>
-                Your cart is empty
+                {t.cart.empty}
               </p>
               <button
                 onClick={onClose}
                 className="mt-4 text-sm font-medium"
                 style={{ color: c.primary }}
               >
-                Continue Shopping
+                {t.cart.continueShopping}
               </button>
             </div>
           ) : (
@@ -119,10 +116,8 @@ export default function CartDrawer({
                     border: `1px solid ${c.primary}10`,
                   }}
                 >
-                  {/* Emoji */}
                   <span className="text-3xl flex-shrink-0">{item.product.emoji}</span>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <h3
                       className="text-sm font-semibold truncate"
@@ -131,10 +126,9 @@ export default function CartDrawer({
                       {item.product.name}
                     </h3>
                     <p className="text-xs mt-0.5" style={{ color: c.textMuted }}>
-                      ${item.product.price.toFixed(2)} each
+                      ${item.product.price.toFixed(2)} {t.cart.each}
                     </p>
 
-                    {/* Quantity controls */}
                     <div className="flex items-center gap-3 mt-2">
                       <button
                         onClick={() => onUpdateQuantity(item.product.id, -1)}
@@ -162,7 +156,6 @@ export default function CartDrawer({
                     </div>
                   </div>
 
-                  {/* Price + Remove */}
                   <div className="flex flex-col items-end gap-2">
                     <button
                       onClick={() => onRemove(item.product.id)}
@@ -182,7 +175,6 @@ export default function CartDrawer({
           )}
         </div>
 
-        {/* Footer */}
         {cart.length > 0 && (
           <div
             className="px-6 py-4"
@@ -193,7 +185,7 @@ export default function CartDrawer({
           >
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm" style={{ color: c.textMuted }}>
-                Subtotal
+                {t.cart.subtotal}
               </span>
               <span className="text-xl font-bold" style={{ color: c.primary }}>
                 ${total.toFixed(2)}
@@ -213,14 +205,14 @@ export default function CartDrawer({
               {checkoutLoading ? (
                 <>
                   <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  Processing...
+                  {t.cart.processing}
                 </>
               ) : (
-                "Proceed to Checkout"
+                t.cart.checkout
               )}
             </button>
             <p className="text-xs text-center mt-2" style={{ color: c.textMuted }}>
-              Secure payment via PayPal
+              {t.cart.securePayment}
             </p>
           </div>
         )}

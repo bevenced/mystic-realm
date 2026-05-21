@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Sparkles } from "lucide-react";
 
 interface FeedWish {
@@ -27,6 +28,7 @@ function truncate(text: string, max = 60): string {
 
 export default function HomepageSocialProof() {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
   const [wishes, setWishes] = useState<FeedWish[]>([]);
 
@@ -49,16 +51,16 @@ export default function HomepageSocialProof() {
             className="text-sm tracking-widest uppercase mb-3"
             style={{ color: "var(--color-text-muted)" }}
           >
-            Community
+            {t.ui.community}
           </p>
           <h2
             className="text-3xl md:text-4xl font-bold"
             style={{ color: "var(--color-primary)" }}
           >
-            Blessings from the Community
+            {t.ui.blessings}
           </h2>
           <p className="text-sm mt-3" style={{ color: "var(--color-text-muted)" }}>
-            Real wishes made by our community members
+            {t.ui.blessingDesc}
           </p>
         </div>
 

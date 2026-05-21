@@ -4,23 +4,26 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
+import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import Avatar from "@/components/ui/Avatar";
 
 const navLinks = [
-  { href: "/dailyfortune", label: "Daily Fortune" },
-  { href: "/wish", label: "Daily Wish" },
-  { href: "/blog", label: "Blog" },
+  { href: "/dailyfortune", labelKey: "dailyFortune" as const },
+  { href: "/wish", labelKey: "dailyWish" as const },
+  { href: "/blog", labelKey: "blog" as const },
 ];
 
 const authLinks = [
-  { href: "/profile", label: "Profile" },
-  { href: "/membership", label: "Membership" },
+  { href: "/profile", labelKey: "profile" as const },
+  { href: "/membership", labelKey: "membership" as const },
 ];
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
   const { isSignedIn, user, signOut } = useAuth();
+  const { t } = useLocale();
 
   return (
     <div className="md:hidden">
@@ -56,18 +59,19 @@ export default function MobileMenu() {
                 className="text-2xl font-semibold animate-slide-up theme-transition"
                 style={{ color: "var(--color-primary)" }}
               >
-                {link.label}
+                {t.nav[link.labelKey]}
               </Link>
             ))}
 
-            <div className="mt-4 animate-slide-up delay-200">
+            <div className="mt-4 flex flex-col items-center gap-3 animate-slide-up delay-200">
               <p
-                className="text-sm text-center mb-3"
+                className="text-sm text-center"
                 style={{ color: "var(--color-text-muted)" }}
               >
-                Switch Realm
+                {t.ui.switchRealm}
               </p>
               <ThemeSwitcher />
+              <LanguageSwitcher />
             </div>
 
             {isSignedIn && authLinks.map((link) => (
@@ -78,7 +82,7 @@ export default function MobileMenu() {
                 className="text-lg font-medium animate-slide-up theme-transition"
                 style={{ color: "var(--color-text-muted)" }}
               >
-                {link.label}
+                {t.nav[link.labelKey]}
               </Link>
             ))}
 
@@ -94,19 +98,19 @@ export default function MobileMenu() {
                     className="text-sm px-6 py-2 rounded-full"
                     style={{ color: "var(--color-text-muted)", border: "1px solid var(--color-border-tertiary)" }}
                   >
-                    Sign Out
+                    {t.userMenu.signOut}
                   </button>
                 </>
               ) : (
                 <div className="flex gap-3">
                   <Link href="/sign-in" onClick={() => setOpen(false)}>
                     <button className="text-sm px-6 py-2 rounded-full" style={{ color: "var(--color-text-muted)", border: "1px solid var(--color-border-tertiary)" }}>
-                      Sign In
+                      {t.nav.signIn}
                     </button>
                   </Link>
                   <Link href="/sign-up" onClick={() => setOpen(false)}>
                     <button className="text-sm px-6 py-2 rounded-full" style={{ backgroundColor: "var(--color-primary)", color: "var(--color-bg)" }}>
-                      Sign Up
+                      {t.nav.signUp}
                     </button>
                   </Link>
                 </div>

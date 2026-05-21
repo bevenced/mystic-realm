@@ -1,35 +1,37 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Sparkles, Users, Star, Shield } from "lucide-react";
-
-const trustItems = [
-  {
-    icon: Users,
-    label: "10,000+",
-    sublabel: "AI Readings Completed",
-  },
-  {
-    icon: Star,
-    label: "4.8 / 5",
-    sublabel: "Average User Rating",
-  },
-  {
-    icon: Sparkles,
-    label: "DeepSeek AI",
-    sublabel: "Powered by Advanced AI",
-  },
-  {
-    icon: Shield,
-    label: "100% Private",
-    sublabel: "Your Data is Secure",
-  },
-];
 
 export default function TrustBadges() {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
+
+  const trustItems = [
+    {
+      icon: Users,
+      label: t.ui.trustReadings,
+      sublabel: t.ui.trustReadingLabel,
+    },
+    {
+      icon: Star,
+      label: t.ui.trustRating,
+      sublabel: t.ui.trustRatingLabel,
+    },
+    {
+      icon: Sparkles,
+      label: t.ui.trustAI,
+      sublabel: t.ui.trustAILabel,
+    },
+    {
+      icon: Shield,
+      label: t.ui.trustPrivacy,
+      sublabel: t.ui.trustPrivacyLabel,
+    },
+  ];
 
   return (
     <section className="py-16 px-6">

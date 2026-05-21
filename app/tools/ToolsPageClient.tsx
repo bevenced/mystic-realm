@@ -11,6 +11,8 @@ import { getSpread } from "@/lib/tarot";
 import SafeHtml from "@/components/features/SafeHtml";
 import ServiceProductRecommendations from "@/components/features/ServiceProductRecommendations";
 import ReviewStars from "@/components/features/ReviewStars";
+import PdfExportButton from "@/components/features/PdfExportButton";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 type Step = 1 | 2 | 3;
 
@@ -20,6 +22,7 @@ export default function ToolsPageClient() {
   const isDark = currentTheme.isDark;
   const searchParams = useSearchParams();
   const themeParam = searchParams.get("theme");
+  const { t, tf } = useLocale();
 
   // State
   const [step, setStep] = useState<Step>(1);
@@ -84,17 +87,17 @@ export default function ToolsPageClient() {
           body = { spreadKey, question: "General reading", ...(orderId && { orderId }) };
           break;
         case "bazi":
-          if (!baziDate) { setError("Please enter your birth date."); setLoading(false); return; }
+          if (!baziDate) { setError(t.tools.enterBirthDate); setLoading(false); return; }
           endpoint = "/api/ai-bazi";
           body = { birthDate: baziDate, birthHour: baziHour, gender: baziGender, ...(orderId && { orderId }) };
           break;
         case "fengshui":
-          if (roomDesc.length < 10) { setError("Please describe your space (at least 10 characters)."); setLoading(false); return; }
+          if (roomDesc.length < 10) { setError(t.tools.describeSpaceMin); setLoading(false); return; }
           endpoint = "/api/ai-fengshui";
           body = { homeType, roomDescription: roomDesc, concerns: fengShuiConcerns, ...(orderId && { orderId }) };
           break;
         case "astrology":
-          if (!astroDate) { setError("Please enter your birth date."); setLoading(false); return; }
+          if (!astroDate) { setError(t.tools.enterBirthDate); setLoading(false); return; }
           endpoint = "/api/ai-astrology";
           body = { birthDate: astroDate, birthHour: astroHour, ...(orderId && { orderId }) };
           break;
@@ -118,7 +121,13 @@ export default function ToolsPageClient() {
       }
 
       setReading(data.reading);
-      setExtraData(data.baziData || data.zodiacData || {});
+      const baziExtra = data.baziData || data.zodiacData || {};
+      setExtraData({
+        ...baziExtra,
+        birthDate: data.birthDate,
+        birthHour: data.birthHour,
+        gender: data.gender,
+      });
       if (activeService === "tarot") setTarotCards(data.cards);
       setIsPaidResult(isPaid);
       setStep(3);
@@ -139,7 +148,7 @@ export default function ToolsPageClient() {
         localStorage.setItem("mystic-readings", JSON.stringify(history.slice(0, 50)));
       }
     } catch {
-      setError("Network error. Please try again.");
+      setError(t.tools.networkError);
     } finally {
       setLoading(false);
     }
@@ -194,12 +203,12 @@ export default function ToolsPageClient() {
             <div className="flex items-center justify-center gap-3 mb-3">
               <Sparkles size={24} style={{ color: c.primary }} />
               <h1 className="text-3xl md:text-4xl font-bold tracking-wider" style={{ color: c.primary }}>
-                AI Mystical Tools
+                {t.tools.title}
               </h1>
               <Sparkles size={24} style={{ color: c.primary }} />
             </div>
             <p className="text-sm" style={{ color: c.textMuted }}>
-              Choose a service and receive personalized AI-powered guidance.
+              {t.tools.subtitle}
             </p>
 
             {/* Step indicator */}
@@ -225,10 +234,10 @@ export default function ToolsPageClient() {
           {step === 1 && (
             <div className="max-w-2xl mx-auto animate-fade-in">
               <h2 className="text-xl font-semibold mb-2 text-center" style={{ color: c.text }}>
-                Choose Your Service
+                {t.tools.chooseService}
               </h2>
               <p className="text-sm text-center mb-8" style={{ color: c.textMuted }}>
-                Each service includes a free preview. Unlock full readings with PayPal.
+                {t.tools.serviceDesc}
               </p>
 
               <div className="space-y-3">
@@ -237,7 +246,10 @@ export default function ToolsPageClient() {
                     <ServiceCard
                       service={service}
                       isSelected={activeService === service.key}
-                      onSelect={setActiveService}
+                      onSelect={(key) => {
+                        if (key === "compatibility") { window.location.href = "/compatibility"; return; }
+                        setActiveService(key);
+                      }}
                     />
                   </div>
                 ))}
@@ -255,7 +267,7 @@ export default function ToolsPageClient() {
                     boxShadow: activeService ? `0 0 20px ${currentTheme.glow}` : "none",
                   }}
                 >
-                  Continue
+                  {t.tools.continue_}
                   <ChevronRight size={16} />
                 </button>
               </div>
@@ -270,14 +282,14 @@ export default function ToolsPageClient() {
                 {SERVICES.find((s) => s.key === activeService)?.name}
               </h2>
               <p className="text-sm text-center mb-6" style={{ color: c.textMuted }}>
-                Free preview included &middot;
+                {t.tools.freePreview} &middot;
                 {isFirstReading ? (
                   <>
-                    First reading <span className="line-through" style={{ color: c.textMuted }}>${getPrice().toFixed(2)}</span>
+                    {t.tools.firstReading} <span className="line-through" style={{ color: c.textMuted }}>${getPrice().toFixed(2)}</span>
                     {" "}<span className="font-bold" style={{ color: c.primary }}>$1.99</span>
                   </>
                 ) : (
-                  <>Full reading ${getPrice().toFixed(2)}</>
+                  <>{t.tools.fullReading} ${getPrice().toFixed(2)}</>
                 )}
               </p>
 
@@ -297,7 +309,7 @@ export default function ToolsPageClient() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: c.text }}>
-                        Birth Date
+                        {t.tools.birthDate}
                       </label>
                       <input
                         type="date"
@@ -314,7 +326,7 @@ export default function ToolsPageClient() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: c.text }}>
-                          Birth Hour
+                          {t.tools.birthHour}
                         </label>
                         <select
                           value={baziHour}
@@ -335,7 +347,7 @@ export default function ToolsPageClient() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: c.text }}>
-                          Gender
+                          {t.tools.gender}
                         </label>
                         <div className="flex gap-2">
                           {(["male", "female"] as const).map((g) => (
@@ -349,7 +361,7 @@ export default function ToolsPageClient() {
                                 border: `1px solid ${c.primary}33`,
                               }}
                             >
-                              {g === "male" ? "♂ Male" : "♀ Female"}
+                              {g === "male" ? `♂ ${t.tools.male}` : `♀ ${t.tools.female}`}
                             </button>
                           ))}
                         </div>
@@ -363,7 +375,7 @@ export default function ToolsPageClient() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: c.text }}>
-                        Home Type
+                        {t.tools.homeType}
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         {(["apartment", "house", "studio", "office"] as const).map((t) => (
@@ -384,12 +396,12 @@ export default function ToolsPageClient() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: c.text }}>
-                        Describe Your Space
+                        {t.tools.describeSpace}
                       </label>
                       <textarea
                         value={roomDesc}
                         onChange={(e) => setRoomDesc(e.target.value)}
-                        placeholder="Describe the layout, rooms, orientation, and any features of your space..."
+                        placeholder={t.tools.spacePlaceholder}
                         className="w-full rounded-lg px-4 py-3 text-sm outline-none resize-none"
                         style={{
                           backgroundColor: `${c.primary}08`,
@@ -402,13 +414,13 @@ export default function ToolsPageClient() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: c.text }}>
-                        Specific Concerns (Optional)
+                        {t.tools.concerns}
                       </label>
                       <input
                         type="text"
                         value={fengShuiConcerns}
                         onChange={(e) => setFengShuiConcerns(e.target.value)}
-                        placeholder="e.g., poor sleep, career stagnation, relationship tension"
+                        placeholder={t.tools.concernsPlaceholder}
                         className="w-full rounded-lg px-4 py-3 text-sm outline-none"
                         style={{
                           backgroundColor: `${c.primary}08`,
@@ -425,7 +437,7 @@ export default function ToolsPageClient() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: c.text }}>
-                        Birth Date
+                        {t.tools.birthDate}
                       </label>
                       <input
                         type="date"
@@ -441,7 +453,7 @@ export default function ToolsPageClient() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: c.text }}>
-                        Birth Hour (for Moon & Rising signs)
+                        {t.tools.birthHour}
                       </label>
                       <select
                         value={astroHour}
@@ -460,7 +472,7 @@ export default function ToolsPageClient() {
                         ))}
                       </select>
                       <p className="text-xs mt-1" style={{ color: c.textMuted }}>
-                        If you don't know your exact birth time, noon (12:00) is a reasonable default.
+                        {t.tools.birthHourHelp}
                       </p>
                     </div>
                   </div>
@@ -471,7 +483,7 @@ export default function ToolsPageClient() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: c.text }}>
-                        Meditation Type
+                        {t.tools.meditationType}
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         {([
@@ -498,7 +510,7 @@ export default function ToolsPageClient() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: c.text }}>
-                        Duration
+                        {t.tools.duration}
                       </label>
                       <div className="flex gap-2">
                         {["5", "10", "15"].map((d) => (
@@ -519,12 +531,12 @@ export default function ToolsPageClient() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: c.text }}>
-                        Current Mood / Concern (Optional)
+                        {t.tools.currentMood}
                       </label>
                       <textarea
                         value={meditationMood}
                         onChange={(e) => setMeditationMood(e.target.value)}
-                        placeholder="What's on your mind right now? (helps personalize your session)"
+                        placeholder={t.tools.moodPlaceholder}
                         className="w-full rounded-lg px-4 py-3 text-sm outline-none resize-none"
                         style={{
                           backgroundColor: `${c.primary}08`,
@@ -550,7 +562,7 @@ export default function ToolsPageClient() {
                     backgroundColor: "transparent",
                   }}
                 >
-                  Back
+                  {t.tools.back}
                 </button>
                 <button
                   onClick={() => handleSubmit()}
@@ -564,7 +576,7 @@ export default function ToolsPageClient() {
                   }}
                 >
                   {loading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
-                  {loading ? "Generating..." : "Free Preview"}
+                  {loading ? t.tools.generating : t.tools.freePreview}
                 </button>
               </div>
 
@@ -584,14 +596,14 @@ export default function ToolsPageClient() {
             <div className="animate-fade-in">
               <div className="flex items-center justify-between mb-6">
                 <button onClick={handleBack} className="text-sm flex items-center gap-1 transition-colors" style={{ color: c.textMuted }}>
-                  ← Back
+                  ← {t.tools.back}
                 </button>
                 <button
                   onClick={handleReset}
                   className="text-sm px-4 py-1.5 rounded-full transition-colors"
                   style={{ border: `1px solid ${c.primary}33`, color: c.textMuted, backgroundColor: "transparent" }}
                 >
-                  New Reading
+                  {t.tools.newReading}
                 </button>
               </div>
 
@@ -606,10 +618,10 @@ export default function ToolsPageClient() {
               {!isPaidResult && (
                 <div className="animate-slide-up text-center mt-6 mb-2">
                   <p className="text-xs tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>
-                    Want the full interpretation?
+                    {t.tools.wantFullReading}
                   </p>
                   <p className="text-sm mb-4" style={{ color: c.text }}>
-                    Unlock detailed analysis and personalized guidance for ${getPrice().toFixed(2)}.
+                    {t.tools.unlockFullReading} ${getPrice().toFixed(2)}.
                   </p>
                   <PayPalButton
                     amount={getPrice()}
@@ -634,6 +646,17 @@ export default function ToolsPageClient() {
               {/* Product recommendations after paid reading */}
               {isPaidResult && (
                 <>
+                  <div className="flex items-center justify-center gap-3 mt-6 mb-2">
+                    <PdfExportButton
+                      type={activeService}
+                      reading={reading}
+                      extraData={extraData}
+                      baziData={(reading as any).baziData}
+                      birthDate={extraData.birthDate as string}
+                      birthHour={extraData.birthHour as number}
+                      gender={extraData.gender as string}
+                    />
+                  </div>
                   <ServiceProductRecommendations service={activeService} />
                   <ReviewStars service={activeService} />
                 </>
@@ -661,6 +684,7 @@ function ResultDisplay({
   isPaid: boolean;
 }) {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
 
   // Free preview — show service-specific data + preview text
@@ -722,7 +746,7 @@ function ResultDisplay({
         )}
 
         <div className="rounded-xl p-6" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}22` }}>
-          <p className="text-xs tracking-wider uppercase mb-2" style={{ color: c.textMuted }}>Preview</p>
+          <p className="text-xs tracking-wider uppercase mb-2" style={{ color: c.textMuted }}>{t.tools.preview}</p>
           <SafeHtml className="text-sm leading-relaxed whitespace-pre-line" style={{ color: c.text }} html={previewText.replace(/\n/g, "<br/>")} />
         </div>
       </div>

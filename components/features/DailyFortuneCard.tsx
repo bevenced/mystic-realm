@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { StructuredFortune, FortuneAspect } from "@/lib/ai-fortune";
 
 interface BaziContext {
@@ -150,7 +151,7 @@ function FortuneRadar({
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 }
 
 export default function DailyFortuneCard({
@@ -163,6 +164,7 @@ export default function DailyFortuneCard({
 }: DailyFortuneCardProps) {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
+  const { t, tf } = useLocale();
 
   return (
     <div
@@ -201,7 +203,7 @@ export default function DailyFortuneCard({
         {/* Header: date */}
         <div className="text-center">
           <p className="text-xs font-medium tracking-wider" style={{ color: c.textMuted }}>
-            ✦ Today&apos;s Fortune — {formatDate(checkinDate)}
+            ✦ {t.dailyFortune.chartTitle} — {formatDate(checkinDate)}
           </p>
         </div>
 
@@ -220,7 +222,7 @@ export default function DailyFortuneCard({
           >
             {userName || "Your"}
             <span className="ml-2 font-normal" style={{ color: c.text, opacity: 0.7 }}>
-              Daily Fortune
+              {t.dailyFortune.todayFortune}
             </span>
           </h2>
 
@@ -237,7 +239,7 @@ export default function DailyFortuneCard({
         {/* Life Aspects — pentagon chart */}
         <div>
           <p className="text-xs font-semibold tracking-wider text-center mb-3" style={{ color: c.textMuted }}>
-            ✦ Fortune Chart
+            ✦ {t.dailyFortune.fortuneTitle}
           </p>
           <FortuneRadar aspects={fortuneData.aspects} colors={c} />
         </div>
@@ -267,7 +269,7 @@ export default function DailyFortuneCard({
           >
             <span>🍀</span>
             <span className="font-medium" style={{ color: c.text }}>
-              Lucky Color:{" "}
+              {t.dailyFortune.luckyColor}{" "}
               <span className="inline-block w-3 h-3 rounded-full align-middle mx-1" style={{ backgroundColor: fortuneData.luckyColor.toLowerCase() }} />
               <span style={{ color: c.primary }}>{fortuneData.luckyColor}</span>
             </span>
@@ -281,7 +283,7 @@ export default function DailyFortuneCard({
           >
             <span>🔢</span>
             <span className="font-medium" style={{ color: c.text }}>
-              Lucky #: <span style={{ color: c.primary }}>{fortuneData.luckyNumber}</span>
+              {t.dailyFortune.luckyNumber} <span style={{ color: c.primary }}>{fortuneData.luckyNumber}</span>
             </span>
           </div>
         </div>
@@ -300,11 +302,11 @@ export default function DailyFortuneCard({
         </span>
         <div className="flex items-center gap-3">
           <span className="text-xs" style={{ color: c.textMuted }}>
-            ✨ +{pointsEarned} pts
+            ✨ +{pointsEarned} {t.dailyFortune.pts}
           </span>
           {streak > 0 && (
             <span className="text-xs" style={{ color: c.textMuted }}>
-              🔥 {streak}d streak
+              🔥 {tf("dailyFortune.dayStreak", { n: streak })}
             </span>
           )}
         </div>

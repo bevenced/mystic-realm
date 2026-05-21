@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { ShoppingBag, Home, ChevronRight, Loader2, CheckCircle, X } from "lucide-react";
 import Link from "next/link";
 import { getProductsByTheme, getProductCategories, type Product } from "@/lib/products";
@@ -13,11 +14,12 @@ export default function ShopPageClient() {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
+  const { t } = useLocale();
   const searchParams = useSearchParams();
   const themeFilter = searchParams.get("theme") || "all";
 
   const [products] = useState(() => getProductsByTheme(themeFilter));
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState(t.common.all);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [addedToast, setAddedToast] = useState("");
@@ -40,8 +42,8 @@ export default function ShopPageClient() {
     localStorage.setItem("mystic-cart", JSON.stringify(newCart));
   }, []);
 
-  const categories = ["All", ...getProductCategories()];
-  const filteredProducts = activeCategory === "All"
+  const categories = [t.common.all, ...getProductCategories()];
+  const filteredProducts = activeCategory === t.common.all
     ? products
     : products.filter((p) => p.category === activeCategory);
 
@@ -137,10 +139,10 @@ export default function ShopPageClient() {
           >
             <Link href="/" className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors">
               <Home size={14} />
-              Home
+              {t.common.home}
             </Link>
             <ChevronRight size={14} />
-            <span style={{ color: c.primary }}>Shop</span>
+            <span style={{ color: c.primary }}>{t.shop.title}</span>
           </nav>
 
           {/* Header */}
@@ -152,11 +154,11 @@ export default function ShopPageClient() {
                 className="text-3xl md:text-4xl font-bold tracking-wider"
                 style={{ color: c.primary }}
               >
-                Mystical Shop
+                {t.shop.title}
               </h1>
             </div>
             <p className="text-sm" style={{ color: c.textMuted }}>
-              Curated tools, crystals, and treasures for your spiritual journey.
+              {t.shop.subtitle}
             </p>
           </div>
 
@@ -217,7 +219,7 @@ export default function ShopPageClient() {
           {filteredProducts.length === 0 && (
             <div className="text-center py-20">
               <p className="text-lg" style={{ color: c.textMuted }}>
-                No products found in this category.
+                {t.shop.noProducts}
               </p>
             </div>
           )}
@@ -245,7 +247,7 @@ export default function ShopPageClient() {
             boxShadow: `0 4px 20px ${currentTheme.glow}`,
           }}
         >
-          ✓ Added to cart
+          ✓ {t.shop.addedToCart}
         </div>
       )}
     </main>

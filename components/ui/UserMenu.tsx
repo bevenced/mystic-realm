@@ -3,10 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import Avatar from "@/components/ui/Avatar";
 
 export default function UserMenu() {
   const { user, signOut } = useAuth();
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -31,7 +33,7 @@ export default function UserMenu() {
         onClick={() => setOpen(!open)}
         aria-haspopup="true"
         aria-expanded={open}
-        aria-label="User menu"
+        aria-label={t.userMenu.menuLabel}
       >
         <Avatar src={user?.avatar} name={user?.name} size={36} />
       </button>
@@ -44,14 +46,12 @@ export default function UserMenu() {
             border: "1px solid color-mix(in srgb, var(--color-text-muted) 15%, transparent)",
           }}
         >
-          {/* User name */}
           <div className="px-4 py-3 text-sm font-medium truncate" style={{ color: "var(--color-text)" }}>
             {user?.name || user?.email}
           </div>
 
           <div className="border-t" style={{ borderColor: "color-mix(in srgb, var(--color-text-muted) 10%, transparent)" }} />
 
-          {/* Menu items */}
           <Link
             href="/profile"
             onClick={() => setOpen(false)}
@@ -60,7 +60,7 @@ export default function UserMenu() {
             onMouseEnter={e => (e.currentTarget.style.color = "var(--color-primary)")}
             onMouseLeave={e => (e.currentTarget.style.color = "var(--color-text-muted)")}
           >
-            Profile
+            {t.userMenu.profile}
           </Link>
           <Link
             href="/membership"
@@ -70,7 +70,7 @@ export default function UserMenu() {
             onMouseEnter={e => (e.currentTarget.style.color = "var(--color-primary)")}
             onMouseLeave={e => (e.currentTarget.style.color = "var(--color-text-muted)")}
           >
-            Membership
+            {t.userMenu.membership}
           </Link>
 
           <div className="border-t" style={{ borderColor: "color-mix(in srgb, var(--color-text-muted) 10%, transparent)" }} />
@@ -82,7 +82,7 @@ export default function UserMenu() {
             onMouseEnter={e => (e.currentTarget.style.color = "#E74C3C")}
             onMouseLeave={e => (e.currentTarget.style.color = "var(--color-text-muted)")}
           >
-            Sign Out
+            {t.userMenu.signOut}
           </button>
         </div>
       )}

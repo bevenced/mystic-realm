@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserFromRequest } from "@/lib/auth";
 import { getPersona } from "@/lib/personas";
+import { getChatStyle } from "@/lib/chat-styles";
 import { streamDeepSeek } from "@/lib/deepseek";
 import { sseEvent } from "@/lib/stream-utils";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -22,7 +23,7 @@ const RATE_LIMITS = {
 
 export async function POST(request: Request) {
   try {
-    const { conversationId, message, persona: personaId } = await request.json();
+    const { conversationId, message, persona: personaId, subPersona } = await request.json();
 
     if (!message || typeof message !== "string" || !message.trim()) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -32,6 +33,9 @@ export async function POST(request: Request) {
     if (!persona) {
       return NextResponse.json({ error: "Invalid persona" }, { status: 400 });
     }
+
+    // Resolve sub-persona (chat style) if provided
+    const style = subPersona ? getChatStyle(subPersona) : null;
 
     // Auth + rate limiting
     const session = getSessionUserFromRequest(request);
@@ -85,11 +89,26 @@ export async function POST(request: Request) {
     // RAG: search knowledge base for relevant classical text chunks
     const knowledgeChunks = await searchKnowledge(message.trim(), 3);
     let systemPrompt = persona.systemPrompt;
+
+    // Inject sub-persona tone instruction
+    if (style) {
+      systemPrompt += `\n\n[Style: ${style.name} / ${style.nameEn}]\n${style.toneInstruction}`;
+    }
+
     if (knowledgeChunks.length > 0) {
       const references = knowledgeChunks
         .map((k) => `[${k.source}${k.chapter ? ` — ${k.chapter}` : ""}]\n${k.content}`)
         .join("\n\n");
       systemPrompt += `\n\nYou may reference the following classical texts when relevant to the user's question:\n${references}`;
+    }
+
+    // Inject long-term user memory for signed-in users
+    if (userId) {
+      const { getMemoryContext } = await import("@/lib/memory/profile-store");
+      const memoryCtx = await getMemoryContext(userId);
+      if (memoryCtx) {
+        systemPrompt += `\n\n${memoryCtx}`;
+      }
     }
 
     // Build message history
@@ -111,13 +130,16 @@ export async function POST(request: Request) {
     // Add current message (may duplicate last user message if already saved, but that's fine)
     messages.push({ role: "user", content: message.trim() });
 
+    // Determine temperature from style, or use default
+    const temperature = style?.temperature;
+
     // SSE stream
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         let fullContent = "";
         try {
-          for await (const token of streamDeepSeek(messages)) {
+          for await (const token of streamDeepSeek(messages, { temperature })) {
             fullContent += token;
             controller.enqueue(encoder.encode(sseEvent("token", { token })));
           }
@@ -125,6 +147,9 @@ export async function POST(request: Request) {
           // Save assistant response
           if (userId && convId) {
             await addMessage(convId, "assistant", fullContent);
+            // Extract memory facts from this exchange
+            const { processConversationTurn } = await import("@/lib/memory/conversation-summary");
+            await processConversationTurn(userId, message.trim(), fullContent);
           }
 
           controller.enqueue(

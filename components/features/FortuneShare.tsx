@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Copy, Share2 } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 interface FortuneShareProps {
   text: string;
@@ -34,6 +35,7 @@ function FacebookIcon({ size }: { size: number }) {
 
 export default function FortuneShare({ text }: FortuneShareProps) {
   const { currentTheme } = useTheme();
+  const { t, tf } = useLocale();
   const c = currentTheme.colors;
   const [copied, setCopied] = useState(false);
 
@@ -110,7 +112,7 @@ export default function FortuneShare({ text }: FortuneShareProps) {
           href={link.url}
           target="_blank"
           rel="noopener noreferrer"
-          title={`Share on ${link.name}`}
+          title={tf("ui.shareTitle", { name: link.name })}
           style={btnStyle}
           className="hover:scale-110 transition-transform"
         >
@@ -120,7 +122,7 @@ export default function FortuneShare({ text }: FortuneShareProps) {
 
       <button
         onClick={handleCopy}
-        title={copied ? "Copied!" : "Copy to clipboard"}
+        title={copied ? t.ui.copied : t.ui.copyToClipboard}
         style={btnStyle}
         className="hover:scale-110 transition-transform"
       >
@@ -134,7 +136,7 @@ export default function FortuneShare({ text }: FortuneShareProps) {
       {typeof navigator.share === "function" && (
         <button
           onClick={handleWebShare}
-          title="More share options"
+          title={t.ui.moreShare}
           style={btnStyle}
           className="hover:scale-110 transition-transform"
         >

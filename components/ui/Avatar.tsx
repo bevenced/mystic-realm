@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useState } from "react";
 
 interface AvatarProps {
@@ -11,6 +12,7 @@ interface AvatarProps {
 }
 
 export default function Avatar({ src, name, size = 36, className = "", onClick }: AvatarProps) {
+  const { t } = useLocale();
   const [imgError, setImgError] = useState(false);
   const letter = (name || "?").charAt(0).toUpperCase();
 
@@ -18,7 +20,7 @@ export default function Avatar({ src, name, size = 36, className = "", onClick }
     return (
       <img
         src={src}
-        alt={name || "User"}
+        alt={name || t.common.avatar}
         width={size}
         height={size}
         onClick={onClick}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Star } from "lucide-react";
 
 interface ReviewStarsProps {
@@ -11,6 +12,7 @@ interface ReviewStarsProps {
 
 export default function ReviewStars({ service, onSubmitted }: ReviewStarsProps) {
   const { currentTheme } = useTheme();
+  const { t, tf } = useLocale();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
 
@@ -37,10 +39,10 @@ export default function ReviewStars({ service, onSubmitted }: ReviewStarsProps) 
         setSubmitted(true);
         onSubmitted?.();
       } else {
-        setError(data.error || "Failed to submit review.");
+        setError(data.error || t.tools.failedSubmitReview);
       }
     } catch {
-      setError("Network error. Please try again.");
+      setError(t.tools.networkError);
     } finally {
       setSubmitting(false);
     }
@@ -53,9 +55,9 @@ export default function ReviewStars({ service, onSubmitted }: ReviewStarsProps) 
         style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}22` }}
       >
         <p className="text-lg mb-1">🙏</p>
-        <p className="text-sm font-semibold" style={{ color: c.text }}>Thank you for your feedback!</p>
+        <p className="text-sm font-semibold" style={{ color: c.text }}>{t.tools.thankYouFeedback}</p>
         <p className="text-xs mt-1" style={{ color: c.textMuted }}>
-          Your review helps others discover their path.
+          {t.tools.reviewHelps}
         </p>
       </div>
     );
@@ -67,10 +69,9 @@ export default function ReviewStars({ service, onSubmitted }: ReviewStarsProps) 
       style={{ background: `${c.primary}05`, border: `1px solid ${c.primary}15` }}
     >
       <p className="text-sm font-semibold text-center mb-3" style={{ color: c.text }}>
-        How was your {service} reading?
+        {tf("tools.howWasReading", { service })}
       </p>
 
-      {/* Stars */}
       <div className="flex items-center justify-center gap-1 mb-4">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
@@ -92,11 +93,10 @@ export default function ReviewStars({ service, onSubmitted }: ReviewStarsProps) 
         ))}
       </div>
 
-      {/* Comment */}
       <textarea
         value={comment}
         onChange={(e) => setComment(e.target.value)}
-        placeholder="Share your experience (optional)..."
+        placeholder={t.tools.shareExperience}
         maxLength={500}
         className="w-full rounded-lg px-4 py-3 text-sm outline-none resize-none mb-4"
         style={{
@@ -107,7 +107,6 @@ export default function ReviewStars({ service, onSubmitted }: ReviewStarsProps) 
         }}
       />
 
-      {/* Submit button */}
       <button
         onClick={handleSubmit}
         disabled={rating === 0 || submitting}
@@ -118,7 +117,7 @@ export default function ReviewStars({ service, onSubmitted }: ReviewStarsProps) 
           cursor: rating > 0 ? "pointer" : "not-allowed",
         }}
       >
-        {submitting ? "Submitting..." : "Submit Review"}
+        {submitting ? t.tools.submitting : t.tools.submitReview}
       </button>
 
       {error && (

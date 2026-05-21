@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Sparkles, Check, Infinity, History, FileText, Headphones } from "lucide-react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { Sparkles, Check, Infinity, FileText, History, Headphones, Zap } from "lucide-react";
 import PayPalButton from "@/components/features/PayPalButton";
 import Link from "next/link";
 
@@ -17,20 +18,65 @@ interface SubStatus {
   readingsThisMonth: number;
 }
 
-const MYSTIC_PRICE = 9.99;
-const MYSTIC_FEATURES = [
-  { icon: Infinity, text: "Unlimited AI readings — tarot, BaZi, astrology, feng shui, meditation" },
-  { icon: FileText, text: "Full detailed interpretations (not just previews)" },
-  { icon: History, text: "Reading history — revisit past readings anytime" },
-  { icon: FileText, text: "Export readings as PDF" },
-  { icon: Headphones, text: "Priority access to new features" },
+const PLANS = [
+  {
+    id: "free",
+    nameKey: "free" as const,
+    price: 0,
+    period: "",
+    popular: false,
+    features: ["freePreviews", "basicGuidance"] as const,
+    cta: "Always free",
+  },
+  {
+    id: "mystic-weekly",
+    nameKey: "mystic" as const,
+    price: 2.99,
+    period: "weekly",
+    popular: false,
+    features: ["unlimitedReadings", "fullInterpretations", "readingHistory", "exportPdf"] as const,
+    cta: "Subscribe $2.99/week",
+    badge: "Best Value",
+  },
+  {
+    id: "mystic",
+    nameKey: "mystic" as const,
+    price: 9.99,
+    period: "monthly",
+    popular: true,
+    features: ["unlimitedReadings", "fullInterpretations", "readingHistory", "exportPdf", "prioritySupport"] as const,
+    cta: "Subscribe $9.99/month",
+    badge: "Most Popular",
+  },
+  {
+    id: "mystic-yearly",
+    nameKey: "mystic" as const,
+    price: 99.99,
+    period: "yearly",
+    popular: false,
+    features: ["unlimitedReadings", "fullInterpretations", "readingHistory", "exportPdf", "prioritySupport"] as const,
+    cta: "Subscribe $99.99/year",
+    badge: "Save 17%",
+    saveAmount: "$19.89",
+  },
 ];
+
+const FEATURE_ICONS: Record<string, any> = {
+  freePreviews: Check,
+  basicGuidance: Check,
+  unlimitedReadings: Infinity,
+  fullInterpretations: FileText,
+  readingHistory: History,
+  exportPdf: FileText,
+  prioritySupport: Headphones,
+};
 
 export default function MembershipClient() {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
   const { isSignedIn } = useAuth();
+  const { t } = useLocale();
 
   const [subStatus, setSubStatus] = useState<SubStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,7 +113,7 @@ export default function MembershipClient() {
           planName: "Mystic",
           isActive: true,
           expiresAt: data.expiresAt,
-          features: MYSTIC_FEATURES.map((f) => f.text),
+          features: PLANS[2].features.map((f) => f),
           readingsLimit: 999,
           readingsThisMonth: 0,
         });
@@ -82,6 +128,11 @@ export default function MembershipClient() {
     return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   };
 
+  const getFeatureText = (key: string) => {
+    const dict = t.membership.features as unknown as Record<string, string>;
+    return dict[key] || key;
+  };
+
   return (
     <main className="min-h-screen">
       <div className="relative">
@@ -90,20 +141,36 @@ export default function MembershipClient() {
           style={{ background: `radial-gradient(ellipse at 50% 0%, ${c.primary}12 0%, transparent 50%)` }}
         />
 
-        <div className="relative mx-auto max-w-4xl px-6 pt-24 pb-20">
+        <div className="relative mx-auto max-w-5xl px-6 pt-24 pb-20">
           {/* Header */}
           <div className="text-center mb-14 animate-fade-in">
             <div className="w-12 h-px mx-auto mb-6" style={{ background: c.primary }} />
             <div className="flex items-center justify-center gap-3 mb-3">
               <Sparkles size={24} style={{ color: c.primary }} />
               <h1 className="text-3xl md:text-4xl font-bold tracking-wider" style={{ color: c.primary }}>
-                Mystic Membership
+                {t.membership.title}
               </h1>
               <Sparkles size={24} style={{ color: c.primary }} />
             </div>
             <p className="text-sm max-w-md mx-auto" style={{ color: c.textMuted }}>
               One monthly pass. Unlimited mystical guidance. Your personal oracle, always available.
             </p>
+          </div>
+
+          {/* Limited-time banner */}
+          <div className="max-w-2xl mx-auto mb-8 animate-fade-in">
+            <div
+              className="rounded-xl p-4 text-center"
+              style={{ background: `linear-gradient(135deg, ${c.primary}20, ${c.primary}08)`, border: `1px solid ${c.primary}30` }}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <Zap size={16} style={{ color: c.primary }} />
+                <span className="text-sm font-semibold" style={{ color: c.primary }}>
+                  Limited Time: Yearly plan saves $19.89 compared to monthly
+                </span>
+                <Zap size={16} style={{ color: c.primary }} />
+              </div>
+            </div>
           </div>
 
           {/* Already subscribed */}
@@ -122,9 +189,6 @@ export default function MembershipClient() {
                 <h2 className="text-lg font-bold mb-1" style={{ color: c.text }}>You're a Mystic Member</h2>
                 <p className="text-sm" style={{ color: c.textMuted }}>
                   Unlimited readings until {formatDate(subStatus.expiresAt)}
-                </p>
-                <p className="text-xs mt-2" style={{ color: c.textMuted }}>
-                  Readings this month: {subStatus.readingsThisMonth}
                 </p>
               </div>
               <div className="text-center mt-6">
@@ -146,90 +210,97 @@ export default function MembershipClient() {
 
           {/* Plan cards */}
           {!subStatus?.isActive && (
-            <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto animate-fade-in">
-              {/* Free */}
-              <div
-                className="rounded-xl p-6"
-                style={{ background: c.surface, border: `1px solid ${c.primary}22` }}
-              >
-                <h3 className="text-lg font-bold mb-1" style={{ color: c.text }}>Free</h3>
-                <p className="text-3xl font-bold mb-4" style={{ color: c.primary }}>$0</p>
-                <ul className="space-y-2">
-                  {["3 free previews per service", "Basic AI guidance"].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm" style={{ color: c.textMuted }}>
-                      <Check size={14} style={{ color: c.primary, marginTop: 3, flexShrink: 0 }} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-6 text-center">
-                  <span className="text-xs" style={{ color: c.textMuted }}>
-                    Always free — no sign-up needed
-                  </span>
-                </div>
-              </div>
-
-              {/* Mystic */}
-              <div
-                className="rounded-xl p-6 relative"
-                style={{
-                  background: `linear-gradient(135deg, ${c.primary}15 0%, ${c.surface} 100%)`,
-                  border: `2px solid ${c.primary}44`,
-                }}
-              >
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto animate-fade-in">
+              {PLANS.map((plan) => (
                 <div
-                  className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase"
-                  style={{ background: c.primary, color: isDark ? c.bg : "#FFFFFF" }}
+                  key={plan.id}
+                  className="rounded-xl p-5 relative flex flex-col"
+                  style={{
+                    background: plan.popular
+                      ? `linear-gradient(135deg, ${c.primary}15 0%, ${c.surface} 100%)`
+                      : c.surface,
+                    border: plan.popular
+                      ? `2px solid ${c.primary}44`
+                      : `1px solid ${c.primary}22`,
+                  }}
                 >
-                  Most Popular
-                </div>
-                <h3 className="text-lg font-bold mb-1 mt-2" style={{ color: c.text }}>Mystic</h3>
-                <p className="text-3xl font-bold mb-1" style={{ color: c.primary }}>
-                  $9.99<span className="text-sm font-normal" style={{ color: c.textMuted }}>/month</span>
-                </p>
-                <p className="text-xs mb-4" style={{ color: c.textMuted }}>Cancel anytime</p>
-                <ul className="space-y-2 mb-6">
-                  {MYSTIC_FEATURES.map((f) => (
-                    <li key={f.text} className="flex items-start gap-2 text-sm" style={{ color: c.text }}>
-                      <f.icon size={14} style={{ color: c.primary, marginTop: 3, flexShrink: 0 }} />
-                      {f.text}
-                    </li>
-                  ))}
-                </ul>
-                {isSignedIn ? (
-                  <PayPalButton
-                    amount={MYSTIC_PRICE}
-                    spreadKey="mystic"
-                    readingId={crypto.randomUUID()}
-                    onSuccess={handleSubscribeSuccess}
-                    onError={setError}
-                  />
-                ) : (
-                  <div className="text-center">
+                  {plan.badge && (
+                    <div
+                      className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase whitespace-nowrap"
+                      style={{ background: c.primary, color: isDark ? c.bg : "#FFFFFF" }}
+                    >
+                      {plan.badge}
+                    </div>
+                  )}
+
+                  <h3 className="text-base font-bold mb-1" style={{ color: c.text }}>
+                    {plan.id === "free" ? t.membership.free : t.membership.mystic}
+                  </h3>
+
+                  <div className="mb-1">
+                    <span className="text-2xl font-bold" style={{ color: c.primary }}>
+                      ${plan.price}
+                    </span>
+                    {plan.period && (
+                      <span className="text-xs ml-1" style={{ color: c.textMuted }}>
+                        /{plan.period === "weekly" ? "week" : plan.period === "yearly" ? "year" : "month"}
+                      </span>
+                    )}
+                  </div>
+
+                  {plan.saveAmount && (
+                    <p className="text-xs mb-3" style={{ color: "#4CAF50" }}>
+                      Save {plan.saveAmount} vs monthly
+                    </p>
+                  )}
+
+                  <div className="text-xs mb-4" style={{ color: c.textMuted }}>
+                    {plan.id === "free" ? "No sign-up needed" : "Cancel anytime"}
+                  </div>
+
+                  <ul className="space-y-2 mb-5 flex-1">
+                    {plan.features.map((f) => {
+                      const Icon = FEATURE_ICONS[f] || Check;
+                      return (
+                        <li key={f} className="flex items-start gap-2 text-xs" style={{ color: c.text }}>
+                          <Icon size={12} style={{ color: c.primary, marginTop: 2, flexShrink: 0 }} />
+                          {getFeatureText(f)}
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  {plan.id === "free" ? (
+                    <div className="text-center text-xs" style={{ color: c.textMuted }}>
+                      Always free
+                    </div>
+                  ) : isSignedIn ? (
+                    <PayPalButton
+                      amount={plan.price}
+                      spreadKey="mystic"
+                      readingId={crypto.randomUUID()}
+                      onSuccess={handleSubscribeSuccess}
+                      onError={setError}
+                    />
+                  ) : (
                     <Link
                       href="/sign-up"
-                      className="inline-block w-full text-center py-3 rounded-full text-sm font-semibold transition-all"
+                      className="block w-full text-center py-2.5 rounded-full text-xs font-semibold transition-all"
                       style={{
                         backgroundColor: c.primary,
                         color: isDark ? c.bg : "#FFFFFF",
-                        boxShadow: `0 0 20px ${currentTheme.glow}`,
                       }}
                     >
                       Sign Up to Subscribe
                     </Link>
-                  </div>
-                )}
-                {error && (
-                  <p className="text-xs mt-2 text-center" style={{ color: "#E74C3C" }}>
-                    {error}
-                  </p>
-                )}
-              </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Not signed in and not subscribed */}
-          {!isSignedIn && (
+          {/* Not signed in prompt */}
+          {!isSignedIn && !subStatus?.isActive && (
             <div className="text-center mt-10 animate-fade-in">
               <p className="text-sm mb-4" style={{ color: c.textMuted }}>
                 Sign in to manage your membership or check your subscription status.
@@ -240,12 +311,17 @@ export default function MembershipClient() {
                 style={{
                   backgroundColor: c.primary,
                   color: isDark ? c.bg : "#FFFFFF",
-                  boxShadow: `0 0 20px ${currentTheme.glow}`,
                 }}
               >
                 Sign In
               </Link>
             </div>
+          )}
+
+          {error && (
+            <p className="text-xs mt-4 text-center" style={{ color: "#E74C3C" }}>
+              {error}
+            </p>
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { ShoppingCart } from "lucide-react";
 import type { Product } from "@/lib/products";
@@ -10,6 +11,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
+  const { t } = useLocale();
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
   const isDark = currentTheme.isDark;
@@ -113,7 +115,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
               color: isDark ? c.bg : "#FFFFFF",
               boxShadow: `0 0 15px ${currentTheme.glow}`,
             }}
-            title="Add to cart"
+            title={t.common.addToCart}
           >
             <ShoppingCart size={15} />
           </button>
