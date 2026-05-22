@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import HeroSection from "@/components/ui/HeroSection";
+import ToolsShowcase from "@/components/features/ToolsShowcase";
 import CoreFeatures from "@/components/ui/CoreFeatures";
+import TrustBadges from "@/components/ui/TrustBadges";
 import HomepageSocialProof from "@/components/features/HomepageSocialProof";
 import Footer from "@/components/ui/Footer";
 import { getLocaleFromBrowser, type Locale } from "@/lib/i18n/config";
@@ -36,16 +38,11 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function HomePage() {
   return (
     <main>
-      {/* Section 1: Hero */}
       <HeroSection />
-
-      {/* Section 2: Core Features */}
+      <ToolsShowcase />
       <CoreFeatures />
-
-      {/* Section 3: Community Social Proof */}
+      <TrustBadges />
       <HomepageSocialProof />
-
-      {/* Section 4: Footer */}
       <Footer />
     </main>
   );
