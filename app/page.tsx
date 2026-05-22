@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import HeroSection from "@/components/ui/HeroSection";
-import ToolsShowcase from "@/components/features/ToolsShowcase";
-import CoreFeatures from "@/components/ui/CoreFeatures";
-import TrustBadges from "@/components/ui/TrustBadges";
-import HomepageSocialProof from "@/components/features/HomepageSocialProof";
-import Footer from "@/components/ui/Footer";
+import CantianHero from "@/components/features/CantianHero";
+import CantianAbout from "@/components/features/CantianAbout";
+import CantianFeatures from "@/components/features/CantianFeatures";
+import CantianShowcase from "@/components/features/CantianShowcase";
+import CantianTestimonials from "@/components/features/CantianTestimonials";
+import CantianFAQ from "@/components/features/CantianFAQ";
+import CantianCTA from "@/components/features/CantianCTA";
+import CantianFooter from "@/components/features/CantianFooter";
 import { getLocaleFromBrowser, type Locale } from "@/lib/i18n/config";
 import { dictionary as enDict } from "@/lib/i18n/dictionaries/en";
 import { dictionary as zhCNDict } from "@/lib/i18n/dictionaries/zh-CN";
@@ -37,13 +39,15 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function HomePage() {
   return (
-    <main>
-      <HeroSection />
-      <div className="section-alt"><ToolsShowcase /></div>
-      <div className="section-alt"><CoreFeatures /></div>
-      <div className="section-alt"><TrustBadges /></div>
-      <div className="section-alt"><HomepageSocialProof /></div>
-      <Footer />
+    <main data-layout="cantian">
+      <CantianHero />
+      <div className="section-alt"><CantianAbout /></div>
+      <div className="section-alt"><CantianFeatures /></div>
+      <div className="section-alt"><CantianShowcase /></div>
+      <CantianTestimonials />
+      <div className="section-alt"><CantianFAQ /></div>
+      <CantianCTA />
+      <CantianFooter />
     </main>
   );
 }
