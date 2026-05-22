@@ -5,12 +5,6 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Flame, Sparkles, UserCircle } from "lucide-react";
 
-const BADGES = [
-  { textKey: "featureDailyFortune", emoji: "🔥" },
-  { textKey: "featureDailyWish", emoji: "✨" },
-  { textKey: "featureProfile", emoji: "👤" },
-];
-
 export default function CoreFeatures() {
   const { currentTheme } = useTheme();
   const { t } = useLocale();
@@ -50,9 +44,10 @@ export default function CoreFeatures() {
           >
             {t.ui.coreFeatures}
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold" style={{ color: c.text }}>
+          <h2 className="heading-fluid-lg" style={{ color: c.text }}>
             {t.ui.whatYouCanDo}
           </h2>
+          <div className="section-accent-line" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -62,42 +57,23 @@ export default function CoreFeatures() {
               <Link
                 key={f.href}
                 href={f.href}
-                className="group relative block rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5"
+                className="group block rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5"
                 style={{ opacity: 0, animationDelay: `${index * 120 + 200}ms`, animationFillMode: "forwards" }}
               >
-                {/* Card surface */}
-                <div
-                  className="absolute inset-0 theme-transition"
-                  style={{
-                    background: currentTheme.isDark
-                      ? `linear-gradient(160deg, ${c.surface} 0%, ${c.primary}10 100%)`
-                      : `linear-gradient(160deg, ${c.surface} 0%, ${c.primary}06 100%)`,
-                  }}
-                />
+                <div className="card-base shadow-card relative p-8">
+                  {/* Decorative corner brackets */}
+                  <div className="corner-bracket corner-bracket--tl" />
+                  <div className="corner-bracket corner-bracket--br" />
 
-                {/* Hover glow from accent */}
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ background: `radial-gradient(circle at 60% 20%, ${f.accent}12 0%, transparent 60%)` }}
-                />
-
-                {/* Border */}
-                <div
-                  className="absolute inset-0 rounded-xl theme-transition group-hover:border-[1.5px]"
-                  style={{ border: `1px solid ${c.primary}15` }}
-                />
-
-                {/* Content */}
-                <div className="relative p-8">
                   {/* Icon with colored background */}
                   <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300"
+                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300"
                     style={{ background: `${f.accent}15` }}
                   >
-                    <Icon size={26} style={{ color: f.accent }} />
+                    <Icon size={22} style={{ color: f.accent }} />
                   </div>
 
-                  <h3 className="text-lg font-bold mb-2" style={{ color: c.text }}>
+                  <h3 className="heading-fluid-base mb-2" style={{ color: c.text }}>
                     {f.title}
                   </h3>
 

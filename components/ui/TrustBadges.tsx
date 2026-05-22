@@ -8,7 +8,6 @@ export default function TrustBadges() {
   const { currentTheme } = useTheme();
   const { t } = useLocale();
   const c = currentTheme.colors;
-  const isDark = currentTheme.isDark;
 
   const trustItems = [
     {
@@ -42,24 +41,23 @@ export default function TrustBadges() {
             return (
               <div
                 key={i}
-                className="relative rounded-lg p-5 text-center animate-fade-in"
+                className="card-base shadow-card p-5 text-center animate-fade-in"
                 style={{
-                  background: `linear-gradient(135deg, ${c.primary}08 0%, ${c.surface} 100%)`,
-                  border: `1px solid ${c.primary}15`,
                   animationDelay: `${i * 100}ms`,
+                  animationFillMode: "forwards",
                 }}
               >
                 {/* Icon */}
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3"
+                  className="w-9 h-9 rounded-full flex items-center justify-center mx-auto mb-3"
                   style={{ background: `${c.primary}15` }}
                 >
-                  <Icon size={20} style={{ color: c.primary }} />
+                  <Icon size={18} style={{ color: c.primary }} />
                 </div>
 
                 {/* Number */}
                 <p
-                  className="text-xl md:text-2xl font-bold mb-1"
+                  className="text-2xl font-bold mb-1"
                   style={{ color: c.primary }}
                 >
                   {item.label}
@@ -67,7 +65,7 @@ export default function TrustBadges() {
 
                 {/* Label */}
                 <p
-                  className="text-xs tracking-wider"
+                  className="text-[11px] tracking-wider"
                   style={{ color: c.textMuted }}
                 >
                   {item.sublabel}

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { Sparkles } from "lucide-react";
 
 interface FeedWish {
   id: string;
@@ -49,17 +48,15 @@ export default function HomepageSocialProof() {
         <div className="text-center mb-10">
           <p
             className="text-sm tracking-widest uppercase mb-3"
-            style={{ color: "var(--color-text-muted)" }}
+            style={{ color: c.textMuted }}
           >
             {t.ui.community}
           </p>
-          <h2
-            className="text-3xl md:text-4xl font-bold"
-            style={{ color: "var(--color-primary)" }}
-          >
+          <h2 className="heading-fluid-lg" style={{ color: c.primary }}>
             {t.ui.blessings}
           </h2>
-          <p className="text-sm mt-3" style={{ color: "var(--color-text-muted)" }}>
+          <div className="section-accent-line" />
+          <p className="text-sm mt-3" style={{ color: c.textMuted }}>
             {t.ui.blessingDesc}
           </p>
         </div>
@@ -68,37 +65,31 @@ export default function HomepageSocialProof() {
           {wishes.map((wish, index) => (
             <div
               key={wish.id}
-              className="group relative rounded-lg overflow-hidden animate-slide-up"
+              className="card-base shadow-card p-5 animate-slide-up"
               style={{
                 opacity: 0,
                 animationDelay: `${index * 80}ms`,
                 animationFillMode: "forwards",
-                background: currentTheme.isDark
-                  ? `linear-gradient(135deg, ${c.surface} 0%, ${c.primary}10 100%)`
-                  : `linear-gradient(135deg, ${c.surface} 0%, ${c.primary}06 100%)`,
-                border: `1px solid ${c.primary}22`,
               }}
             >
-              <div className="relative p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-lg">{CATEGORY_EMOJI[wish.category] || "✨"}</span>
-                  <span
-                    className="text-[11px] font-semibold"
-                    style={{ color: c.primary }}
-                  >
-                    {wish.userName}
-                  </span>
-                  <span className="text-[10px] ml-auto" style={{ color: c.textMuted }}>
-                    {wish.timeLabel}
-                  </span>
-                </div>
-                <p
-                  className="text-sm leading-relaxed italic"
-                  style={{ color: c.text, opacity: 0.85 }}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">{CATEGORY_EMOJI[wish.category] || "✨"}</span>
+                <span
+                  className="text-[11px] font-semibold"
+                  style={{ color: c.primary }}
                 >
-                  &ldquo;{truncate(wish.text)}&rdquo;
-                </p>
+                  {wish.userName}
+                </span>
+                <span className="text-[10px] ml-auto" style={{ color: c.textMuted }}>
+                  {wish.timeLabel}
+                </span>
               </div>
+              <p
+                className="text-sm leading-relaxed italic"
+                style={{ color: c.text, opacity: 0.85 }}
+              >
+                &ldquo;{truncate(wish.text)}&rdquo;
+              </p>
             </div>
           ))}
         </div>

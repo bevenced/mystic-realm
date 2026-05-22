@@ -39,10 +39,10 @@ export default function HomePage() {
   return (
     <main>
       <HeroSection />
-      <ToolsShowcase />
-      <CoreFeatures />
-      <TrustBadges />
-      <HomepageSocialProof />
+      <div className="section-alt"><ToolsShowcase /></div>
+      <div className="section-alt"><CoreFeatures /></div>
+      <div className="section-alt"><TrustBadges /></div>
+      <div className="section-alt"><HomepageSocialProof /></div>
       <Footer />
     </main>
   );

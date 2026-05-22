@@ -31,9 +31,10 @@ export default function ToolsShowcase() {
           >
             {t.ui.explore}
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold" style={{ color: c.text }}>
+          <h2 className="heading-fluid-lg" style={{ color: c.text }}>
             {t.tools.title}
           </h2>
+          <div className="section-accent-line" />
           <p className="text-sm mt-3 max-w-xl mx-auto" style={{ color: c.textMuted }}>
             {t.tools.subtitle}
           </p>
@@ -44,41 +45,33 @@ export default function ToolsShowcase() {
             <Link
               key={tool.key}
               href={tool.href}
-              className="group relative rounded-xl overflow-hidden animate-slide-up transition-all duration-300 hover:-translate-y-1"
+              className="group block rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
               style={{
                 opacity: 0,
+                animation: `slide-up 0.6s ease forwards`,
                 animationDelay: `${i * 80 + 100}ms`,
-                animationFillMode: "forwards",
-                background: currentTheme.isDark
-                  ? `linear-gradient(135deg, ${c.surface} 0%, ${c.primary}12 100%)`
-                  : `linear-gradient(135deg, ${c.surface} 0%, ${c.primary}06 100%)`,
-                border: `1px solid ${c.primary}18`,
               }}
             >
-              {/* Hover glow */}
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                style={{
-                  background: `radial-gradient(circle at 50% 30%, ${c.primary}15 0%, transparent 60%)`,
-                }}
-              />
+              <div className="card-base shadow-card relative p-7">
+                {/* Decorative corner brackets */}
+                <div className="corner-bracket corner-bracket--tl" />
+                <div className="corner-bracket corner-bracket--br" />
 
-              <div className="relative p-7">
                 {/* Emoji */}
                 <div
-                  className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform duration-300"
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform duration-300"
                   style={{ background: `${c.primary}10` }}
                 >
                   {tool.emoji}
                 </div>
 
                 {/* Name */}
-                <h3 className="text-base font-bold mb-1.5" style={{ color: c.text }}>
+                <h3 className="heading-fluid-base mb-1.5" style={{ color: c.text }}>
                   {services[tool.key] || tool.key}
                 </h3>
 
                 {/* Description */}
-                <p className="text-xs leading-relaxed mb-4" style={{ color: c.textMuted, opacity: 0.8 }}>
+                <p className="text-sm leading-relaxed mb-4" style={{ color: c.textMuted, opacity: 0.8 }}>
                   {serviceDescs[tool.key] || ""}
                 </p>
 
