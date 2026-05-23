@@ -2,120 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== 六主题 CSS 变量 ===== */
+/* ===== 全局暗色东方智慧配色 ===== */
+:root {
+  --color-primary: #c19a4b;
+  --color-primary-deep: #a07d30;
+  --color-secondary: #8a7a5a;
+  --color-bg: #0a0806;
+  --color-surface: #1a1410;
+  --color-text: #e8ddd0;
+  --color-text-muted: #9a8a7a;
+  --color-text-muted-soft: #6a5a4a;
+  --color-accent: #c19a4b;
+  --color-glow: rgba(193, 154, 75, 0.15);
+  --gradient-hero: linear-gradient(180deg, #0a0806 0%, #120e0a 50%, #0a0806 100%);
+  --color-border: #3a2a1a;
+  --color-border-light: #4a3820;
+  --section-alt-bg: #120e0a;
+  --color-success: #2ECC71;
+  --color-warning: #F1C40F;
+  --color-error: #E74C3C;
+}
 
-/* 冥想 Meditation — 深蓝 + 米白，平静 */
+/* ===== 主题字体风格 ===== */
 [data-theme="meditation"] {
-  --color-primary: #3B5998;
-  --color-secondary: #6B8ACB;
-  --color-bg: #F5F0E8;
-  --color-surface: #FFFFFF;
-  --color-text: #1A1A2E;
-  --color-text-muted: #6B6B8D;
-  --color-accent: #8B7FC4;
-  --color-glow: rgba(59, 89, 152, 0.25);
-  --gradient-hero: linear-gradient(180deg, #F5F0E8 0%, #E8DFD0 50%, #DDD4C0 100%);
   --font-body: 'Cormorant Garamond', Georgia, serif;
   --font-heading: 'Cormorant Garamond', Georgia, serif;
-  --color-success: #2ECC71;
-  --color-warning: #F1C40F;
-  --color-error: #E74C3C;
 }
-
-/* ... existing theme blocks ... */
-
-[data-theme="astrology"] {
-  /* ... */
-}
-
-/* 疗愈 Healing — 柔绿 + 暖白，自然 */
 [data-theme="healing"] {
-  --color-primary: #5A8C6A;
-  --color-secondary: #8ABD98;
-  --color-bg: #FFF8F0;
-  --color-surface: #FFFFFF;
-  --color-text: #2D3A2E;
-  --color-text-muted: #7A8B7C;
-  --color-accent: #F4C091;
-  --color-glow: rgba(90, 140, 106, 0.25);
-  --gradient-hero: linear-gradient(180deg, #FFF8F0 0%, #F0EDE5 50%, #E8E4DA 100%);
   --font-body: 'Nunito', system-ui, sans-serif;
   --font-heading: 'Nunito', system-ui, sans-serif;
-  --color-success: #2ECC71;
-  --color-warning: #F1C40F;
-  --color-error: #E74C3C;
 }
-
-/* 风水 Fengshui — 中国红 + 深黑，庄重 */
 [data-theme="fengshui"] {
-  --color-primary: #C0392B;
-  --color-secondary: #E74C3C;
-  --color-bg: #0F0F0F;
-  --color-surface: #1E1E1E;
-  --color-text: #F5E6D3;
-  --color-text-muted: #B8A898;
-  --color-accent: #D4A843;
-  --color-glow: rgba(192, 57, 43, 0.3);
-  --gradient-hero: linear-gradient(180deg, #0F0F0F 0%, #1A0A0A 50%, #0F0F0F 100%);
   --font-body: 'Noto Serif SC', 'SimSun', serif;
   --font-heading: 'Noto Serif SC', 'SimSun', serif;
-  --color-success: #2ECC71;
-  --color-warning: #F1C40F;
-  --color-error: #E74C3C;
 }
-
-/* 八卦命理 BaZi — 铜金 + 深紫，神秘 */
 [data-theme="bazi"] {
-  --color-primary: #C4A035;
-  --color-secondary: #D4B84A;
-  --color-bg: #12101A;
-  --color-surface: #1E1A2A;
-  --color-text: #E8D5A3;
-  --color-text-muted: #A09080;
-  --color-accent: #FFD700;
-  --color-glow: rgba(196, 160, 53, 0.25);
-  --gradient-hero: linear-gradient(180deg, #12101A 0%, #1A1525 50%, #12101A 100%);
   --font-body: 'Cormorant Garamond', Georgia, serif;
   --font-heading: 'Cinzel', Georgia, serif;
-  --color-success: #2ECC71;
-  --color-warning: #F1C40F;
-  --color-error: #E74C3C;
 }
-
-/* 塔罗 Tarot — 金色 + 深靛，魔幻 */
 [data-theme="tarot"] {
-  --color-primary: #FFD700;
-  --color-secondary: #FFE44D;
-  --color-bg: #0A0A20;
-  --color-surface: #151535;
-  --color-text: #E8E0FF;
-  --color-text-muted: #9B8EC4;
-  --color-accent: #A78BFA;
-  --color-glow: rgba(255, 215, 0, 0.2);
-  --gradient-hero: linear-gradient(180deg, #0A0A20 0%, #150A30 50%, #0A0A20 100%);
   --font-body: 'Cormorant Garamond', Georgia, serif;
   --font-heading: 'Uncial Antiqua', Georgia, serif;
-  --color-success: #2ECC71;
-  --color-warning: #F1C40F;
-  --color-error: #E74C3C;
 }
-
-/* 星象 Astrology — 银白 + 午夜蓝，宇宙 */
 [data-theme="astrology"] {
-  --color-primary: #A8C4E0;
-  --color-secondary: #C8D8E8;
-  --color-bg: #020810;
-  --color-surface: #0A1420;
-  --color-text: #D0DCE8;
-  --color-text-muted: #6A80A0;
-  --color-accent: #7DD3FC;
-  --color-glow: rgba(125, 211, 252, 0.15);
-  --gradient-hero: linear-gradient(180deg, #020810 0%, #081020 50%, #020810 100%);
   --font-body: 'Josefin Sans', system-ui, sans-serif;
   --font-heading: 'Josefin Sans', system-ui, sans-serif;
-  --color-success: #2ECC71;
-  --color-warning: #F1C40F;
-  --color-error: #E74C3C;
 }
 
 /* ===== 基础排版 ===== */
@@ -465,20 +396,7 @@ main > .section-alt:nth-child(even) {
   font-weight: 600;
 }
 
-/* ===== 暗色东方智慧配色 ===== */
-body:has(main[data-layout="cantian"]) {
-  --color-primary: #c19a4b;
-  --color-primary-deep: #a07d30;
-  --color-bg: #0a0806;
-  --color-surface: #1a1410;
-  --color-text: #e8ddd0;
-  --color-text-muted: #9a8a7a;
-  --color-text-muted-soft: #6a5a4a;
-  --color-accent: #c19a4b;
-  --color-border: #2a2018;
-  --color-border-light: #3a2a1a;
-  --section-alt-bg: #120e0a;
-}
+/* ===== 首页专属排版与卡片样式 ===== */
 
 /* 段落交替背景 — cantian 版 */
 main[data-layout="cantian"] .section-alt:nth-child(odd) {
