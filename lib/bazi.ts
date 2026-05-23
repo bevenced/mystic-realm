@@ -18,3 +18,12 @@ export {
 } from "./bazi-engine/pillars";
 
 export type { BaZiPillar, BaZiResult } from "./bazi-engine/pillars";
+
+export { getAllTenGods, getTenGod } from "./bazi-engine/ten-gods";
+export type { TenGodResult } from "./bazi-engine/ten-gods";
+
+export { getNaYin } from "./bazi-engine/nayin";
+export type { NaYinResult } from "./bazi-engine/nayin";
+
+export { getAllHiddenStems, getHiddenStems } from "./bazi-engine/hidden-stems";
+export type { HiddenStem } from "./bazi-engine/hidden-stems";

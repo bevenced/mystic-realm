@@ -9,7 +9,52 @@ import {
   type FortuneContext,
   type StructuredFortune,
 } from "@/lib/ai-fortune";
-import { calculateBaZi, getDayPillar } from "@/lib/bazi";
+import { calculateBaZi, getDayPillar, getAllTenGods, getNaYin, getAllHiddenStems } from "@/lib/bazi";
+import type { BaZiResult, BaZiPillar } from "@/lib/bazi";
+
+function buildBaziContext(bazi: BaZiResult, todayPillar: BaZiPillar) {
+  const tenGods = getAllTenGods(bazi.dayMasterIndex, [
+    bazi.year.stemIndex,
+    bazi.month.stemIndex,
+    bazi.day.stemIndex,
+    bazi.hour.stemIndex,
+  ]);
+  const naYin = [
+    getNaYin(bazi.year.stemIndex, bazi.year.branchIndex),
+    getNaYin(bazi.month.stemIndex, bazi.month.branchIndex),
+    getNaYin(bazi.day.stemIndex, bazi.day.branchIndex),
+    getNaYin(bazi.hour.stemIndex, bazi.hour.branchIndex),
+  ];
+  const hiddenStems = getAllHiddenStems([
+    bazi.year.branchIndex,
+    bazi.month.branchIndex,
+    bazi.day.branchIndex,
+    bazi.hour.branchIndex,
+  ]);
+
+  return {
+    dayMaster: `${bazi.dayMasterYinYang} ${bazi.dayMasterElement}`,
+    dayMasterElement: bazi.dayMasterElement,
+    dayMasterYinYang: bazi.dayMasterYinYang,
+    dayMasterIndex: bazi.dayMasterIndex,
+    zodiac: bazi.day.zodiac.split(" ")[0],
+    elementCounts: bazi.elementCounts,
+    todayStem: todayPillar.stem,
+    todayBranch: todayPillar.branch,
+    todayStemEn: todayPillar.stemEn,
+    todayBranchEn: todayPillar.branchEn,
+    todayElement: todayPillar.stemElement,
+    pillars: {
+      year: bazi.year,
+      month: bazi.month,
+      day: bazi.day,
+      hour: bazi.hour,
+    },
+    tenGods: tenGods.map((t) => t.tenGodName),
+    naYin: naYin.map((n) => n.toneName),
+    hiddenStems: hiddenStems.map((h) => h.stems),
+  };
+}
 
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
@@ -31,18 +76,7 @@ export async function GET(request: NextRequest) {
       const bh = user.birth_hour ?? 0;
       const bazi = calculateBaZi(y, m, d, bh);
       const todayPillar = getDayPillar(new Date());
-      baziContext = {
-        dayMaster: `${bazi.dayMasterYinYang} ${bazi.dayMasterElement}`,
-        dayMasterElement: bazi.dayMasterElement,
-        dayMasterYinYang: bazi.dayMasterYinYang,
-        zodiac: bazi.day.zodiac.split(" ")[0],
-        elementCounts: bazi.elementCounts,
-        todayStem: todayPillar.stem,
-        todayBranch: todayPillar.branch,
-        todayStemEn: todayPillar.stemEn,
-        todayBranchEn: todayPillar.branchEn,
-        todayElement: todayPillar.stemElement,
-      };
+      baziContext = buildBaziContext(bazi, todayPillar);
     }
 
     // Try to parse today's fortune as structured data
@@ -150,18 +184,7 @@ export async function POST(request: NextRequest) {
 
     const result = await performCheckin(user.id, fortune);
 
-    const baziContext = {
-      dayMaster: `${bazi.dayMasterYinYang} ${bazi.dayMasterElement}`,
-      dayMasterElement: bazi.dayMasterElement,
-      dayMasterYinYang: bazi.dayMasterYinYang,
-      zodiac: bazi.day.zodiac.split(" ")[0],
-      elementCounts: bazi.elementCounts,
-      todayStem: todayPillar.stem,
-      todayBranch: todayPillar.branch,
-      todayStemEn: todayPillar.stemEn,
-      todayBranchEn: todayPillar.branchEn,
-      todayElement: todayPillar.stemElement,
-    };
+    const baziContext = buildBaziContext(bazi, todayPillar);
 
     return NextResponse.json({
       success: true,

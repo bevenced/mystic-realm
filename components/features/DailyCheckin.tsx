@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -11,13 +11,32 @@ import {
 import Link from "next/link";
 import DailyFortuneCard from "@/components/features/DailyFortuneCard";
 import FortuneShare from "@/components/features/FortuneShare";
+import BaziChart from "@/components/features/BaziChart";
 
 // ── Types ──
+
+interface PillarInfo {
+  stem: string;
+  stemIndex: number;
+  branch: string;
+  branchIndex: number;
+  stemElement: string;
+  branchElement: string;
+  zodiac: string;
+}
+
+interface HiddenStemInfo {
+  stem: string;
+  stemIndex: number;
+  qi: string;
+  element: string;
+}
 
 interface BaziContext {
   dayMaster: string;
   dayMasterElement: string;
   dayMasterYinYang: string;
+  dayMasterIndex: number;
   zodiac: string;
   elementCounts: Record<string, number>;
   todayStem: string;
@@ -25,6 +44,15 @@ interface BaziContext {
   todayStemEn: string;
   todayBranchEn: string;
   todayElement: string;
+  pillars?: {
+    year: PillarInfo;
+    month: PillarInfo;
+    day: PillarInfo;
+    hour: PillarInfo;
+  };
+  tenGods?: string[];
+  naYin?: string[];
+  hiddenStems?: HiddenStemInfo[][];
 }
 
 interface CheckinToday {
@@ -118,6 +146,7 @@ export default function DailyCheckin({
 
   const fortuneData = data?.today?.fortuneData;
   const baziCtx = data?.baziContext;
+  const cardRef = useRef<HTMLDivElement>(null);
 
   return (
     <div
@@ -224,12 +253,29 @@ export default function DailyCheckin({
         </div>
       )}
 
-      {/* ── Checked in — show fortune card ── */}
+      {/* ── Checked in — show Bazi chart + fortune card ── */}
       {data?.checkedIn && data.today && (
         <div className="px-7 py-6 space-y-5 animate-fade-in">
+          {/* BaZi Four Pillars Chart */}
+          {baziCtx?.pillars && (
+            <BaziChart
+              pillars={baziCtx.pillars}
+              tenGods={baziCtx.tenGods || []}
+              naYin={baziCtx.naYin || []}
+              hiddenStems={baziCtx.hiddenStems || []}
+              dayMasterIndex={baziCtx.dayMasterIndex}
+              dayMasterElement={baziCtx.dayMasterElement}
+              dayMasterYinYang={baziCtx.dayMasterYinYang}
+              elementCounts={baziCtx.elementCounts}
+              zodiac={baziCtx.zodiac}
+              locale={locale}
+            />
+          )}
+
           {fortuneData ? (
             <>
               <DailyFortuneCard
+                ref={cardRef}
                 fortuneData={fortuneData}
                 userName={user?.name || user?.email || ""}
                 baziCtx={baziCtx}
@@ -243,6 +289,7 @@ export default function DailyCheckin({
                   const fortune = `${name} ${t.dailyFortune.todayFortune}\n${fortuneData.advice}\n🍀 ${t.dailyFortune.shareLuckyLabel} ${fortuneData.luckyColor} | 🔢 ${t.dailyFortune.shareLuckyNumLabel} ${fortuneData.luckyNumber}`;
                   return tf("dailyFortune.shareTemplate", { fortune });
                 })()}
+                cardRef={cardRef}
               />
             </>
           ) : (
