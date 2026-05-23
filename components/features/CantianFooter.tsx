@@ -40,17 +40,17 @@ export default function CantianFooter() {
           {/* Column 1: Logo + tagline */}
           <div className="md:col-span-4">
             <div className="flex items-center gap-2 mb-4">
-              <Moon size={20} style={{ color: "#c5a170" }} />
-              <span className="text-sm font-semibold" style={{ color: "#4a3525" }}>Orient Wisdom</span>
+              <Moon size={20} style={{ color: "#c19a4b" }} />
+              <span className="text-sm font-semibold" style={{ color: "#e8ddd0" }}>Orient Wisdom</span>
             </div>
-            <p className="text-sm max-w-md" style={{ color: "#665744" }}>
+            <p className="text-sm max-w-md" style={{ color: "#9a8a7a" }}>
               {t.tagline}
             </p>
           </div>
 
           {/* Column 2: Knowledge */}
           <div>
-            <h4 className="text-xs font-semibold tracking-[0.16em] uppercase mb-4" style={{ color: "#4a3525" }}>
+            <h4 className="text-xs font-semibold tracking-[0.16em] uppercase mb-4" style={{ color: "#c19a4b" }}>
               {t.knowledge}
             </h4>
             <ul className="space-y-2.5">
@@ -61,7 +61,7 @@ export default function CantianFooter() {
                 { label: locale === "en" ? "Feng Shui" : "风水", href: "/tools?service=fengshui" },
               ].map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm transition-colors hover:opacity-80" style={{ color: "#665744" }}>
+                  <Link href={link.href} className="text-sm transition-colors hover:opacity-80" style={{ color: "#9a8a7a" }}>
                     {link.label}
                   </Link>
                 </li>
@@ -71,7 +71,7 @@ export default function CantianFooter() {
 
           {/* Column 3: Related Links */}
           <div>
-            <h4 className="text-xs font-semibold tracking-[0.16em] uppercase mb-4" style={{ color: "#4a3525" }}>
+            <h4 className="text-xs font-semibold tracking-[0.16em] uppercase mb-4" style={{ color: "#c19a4b" }}>
               {t.related}
             </h4>
             <ul className="space-y-2.5">
@@ -82,7 +82,7 @@ export default function CantianFooter() {
                 { label: locale === "en" ? "Terms" : "服务条款", href: "/terms" },
               ].map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm transition-colors hover:opacity-80" style={{ color: "#665744" }}>
+                  <Link href={link.href} className="text-sm transition-colors hover:opacity-80" style={{ color: "#9a8a7a" }}>
                     {link.label}
                   </Link>
                 </li>
@@ -92,12 +92,12 @@ export default function CantianFooter() {
 
           {/* Column 4: Partners */}
           <div>
-            <h4 className="text-xs font-semibold tracking-[0.16em] uppercase mb-4" style={{ color: "#4a3525" }}>
+            <h4 className="text-xs font-semibold tracking-[0.16em] uppercase mb-4" style={{ color: "#c19a4b" }}>
               {t.partners}
             </h4>
             <ul className="space-y-2.5">
               <li>
-                <a href="mailto:support@wentchine.shop" className="text-sm transition-colors hover:opacity-80" style={{ color: "#665744" }}>
+                <a href="mailto:support@wentchine.shop" className="text-sm transition-colors hover:opacity-80" style={{ color: "#9a8a7a" }}>
                   {locale === "en" ? "Contact Us" : "联系我们"}
                 </a>
               </li>
@@ -106,7 +106,7 @@ export default function CantianFooter() {
         </div>
 
         {/* Bottom copyright */}
-        <div className="mt-12 pt-6 text-center text-xs" style={{ borderTop: "1px solid #e2d2ba", color: "#9a7f5b" }}>
+        <div className="mt-12 pt-6 text-center text-xs" style={{ borderTop: "1px solid #3a2a1a", color: "#6a5a4a" }}>
           &copy; {new Date().getFullYear()} {t.copyright}
         </div>
       </div>

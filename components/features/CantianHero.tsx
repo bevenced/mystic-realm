@@ -50,7 +50,7 @@ export default function CantianHero() {
           {/* Eyebrow */}
           <span
             className="text-[11px] font-semibold tracking-[0.13em] uppercase"
-            style={{ color: "#8e7047" }}
+            style={{ color: "#d4a85a" }}
           >
             {t.eyebrow1}
           </span>
@@ -59,13 +59,13 @@ export default function CantianHero() {
           <h1 className="font-serif mt-4">
             <span
               className="block text-base md:text-lg lg:text-xl font-medium tracking-normal"
-              style={{ color: "#9a7f5b" }}
+              style={{ color: "#c19a4b" }}
             >
               {t.headline1}
             </span>
             <span
               className="block mt-3 heading-fluid-xl"
-              style={{ color: "#5a3f24" }}
+              style={{ color: "#e8ddd0" }}
             >
               {t.headline2}
             </span>
@@ -74,7 +74,7 @@ export default function CantianHero() {
           {/* Subheading */}
           <p
             className="mt-6 text-[15px] md:text-base leading-relaxed max-w-[57ch] mx-auto lg:mx-0"
-            style={{ color: "#665744" }}
+            style={{ color: "#9a8a7a" }}
           >
             {t.desc}
           </p>
@@ -101,10 +101,10 @@ export default function CantianHero() {
               href="/dailyfortune"
               className="inline-flex items-center gap-2.5 min-h-[3rem] px-6 rounded-[15px] text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5"
               style={{
-                border: "1px solid #e5c58d",
-                background: "#fff7ea",
-                color: "#4a311c",
-                boxShadow: "0 14px 28px -22px rgba(86, 58, 24, 0.58)",
+                border: "1px solid #4a3820",
+                background: "#2a1e14",
+                color: "#d0c0a8",
+                boxShadow: "0 14px 28px -22px rgba(0, 0, 0, 0.58)",
               }}
             >
               <span className="text-lg">🔮</span>
@@ -114,10 +114,10 @@ export default function CantianHero() {
               href="/chat"
               className="inline-flex items-center gap-2.5 min-h-[3rem] px-6 rounded-[15px] text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5"
               style={{
-                border: "1px solid #e5c58d",
-                background: "#fff7ea",
-                color: "#4a311c",
-                boxShadow: "0 14px 28px -22px rgba(86, 58, 24, 0.58)",
+                border: "1px solid #4a3820",
+                background: "#2a1e14",
+                color: "#d0c0a8",
+                boxShadow: "0 14px 28px -22px rgba(0, 0, 0, 0.58)",
               }}
             >
               <MessageCircle size={18} />
@@ -133,8 +133,8 @@ export default function CantianHero() {
             <div
               className="absolute inset-[15%] rounded-full pointer-events-none"
               style={{
-                border: "1px solid rgba(197, 161, 112, 0.15)",
-                background: "radial-gradient(circle at 50% 50%, rgba(197, 161, 112, 0.04) 0%, transparent 60%)",
+                border: "1px solid rgba(193, 154, 75, 0.2)",
+                background: "radial-gradient(circle at 50% 50%, rgba(193, 154, 75, 0.08) 0%, transparent 60%)",
               }}
             />
           </div>

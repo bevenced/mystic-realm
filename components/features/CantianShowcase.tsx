@@ -34,14 +34,14 @@ export default function CantianShowcase() {
       <div className="mx-auto max-w-[1320px]">
         {/* Section header */}
         <div className="text-center mb-14">
-          <p className="text-[11px] font-semibold tracking-[0.13em] uppercase mb-4" style={{ color: "#8e7047" }}>
+          <p className="text-[11px] font-semibold tracking-[0.13em] uppercase mb-4" style={{ color: "#d4a85a" }}>
             {t.eyebrow}
           </p>
-          <h2 className="heading-fluid-lg font-serif" style={{ color: "#3e3024" }}>
+          <h2 className="heading-fluid-lg font-serif" style={{ color: "#e8ddd0" }}>
             {t.title}
           </h2>
           <div className="section-accent-line mx-auto" />
-          <p className="text-[15px] mt-6 max-w-[65ch] mx-auto" style={{ color: "#665744" }}>
+          <p className="text-[15px] mt-6 max-w-[65ch] mx-auto" style={{ color: "#9a8a7a" }}>
             {t.desc}
           </p>
         </div>
@@ -50,9 +50,9 @@ export default function CantianShowcase() {
         <div
           className="relative p-8 md:p-12"
           style={{
-            border: "1px solid #d7bf9a",
-            background: "#fff8ec",
-            boxShadow: "0 24px 44px -30px rgba(107, 82, 45, 0.28)",
+            border: "1px solid #3a2a1a",
+            background: "#1a1410",
+            boxShadow: "0 24px 44px -30px rgba(0, 0, 0, 0.5)",
           }}
         >
           {/* Corner brackets */}
@@ -67,18 +67,18 @@ export default function CantianShowcase() {
                 href={tool.href}
                 className="group block p-5 transition-all duration-200 hover:-translate-y-0.5"
                 style={{
-                  border: "1px solid #dcc8aa",
-                  background: "linear-gradient(#fbf4e8, #ead7bd)",
+                  border: "1px solid #4a3820",
+                  background: "#241a10",
                   borderRadius: 0,
                 }}
               >
                 <div className="flex items-start gap-4">
                   <span className="text-2xl">{tool.emoji}</span>
                   <div>
-                    <h3 className="text-base font-semibold" style={{ color: "#4a3525" }}>
+                    <h3 className="text-base font-semibold" style={{ color: "#e8ddd0" }}>
                       {names[tool.key] || tool.key}
                     </h3>
-                    <p className="text-xs mt-1" style={{ color: "#665744" }}>
+                    <p className="text-xs mt-1" style={{ color: "#9a8a7a" }}>
                       <span className="link-arrow text-xs">
                         {locale === "en" ? "Enter" : "进入"}
                         <span>&rarr;</span>

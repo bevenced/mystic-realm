@@ -43,14 +43,14 @@ export default function CantianFeatures() {
       <div className="mx-auto max-w-[1320px]">
         {/* Section header */}
         <div className="text-center mb-16">
-          <p className="text-[11px] font-semibold tracking-[0.14em] mb-4" style={{ color: "#b0844b" }}>
+          <p className="text-[11px] font-semibold tracking-[0.14em] mb-4" style={{ color: "#d4a85a" }}>
             {t.title.toUpperCase()}
           </p>
-          <h2 className="heading-fluid-lg font-serif" style={{ color: "#3e3024" }}>
+          <h2 className="heading-fluid-lg font-serif" style={{ color: "#e8ddd0" }}>
             {t.title}
           </h2>
           <div className="section-accent-line mx-auto" />
-          <p className="text-[15px] mt-6 max-w-[65ch] mx-auto" style={{ color: "#665744" }}>
+          <p className="text-[15px] mt-6 max-w-[65ch] mx-auto" style={{ color: "#9a8a7a" }}>
             {t.desc}
           </p>
         </div>
@@ -70,7 +70,7 @@ export default function CantianFeatures() {
                 {/* Icon circle */}
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center mb-4"
-                  style={{ border: "1px solid #dcc4a2", background: "#fff8ea" }}
+                  style={{ border: "1px solid #4a3820", background: "#2a1e14" }}
                 >
                   <span className="text-sm">{item.icon}</span>
                 </div>
@@ -78,13 +78,13 @@ export default function CantianFeatures() {
                 {/* Title */}
                 <h3
                   className="text-xl font-semibold mb-3"
-                  style={{ color: "#4a3525" }}
+                  style={{ color: "#e8ddd0" }}
                 >
                   {item.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-[15px] leading-relaxed mb-4" style={{ color: "#5f4a36" }}>
+                <p className="text-[15px] leading-relaxed mb-4" style={{ color: "#c0b09a" }}>
                   {item.desc}
                 </p>
 

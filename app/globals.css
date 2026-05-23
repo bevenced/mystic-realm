@@ -465,19 +465,19 @@ main > .section-alt:nth-child(even) {
   font-weight: 600;
 }
 
-/* ===== cantian.ai 复制配色 ===== */
+/* ===== 暗色东方智慧配色 ===== */
 body:has(main[data-layout="cantian"]) {
-  --color-primary: #c5a170;
-  --color-primary-deep: #b0844b;
-  --color-bg: #fbf8f2;
-  --color-surface: #ffffff;
-  --color-text: #3e3024;
-  --color-text-muted: #665744;
-  --color-text-muted-soft: #9a7f5b;
-  --color-accent: #f5c77f;
-  --color-border: #e8dbc7;
-  --color-border-light: #eadfce;
-  --section-alt-bg: #faf5ea;
+  --color-primary: #c19a4b;
+  --color-primary-deep: #a07d30;
+  --color-bg: #0a0806;
+  --color-surface: #1a1410;
+  --color-text: #e8ddd0;
+  --color-text-muted: #9a8a7a;
+  --color-text-muted-soft: #6a5a4a;
+  --color-accent: #c19a4b;
+  --color-border: #2a2018;
+  --color-border-light: #3a2a1a;
+  --section-alt-bg: #120e0a;
 }
 
 /* 段落交替背景 — cantian 版 */
@@ -485,21 +485,21 @@ main[data-layout="cantian"] .section-alt:nth-child(odd) {
   background: var(--section-alt-bg);
 }
 
-/* 卡片 — cantian 版：白色 + 暖色边框 */
+/* 卡片 — 暗色版：深色面 + 暖色边框 */
 main[data-layout="cantian"] .card-base {
-  background: #ffffff;
+  background: #1a1410;
   border: 1px solid var(--color-border);
   border-radius: 0;
 }
 
-/* 阴影 — cantian 版：暖棕色 */
+/* 阴影 — 暗色版：金色微光 */
 main[data-layout="cantian"] .shadow-card {
-  box-shadow: 0 24px 44px -30px rgba(107, 82, 45, 0.28);
+  box-shadow: 0 24px 44px -30px rgba(193, 154, 75, 0.15);
   transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 main[data-layout="cantian"] .shadow-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 28px 52px -30px rgba(107, 82, 45, 0.35);
+  box-shadow: 0 28px 52px -30px rgba(193, 154, 75, 0.25);
 }
 
 /* 装饰线 — cantian 版：14px 宽 */
@@ -525,27 +525,27 @@ main[data-layout="cantian"] .heading-fluid-lg {
   line-height: 1.02;
 }
 
-/* 金色 CTA 按钮 */
+/* 金色 CTA 按钮 — 暗色版 */
 .btn-gold {
   display: inline-flex;
   min-height: 3rem;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  border: 1px solid #e1bc83;
-  background: #f5c77f;
+  border: 1px solid #b8913a;
+  background: #8a6a20;
   padding: 0 2rem;
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: #6b4b24;
-  box-shadow: 0 10px 22px -14px rgba(125, 93, 47, 0.55);
+  color: #f5e6c0;
+  box-shadow: 0 10px 22px -14px rgba(0, 0, 0, 0.55);
   transition: all 200ms;
 }
 .btn-gold:hover {
   transform: translateY(-1px);
-  background: #f8d08e;
-  box-shadow: 0 14px 28px -14px rgba(125, 93, 47, 0.55);
+  background: #9a7828;
+  box-shadow: 0 14px 28px -14px rgba(193, 154, 75, 0.3);
 }
 
 /* 分割线 "或" 样式 */
@@ -562,18 +562,18 @@ main[data-layout="cantian"] .heading-fluid-lg {
   height: 1px;
 }
 .divider-or::before {
-  background: linear-gradient(to right, transparent, #dfc8a5);
+  background: linear-gradient(to right, transparent, #5a4a30);
 }
 .divider-or::after {
-  background: linear-gradient(to right, #dfc8a5, transparent);
+  background: linear-gradient(to right, #5a4a30, transparent);
 }
 .divider-or-badge {
   display: inline-flex;
   align-items: center;
-  border: 1px solid #ead7ba;
-  background: #fffaf2;
+  border: 1px solid #4a3820;
+  background: #1a1410;
   font-size: 10px;
-  color: #9a7a4f;
+  color: #b8913a;
   letter-spacing: 0.12em;
   border-radius: 9999px;
   padding: 0.125rem 0.625rem;
@@ -585,7 +585,7 @@ main[data-layout="cantian"] .heading-fluid-lg {
   display: inline-block;
   width: 5px;
   height: 5px;
-  background: #c5a170;
+  background: #c19a4b;
   transform: rotate(45deg);
   border-radius: 1px;
   flex-shrink: 0;
@@ -596,17 +596,17 @@ main[data-layout="cantian"] .heading-fluid-lg {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.14em;
-  color: #b0844b;
+  color: #c19a4b;
 }
 
-/* 箭头链接 */
+/* 箭头链接 — 暗色版 */
 .link-arrow {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
   font-size: 14px;
   font-weight: 500;
-  color: #8e7047;
+  color: #c19a4b;
   transition: gap 0.2s;
 }
 .link-arrow:hover {

@@ -43,14 +43,14 @@ export default function CantianTestimonials() {
     <section className="py-16 md:py-20 px-4" style={{ background: "#ffffff" }}>
       <div className="mx-auto max-w-[1320px]">
         <div className="text-center mb-12">
-          <p className="text-[11px] font-semibold tracking-[0.13em] uppercase mb-4" style={{ color: "#8e7047" }}>
+          <p className="text-[11px] font-semibold tracking-[0.13em] uppercase mb-4" style={{ color: "#d4a85a" }}>
             {t.eyebrow}
           </p>
-          <h2 className="heading-fluid-lg font-serif" style={{ color: "#3e3024" }}>
+          <h2 className="heading-fluid-lg font-serif" style={{ color: "#e8ddd0" }}>
             {t.title}
           </h2>
           <div className="section-accent-line mx-auto" />
-          <p className="text-[15px] mt-6 max-w-[65ch] mx-auto" style={{ color: "#665744" }}>
+          <p className="text-[15px] mt-6 max-w-[65ch] mx-auto" style={{ color: "#9a8a7a" }}>
             {t.desc}
           </p>
         </div>
@@ -60,23 +60,23 @@ export default function CantianTestimonials() {
             <div
               key={i}
               className="p-5"
-              style={{ border: "1px solid #e8dbc7", background: "#ffffff" }}
+              style={{ border: "1px solid #3a2a1a", background: "#1a1410" }}
             >
               {/* Star rating */}
               <div className="flex gap-1 mb-4">
                 {[...Array(5)].map((_, s) => (
-                  <span key={s} style={{ color: "#c5a170" }}>★</span>
+                  <span key={s} style={{ color: "#c19a4b" }}>★</span>
                 ))}
               </div>
               {/* Quote */}
-              <p className="text-[15px] leading-relaxed mb-4" style={{ color: "#5f4a36" }}>
+              <p className="text-[15px] leading-relaxed mb-4" style={{ color: "#d0c0a8" }}>
                 &ldquo;{item.text}&rdquo;
               </p>
               {/* Author */}
-              <p className="text-sm font-semibold" style={{ color: "#4a3525" }}>
+              <p className="text-sm font-semibold" style={{ color: "#e8ddd0" }}>
                 {item.name}
               </p>
-              <p className="text-xs" style={{ color: "#9a7f5b" }}>
+              <p className="text-xs" style={{ color: "#7a6a5a" }}>
                 {item.role}
               </p>
             </div>

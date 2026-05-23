@@ -1,11 +1,11 @@
 "use client";
 
 const ELEMENT_COLORS: Record<string, string> = {
-  metal: "#D4C5A9",
+  metal: "#e0d5c0",
   wood: "#7BAE7F",
-  water: "#6A8EB0",
-  fire: "#D4675B",
-  earth: "#B8915A",
+  water: "#7aaac4",
+  fire: "#d4786a",
+  earth: "#c9a56a",
 };
 
 const ELEMENTS = [
@@ -77,13 +77,13 @@ const LINES = (() => {
 function YaoLine({ solid, y }: { solid: number; y: number }) {
   if (solid) {
     return (
-      <line x1="-9" y1={y} x2="9" y2={y} stroke="#c5a170" strokeWidth="2" strokeLinecap="round" opacity={0.8} />
+      <line x1="-9" y1={y} x2="9" y2={y} stroke="#d4a85a" strokeWidth="2" strokeLinecap="round" opacity={0.9} />
     );
   }
   return (
     <>
-      <line x1="-9" y1={y} x2="-2" y2={y} stroke="#c5a170" strokeWidth="2" strokeLinecap="round" opacity={0.8} />
-      <line x1="2" y1={y} x2="9" y2={y} stroke="#c5a170" strokeWidth="2" strokeLinecap="round" opacity={0.8} />
+      <line x1="-9" y1={y} x2="-2" y2={y} stroke="#d4a85a" strokeWidth="2" strokeLinecap="round" opacity={0.9} />
+      <line x1="2" y1={y} x2="9" y2={y} stroke="#d4a85a" strokeWidth="2" strokeLinecap="round" opacity={0.9} />
     </>
   );
 }
@@ -98,13 +98,13 @@ export default function CosmicMandala() {
       >
         <defs>
           <radialGradient id="mandala-glow">
-            <stop offset="0%" stopColor="#c5a170" stopOpacity="0.07" />
-            <stop offset="50%" stopColor="#c5a170" stopOpacity="0.02" />
-            <stop offset="100%" stopColor="#c5a170" stopOpacity="0" />
+            <stop offset="0%" stopColor="#c19a4b" stopOpacity="0.12" />
+            <stop offset="50%" stopColor="#c19a4b" stopOpacity="0.04" />
+            <stop offset="100%" stopColor="#c19a4b" stopOpacity="0" />
           </radialGradient>
           <radialGradient id="center-glow">
-            <stop offset="0%" stopColor="#c5a170" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#c5a170" stopOpacity="0" />
+            <stop offset="0%" stopColor="#c19a4b" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#c19a4b" stopOpacity="0" />
           </radialGradient>
           <style>{`
             @keyframes cm-twinkle {
@@ -147,8 +147,8 @@ export default function CosmicMandala() {
             y1={line.y1}
             x2={line.x2}
             y2={line.y2}
-            stroke="#c5a170"
-            strokeWidth="0.25"
+            stroke="#c19a4b"
+            strokeWidth="0.35"
             strokeDasharray="1 2"
             style={{
               animation: `cm-line-pulse ${2 + (i % 3)}s ease-in-out ${line.delay}s infinite`,
@@ -164,7 +164,8 @@ export default function CosmicMandala() {
               cx={star.x}
               cy={star.y}
               r={star.r * 3}
-              fill="#c5a170"
+              fill="#c19a4b"
+              opacity="0.5"
               style={{
                 animation: `cm-twinkle ${star.duration}s ease-in-out ${star.delay}s infinite`,
               }}
@@ -174,7 +175,7 @@ export default function CosmicMandala() {
               cx={star.x}
               cy={star.y}
               r={star.r * 0.6}
-              fill="#fff8ee"
+              fill="#ffffff"
               style={{
                 animation: `cm-twinkle ${star.duration}s ease-in-out ${star.delay + 0.3}s infinite`,
               }}
@@ -182,21 +183,21 @@ export default function CosmicMandala() {
           </g>
         ))}
 
-        {/* Orbit rings */}
+        {/* Orbit rings — dark theme */}
         <circle
           cx="200" cy="200" r="72"
-          fill="none" stroke="#c5a170" strokeWidth="0.3"
-          strokeDasharray="2 4" opacity="0.12"
+          fill="none" stroke="#c19a4b" strokeWidth="0.4"
+          strokeDasharray="2 4" opacity="0.2"
         />
         <circle
           cx="200" cy="200" r="104"
-          fill="none" stroke="#c5a170" strokeWidth="0.3"
-          strokeDasharray="2 4" opacity="0.12"
+          fill="none" stroke="#c19a4b" strokeWidth="0.4"
+          strokeDasharray="2 4" opacity="0.2"
         />
         <circle
           cx="200" cy="200" r="140"
-          fill="none" stroke="#c5a170" strokeWidth="0.15"
-          strokeDasharray="1 6" opacity="0.08"
+          fill="none" stroke="#c19a4b" strokeWidth="0.2"
+          strokeDasharray="1 6" opacity="0.12"
         />
 
         {/* ===== Bagua ring (内环) ===== */}
@@ -241,27 +242,27 @@ export default function CosmicMandala() {
 
         {/* ===== Taiji (太极) ===== */}
         <g className="cm-taiji">
-          {/* Yang half — white */}
+          {/* Yang half — warm white */}
           <path
             d="M 200 152 A 48 48 0 0 1 200 248 A 24 24 0 0 0 200 200 A 24 24 0 0 1 200 152 Z"
-            fill="#ffffff"
+            fill="#f0e6d8"
           />
-          {/* Yin half — dark */}
+          {/* Yin half — dark wood */}
           <path
             d="M 200 152 A 24 24 0 0 0 200 200 A 24 24 0 0 1 200 248 A 48 48 0 0 0 200 152 Z"
-            fill="#4a3525"
+            fill="#1a1410"
           />
-          {/* Yin dot in Yang (dark dot in white) */}
-          <circle cx="200" cy="176" r="7" fill="#4a3525" />
-          {/* Yang dot in Yin (white dot in dark) */}
-          <circle cx="200" cy="224" r="7" fill="#ffffff" />
+          {/* Yin dot in Yang (dark dot in warm white) */}
+          <circle cx="200" cy="176" r="7" fill="#1a1410" />
+          {/* Yang dot in Yin (warm white dot in dark) */}
+          <circle cx="200" cy="224" r="7" fill="#f0e6d8" />
         </g>
 
         {/* Subtle gold ring around Taiji */}
         <circle
           cx="200" cy="200" r="50"
-          fill="none" stroke="#c5a170" strokeWidth="0.5"
-          opacity="0.15"
+          fill="none" stroke="#c19a4b" strokeWidth="0.5"
+          opacity="0.2"
         />
       </svg>
     </div>

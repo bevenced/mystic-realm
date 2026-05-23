@@ -43,39 +43,39 @@ export default function CantianFAQ() {
     <section className="py-16 md:py-20 px-4">
       <div className="mx-auto max-w-[1320px]">
         <div className="text-center mb-12">
-          <p className="text-[11px] font-semibold tracking-[0.13em] uppercase mb-4" style={{ color: "#8e7047" }}>
+          <p className="text-[11px] font-semibold tracking-[0.13em] uppercase mb-4" style={{ color: "#d4a85a" }}>
             {t.eyebrow}
           </p>
-          <h2 className="heading-fluid-lg font-serif" style={{ color: "#3e3024" }}>
+          <h2 className="heading-fluid-lg font-serif" style={{ color: "#e8ddd0" }}>
             {t.title}
           </h2>
           <div className="section-accent-line mx-auto" />
         </div>
 
-        <div className="max-w-3xl mx-auto" style={{ border: "1px solid #e2d2ba", background: "#fffdf8" }}>
+        <div className="max-w-3xl mx-auto" style={{ border: "1px solid #3a2a1a", background: "#1a1410" }}>
           {t.items.map((item, i) => (
             <details
               key={i}
               className="group"
-              style={{ borderBottom: i < t.items.length - 1 ? "1px solid #eadfce" : "none" }}
+              style={{ borderBottom: i < t.items.length - 1 ? "1px solid #3a2a1a" : "none" }}
             >
               <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
-                <span className="text-sm font-semibold pr-4" style={{ color: "#4a3525" }}>
+                <span className="text-sm font-semibold pr-4" style={{ color: "#e8ddd0" }}>
                   {item.q}
                 </span>
                 <span className="relative w-4 h-4 flex-shrink-0">
                   <span className="absolute inset-0 flex items-center justify-center">
-                    <span className="block w-4 h-0.5 rounded-full" style={{ background: "#c5a170" }} />
+                    <span className="block w-4 h-0.5 rounded-full" style={{ background: "#c19a4b" }} />
                   </span>
                   <span
                     className="absolute inset-0 flex items-center justify-center transition-opacity duration-200 group-open:opacity-0"
                   >
-                    <span className="block w-0.5 h-4 rounded-full" style={{ background: "#c5a170" }} />
+                    <span className="block w-0.5 h-4 rounded-full" style={{ background: "#c19a4b" }} />
                   </span>
                 </span>
               </summary>
               <div className="px-5 pb-5">
-                <p className="text-sm leading-relaxed" style={{ color: "#5f4a36" }}>
+                <p className="text-sm leading-relaxed" style={{ color: "#c0b09a" }}>
                   {item.a}
                 </p>
               </div>

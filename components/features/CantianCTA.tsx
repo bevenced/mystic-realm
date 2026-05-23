@@ -15,12 +15,12 @@ export default function CantianCTA() {
   const t = COPY[locale] || COPY.en;
 
   return (
-    <section className="py-14 md:py-16 px-4" style={{ background: "#ffffff" }}>
-      <div className="mx-auto max-w-[1320px] border-y border-[#e2d2ba] py-14 text-center">
-        <h2 className="heading-fluid-lg font-serif" style={{ color: "#3e3024" }}>
+    <section className="py-14 md:py-16 px-4">
+      <div className="mx-auto max-w-[1320px] border-y border-[#3a2a1a] py-14 text-center">
+        <h2 className="heading-fluid-lg font-serif" style={{ color: "#e8ddd0" }}>
           {t.title}
         </h2>
-        <p className="text-[15px] mt-4 max-w-[57ch] mx-auto" style={{ color: "#665744" }}>
+        <p className="text-[15px] mt-4 max-w-[57ch] mx-auto" style={{ color: "#9a8a7a" }}>
           {t.desc}
         </p>
         <div className="mt-8">

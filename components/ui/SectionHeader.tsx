@@ -18,14 +18,14 @@ export default function SectionHeader({ eyebrow, title, description, center = tr
       {eyebrow && (
         <p
           className="text-[11px] font-semibold tracking-[0.13em] uppercase mb-4"
-          style={{ color: "#8e7047" }}
+          style={{ color: "#d4a85a" }}
         >
           {eyebrow}
         </p>
       )}
       <h2
         className="heading-fluid-lg"
-        style={{ color: "#3e3024" }}
+        style={{ color: "#e8ddd0" }}
       >
         {title}
       </h2>
@@ -36,7 +36,7 @@ export default function SectionHeader({ eyebrow, title, description, center = tr
       {description && (
         <p
           className="text-[15px] mt-6 leading-relaxed max-w-[65ch]"
-          style={{ color: "#665744", marginLeft: center ? "auto" : 0, marginRight: center ? "auto" : 0 }}
+          style={{ color: "#9a8a7a", marginLeft: center ? "auto" : 0, marginRight: center ? "auto" : 0 }}
         >
           {description}
         </p>
