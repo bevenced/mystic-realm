@@ -195,6 +195,7 @@ export const dictionary: Dictionary = {
     shareLuckyLabel: "Lucky:",
     shareLuckyNumLabel: "Lucky #:",
     aiPowered: "AI-powered",
+    shareImage: "Share as Image",
     brandFooter: "Orient Wisdom ✦",
     aspectNames: {
       Wealth: "Wealth",

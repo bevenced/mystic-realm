@@ -154,6 +154,7 @@ export interface Dictionary {
     shareLuckyLabel: string;
     shareLuckyNumLabel: string;
     aiPowered: string;
+    shareImage: string;
     brandFooter: string;
     aspectNames: Record<string, string>;
     yinYang: Record<string, string>;
