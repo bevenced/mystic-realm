@@ -7,9 +7,10 @@ import { ArrowRight, MessageCircle } from "lucide-react";
 
 const COPY: Record<string, Record<string, string>> = {
   en: {
-    eyebrow1: "From Ancient Wisdom",
+    eyebrow1: "Orient Wisdom",
     headline1: "AI That Understands",
     headline2: "Eastern Mysticism",
+    slogan: "Wisdom That Orients You",
     desc: "Combining BaZi, Tarot, Astrology, and Feng Shui — AI reads the patterns of destiny. Ancient wisdom, reimagined for the modern age.",
     cta: "Explore Now",
     or: "or",
@@ -17,9 +18,10 @@ const COPY: Record<string, Record<string, string>> = {
     btnChat: "AI Chat",
   },
   "zh-CN": {
-    eyebrow1: "从智慧出发",
+    eyebrow1: "Orient Wisdom",
     headline1: "更懂你的",
     headline2: "东方玄学 AI",
+    slogan: "指引你的东方智慧",
     desc: "融合八字、塔罗、占星与风水智慧，AI 为你解读命运密码。让古老智慧在现代科技中焕发新生。",
     cta: "开始探索",
     or: "或",
@@ -27,9 +29,10 @@ const COPY: Record<string, Record<string, string>> = {
     btnChat: "AI 对话",
   },
   "zh-TW": {
-    eyebrow1: "從智慧出發",
+    eyebrow1: "Orient Wisdom",
     headline1: "更懂你的",
     headline2: "東方玄學 AI",
+    slogan: "指引你的東方智慧",
     desc: "融合八字、塔羅、占星與風水智慧，AI 為你解讀命運密碼。讓古老智慧在現代科技中煥發新生。",
     cta: "開始探索",
     or: "或",
@@ -70,6 +73,11 @@ export default function CantianHero() {
               {t.headline2}
             </span>
           </h1>
+
+          {/* Slogan */}
+          <p className="mt-5 text-sm tracking-[0.12em] font-medium" style={{ color: "#c19a4b" }}>
+            {t.slogan}
+          </p>
 
           {/* Subheading */}
           <p
