@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import ConstellationBG from "@/components/ui/ConstellationBG";
 import AuraParticles from "@/components/ui/AuraParticles";
 import { Sparkles, MessageCircle, ChevronDown } from "lucide-react";
 
@@ -21,10 +20,7 @@ export default function HeroSection() {
         style={{ background: currentTheme.gradientHero }}
       />
 
-      {/* Layer 1: constellation animation */}
-      <ConstellationBG />
-
-      {/* Layer 2: aura particles */}
+      {/* Layer 1: aura particles */}
       <AuraParticles />
 
       {/* Layer 3: main content */}

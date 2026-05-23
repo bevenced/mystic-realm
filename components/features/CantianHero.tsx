@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import ConstellationBG from "@/components/ui/ConstellationBG";
+import CosmicMandala from "@/components/ui/CosmicMandala";
 import { ArrowRight, MessageCircle } from "lucide-react";
 
 const COPY: Record<string, Record<string, string>> = {
@@ -126,10 +126,10 @@ export default function CantianHero() {
           </div>
         </div>
 
-        {/* Right: Constellation illustration */}
+        {/* Right: Cosmic Mandala illustration */}
         <div className="order-1 lg:order-2 relative flex items-center justify-center">
           <div className="relative w-full aspect-square max-w-lg mx-auto">
-            <ConstellationBG />
+            <CosmicMandala />
             <div
               className="absolute inset-[15%] rounded-full pointer-events-none"
               style={{
