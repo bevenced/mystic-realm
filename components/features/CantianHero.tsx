@@ -8,9 +8,8 @@ import { ArrowRight, MessageCircle } from "lucide-react";
 const COPY: Record<string, Record<string, string>> = {
   en: {
     eyebrow1: "Orient Wisdom",
-    headline1: "AI That Understands",
-    headline2: "Eastern Mysticism",
     slogan: "Wisdom That Orients You",
+    subtitle: "AI-powered BaZi, Tarot, Astrology & Feng Shui",
     desc: "Combining BaZi, Tarot, Astrology, and Feng Shui — AI reads the patterns of destiny. Ancient wisdom, reimagined for the modern age.",
     cta: "Explore Now",
     or: "or",
@@ -19,9 +18,8 @@ const COPY: Record<string, Record<string, string>> = {
   },
   "zh-CN": {
     eyebrow1: "Orient Wisdom",
-    headline1: "更懂你的",
-    headline2: "东方玄学 AI",
     slogan: "指引你的东方智慧",
+    subtitle: "AI 驱动的八字、塔罗、占星与风水",
     desc: "融合八字、塔罗、占星与风水智慧，AI 为你解读命运密码。让古老智慧在现代科技中焕发新生。",
     cta: "开始探索",
     or: "或",
@@ -30,9 +28,8 @@ const COPY: Record<string, Record<string, string>> = {
   },
   "zh-TW": {
     eyebrow1: "Orient Wisdom",
-    headline1: "更懂你的",
-    headline2: "東方玄學 AI",
     slogan: "指引你的東方智慧",
+    subtitle: "AI 驅動的八字、塔羅、占星與風水",
     desc: "融合八字、塔羅、占星與風水智慧，AI 為你解讀命運密碼。讓古老智慧在現代科技中煥發新生。",
     cta: "開始探索",
     or: "或",
@@ -58,25 +55,22 @@ export default function CantianHero() {
             {t.eyebrow1}
           </span>
 
-          {/* h1 — two lines like cantian.ai */}
+          {/* h1 — Slogan as main heading */}
           <h1 className="font-serif mt-4">
             <span
-              className="block text-base md:text-lg lg:text-xl font-medium tracking-normal"
-              style={{ color: "#c19a4b" }}
-            >
-              {t.headline1}
-            </span>
-            <span
-              className="block mt-3 heading-fluid-xl"
+              className="block heading-fluid-xl"
               style={{ color: "#e8ddd0" }}
             >
-              {t.headline2}
+              {t.slogan}
             </span>
           </h1>
 
-          {/* Slogan */}
-          <p className="mt-5 text-sm tracking-[0.12em] font-medium" style={{ color: "#c19a4b" }}>
-            {t.slogan}
+          {/* Subtitle — what we do */}
+          <p
+            className="mt-6 text-sm md:text-base tracking-[0.04em] font-medium"
+            style={{ color: "#c19a4b" }}
+          >
+            {t.subtitle}
           </p>
 
           {/* Subheading */}
