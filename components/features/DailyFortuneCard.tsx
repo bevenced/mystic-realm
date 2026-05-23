@@ -1,5 +1,6 @@
 "use client";
 
+import { forwardRef } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { StructuredFortune, FortuneAspect } from "@/lib/ai-fortune";
@@ -157,20 +158,21 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 }
 
-export default function DailyFortuneCard({
+export default forwardRef<HTMLDivElement, DailyFortuneCardProps>(function DailyFortuneCard({
   fortuneData,
   userName,
   baziCtx,
   streak,
   pointsEarned,
   checkinDate,
-}: DailyFortuneCardProps) {
+}, ref) {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
   const { t, tf } = useLocale();
 
   return (
     <div
+      ref={ref}
       className="rounded-lg overflow-hidden animate-fade-in relative"
       style={{
         background: c.surface,
@@ -318,4 +320,4 @@ export default function DailyFortuneCard({
       </div>
     </div>
   );
-}
+});

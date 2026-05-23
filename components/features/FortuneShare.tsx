@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Share2 } from "lucide-react";
+import { Copy, Share2, Loader2 } from "lucide-react";
+import { toPng } from "html-to-image";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 interface FortuneShareProps {
   text: string;
+  /** When provided, sharing becomes image-first: captures the card DOM element as PNG.
+   *  On mobile, uses native share sheet (covers X, WhatsApp, WeChat, Facebook, etc.).
+   *  On desktop, downloads the image. */
+  cardRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 function XIcon({ size }: { size: number }) {
@@ -33,11 +38,138 @@ function FacebookIcon({ size }: { size: number }) {
   );
 }
 
-export default function FortuneShare({ text }: FortuneShareProps) {
+function btnStyle(c: Record<string, string>, w = 36, h = 36): React.CSSProperties {
+  return {
+    width: w,
+    height: h,
+    borderRadius: 10,
+    border: `1px solid ${c.primary}15`,
+    background: `${c.primary}06`,
+    color: c.text,
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "all 0.2s",
+  };
+}
+
+export default function FortuneShare({ text, cardRef }: FortuneShareProps) {
   const { currentTheme } = useTheme();
   const { t, tf } = useLocale();
   const c = currentTheme.colors;
   const [copied, setCopied] = useState(false);
+  const [sharingImage, setSharingImage] = useState(false);
+
+  // ── Image capture & share ──
+
+  const handleShareImage = async () => {
+    if (!cardRef?.current) return;
+    setSharingImage(true);
+    try {
+      const dataUrl = await toPng(cardRef.current, {
+        quality: 1,
+        pixelRatio: 2,
+        cacheBust: true,
+      });
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], "daily-fortune.png", { type: "image/png" });
+
+      // Mobile: native share sheet → user picks X, WhatsApp, WeChat, etc.
+      if (typeof navigator.share === "function" && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: t.dailyFortune.title });
+      } else {
+        // Desktop: download
+        const link = document.createElement("a");
+        link.download = "daily-fortune.png";
+        link.href = dataUrl;
+        link.click();
+      }
+    } catch {
+      // user cancelled share or error
+    } finally {
+      setSharingImage(false);
+    }
+  };
+
+  // ── Copy (image-first, then text fallback) ──
+
+  const handleCopy = async () => {
+    // Try copying image to clipboard
+    if (cardRef?.current) {
+      try {
+        const dataUrl = await toPng(cardRef.current, {
+          quality: 1,
+          pixelRatio: 2,
+          cacheBust: true,
+        });
+        const blob = await (await fetch(dataUrl)).blob();
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ]);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        return;
+      } catch {
+        // Image clipboard not supported → text fallback
+      }
+    }
+
+    // Text fallback
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // ── Image-first mode (when cardRef available) ──
+
+  if (cardRef) {
+    return (
+      <div className="flex items-center justify-center gap-2 pt-2">
+        <button
+          onClick={handleShareImage}
+          disabled={sharingImage}
+          title={t.dailyFortune.shareImage}
+          style={{
+            ...btnStyle(c, 40, 40),
+            opacity: sharingImage ? 0.6 : 1,
+            cursor: sharingImage ? "not-allowed" : "pointer",
+          }}
+          className="hover:scale-110 transition-transform"
+        >
+          {sharingImage ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Share2 size={16} />
+          )}
+        </button>
+
+        <button
+          onClick={handleCopy}
+          title={copied ? t.ui.copied : t.ui.copyToClipboard}
+          style={btnStyle(c)}
+          className="hover:scale-110 transition-transform"
+        >
+          {copied ? (
+            <span className="text-[10px] font-bold" style={{ color: "#2ECC71" }}>✓</span>
+          ) : (
+            <Copy size={14} />
+          )}
+        </button>
+      </div>
+    );
+  }
+
+  // ── Text-only mode (backward compat, no cardRef) ──
 
   const encoded = encodeURIComponent(text);
 
@@ -62,48 +194,6 @@ export default function FortuneShare({ text }: FortuneShareProps) {
     },
   ];
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // fallback
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const handleWebShare = async () => {
-    if (typeof navigator.share === "function") {
-      try {
-        await navigator.share({ text });
-      } catch {
-        // user cancelled or API not available
-      }
-    }
-  };
-
-  const btnStyle = {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    border: `1px solid ${c.primary}15`,
-    background: `${c.primary}06`,
-    color: c.text,
-    cursor: "pointer",
-    display: "inline-flex" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    transition: "all 0.2s",
-  };
-
   return (
     <div className="flex items-center justify-center gap-2 pt-2">
       {shareLinks.map((link) => (
@@ -113,7 +203,7 @@ export default function FortuneShare({ text }: FortuneShareProps) {
           target="_blank"
           rel="noopener noreferrer"
           title={tf("ui.shareTitle", { name: link.name })}
-          style={btnStyle}
+          style={btnStyle(c)}
           className="hover:scale-110 transition-transform"
         >
           <span style={{ color: link.color }}>{link.icon}</span>
@@ -123,7 +213,7 @@ export default function FortuneShare({ text }: FortuneShareProps) {
       <button
         onClick={handleCopy}
         title={copied ? t.ui.copied : t.ui.copyToClipboard}
-        style={btnStyle}
+        style={btnStyle(c)}
         className="hover:scale-110 transition-transform"
       >
         {copied ? (
@@ -135,9 +225,11 @@ export default function FortuneShare({ text }: FortuneShareProps) {
 
       {typeof navigator.share === "function" && (
         <button
-          onClick={handleWebShare}
+          onClick={async () => {
+            try { await navigator.share({ text }); } catch { /* user cancelled */ }
+          }}
           title={t.ui.moreShare}
-          style={btnStyle}
+          style={btnStyle(c)}
           className="hover:scale-110 transition-transform"
         >
           <Share2 size={14} />
