@@ -17,6 +17,8 @@
   --gradient-hero: linear-gradient(180deg, #0a0806 0%, #120e0a 50%, #0a0806 100%);
   --color-border: #3a2a1a;
   --color-border-light: #4a3820;
+  --color-card-bg: var(--color-surface);
+  --color-border-tertiary: var(--color-border);
   --section-alt-bg: #120e0a;
   --color-success: #2ECC71;
   --color-warning: #F1C40F;

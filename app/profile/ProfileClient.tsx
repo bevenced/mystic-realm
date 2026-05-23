@@ -303,7 +303,7 @@ export default function ProfileClient() {
                 placeholder={authUser?.name || t.profile.namePlaceholder}
                 className="w-full px-3 py-2 rounded-lg text-sm border outline-none transition-colors"
                 style={{
-                  background: isDark ? "#1a1a2e" : "#fafafa",
+                  background: c.surface,
                   color: c.text,
                   borderColor: `${c.primary}22`,
                 }}
@@ -321,7 +321,7 @@ export default function ProfileClient() {
                 onChange={(e) => setProfile({ ...profile, birthDate: e.target.value || null })}
                 className="w-full px-3 py-2 rounded-lg text-sm border outline-none transition-colors"
                 style={{
-                  background: isDark ? "#1a1a2e" : "#fafafa",
+                  background: c.surface,
                   color: c.text,
                   borderColor: `${c.primary}22`,
                 }}
@@ -341,7 +341,7 @@ export default function ProfileClient() {
                 onChange={(e) => setProfile({ ...profile, birthHour: e.target.value ? Number(e.target.value) : null })}
                 className="w-full px-3 py-2 rounded-lg text-sm border outline-none transition-colors"
                 style={{
-                  background: isDark ? "#1a1a2e" : "#fafafa",
+                  background: c.surface,
                   color: c.text,
                   borderColor: `${c.primary}22`,
                 }}
