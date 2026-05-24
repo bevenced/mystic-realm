@@ -20,6 +20,37 @@ function getTransporter() {
   return transporter;
 }
 
+export async function sendVerificationEmail(email: string, code: string): Promise<{ messageId: string }> {
+  const transport = getTransporter();
+
+  const html = `
+    <div style="max-width:480px;margin:0 auto;padding:24px;font-family:Arial,sans-serif;background:#fdfaf5;border-radius:12px;border:1px solid #e8dcc8;">
+      <h2 style="color:#8B7355;margin:0 0 8px;">🔑 Verification Code</h2>
+      <p style="color:#555;font-size:14px;line-height:1.6;">
+        Your verification code for <strong>Orient Wisdom</strong> is:
+      </p>
+      <div style="background:#fff;border:2px dashed #8B7355;padding:16px;margin:16px 0;border-radius:8px;text-align:center;">
+        <span style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#8B7355;font-family:monospace;">${code}</span>
+      </div>
+      <p style="color:#999;font-size:12px;margin:0;">
+        This code expires in 10 minutes. If you didn't request this, you can safely ignore it.
+      </p>
+    </div>
+  `;
+
+  const text = `Verification Code: ${code}\n\nUse this code to sign in to Orient Wisdom. It expires in 10 minutes.`;
+
+  const info = await transport.sendMail({
+    from: `"Orient Wisdom" <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: `${code} is your Orient Wisdom verification code`,
+    text,
+    html,
+  });
+
+  return { messageId: info.messageId };
+}
+
 export async function sendWishEmail(params: {
   to: string;
   fromName: string;

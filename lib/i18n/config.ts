@@ -114,6 +114,17 @@ export interface Dictionary {
     signingIn: string;
     noAccount: string;
     signUp: string;
+    passwordTab: string;
+    codeTab: string;
+    sendCode: string;
+    sendingCode: string;
+    codeSent: string;
+    codePlaceholder: string;
+    verifyCode: string;
+    verifying: string;
+    googleSignIn: string;
+    googleNotConfigured: string;
+    autoRegisterNotice: string;
   };
   signUp: {
     title: string;
