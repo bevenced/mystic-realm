@@ -4,6 +4,7 @@ export const dictionary: Dictionary = {
   nav: {
     dashboard: "Dashboard",
     dailyFortune: "Daily Fortune",
+    bazi: "BaZi Chart",
     aiChat: "AI Chat",
     dailyWish: "Daily Wish",
     blog: "Blog",

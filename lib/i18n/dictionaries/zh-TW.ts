@@ -4,6 +4,7 @@ export const dictionary: Dictionary = {
   nav: {
     dashboard: "儀表盤",
     dailyFortune: "每日運勢",
+    bazi: "八字排盤",
     aiChat: "AI 對話",
     dailyWish: "每日許願",
     blog: "部落格",

@@ -12,6 +12,7 @@ import Avatar from "@/components/ui/Avatar";
 
 const navLinks = [
   { href: "/dailyfortune", labelKey: "dailyFortune" as const },
+  { href: "/bazi", labelKey: "bazi" as const },
   { href: "/wish", labelKey: "dailyWish" as const },
   { href: "/blog", labelKey: "blog" as const },
 ];

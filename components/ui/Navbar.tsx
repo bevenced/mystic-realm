@@ -44,6 +44,9 @@ export default function Navbar() {
           <Link href="/dailyfortune" className="nav-link theme-transition hover:text-[var(--color-primary)]">
             {t.nav.dailyFortune}
           </Link>
+          <Link href="/bazi" className="nav-link theme-transition hover:text-[var(--color-primary)]">
+            {t.nav.bazi}
+          </Link>
           <Link href="/chat" className="nav-link theme-transition hover:text-[var(--color-primary)]">
             {t.nav.aiChat}
           </Link>

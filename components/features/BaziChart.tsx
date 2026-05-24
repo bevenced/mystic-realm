@@ -224,7 +224,7 @@ export default function BaziChart({
               key={elem}
               title={`${elem}: ${count}`}
               style={{
-                width: `${(count / 8) * 100}%`,
+                width: `${(count / 7) * 100}%`,
                 background: ELEMENT_COLORS[elem],
                 opacity: count > 0 ? 1 : 0.2,
               }}

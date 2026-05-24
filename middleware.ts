@@ -22,6 +22,7 @@ const publicRoutes = [
   "/about",
   "/faq",
   "/changelog",
+  "/bazi",
 ];
 
 function isPublicRoute(pathname: string): boolean {
