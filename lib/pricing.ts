@@ -14,6 +14,10 @@ export const SERVICE_PRICES: Record<string, number> = {
   "astrology": 12.99,
   "fengshui": 9.99,
   "meditation": 6.99,
+  // BaZi report types
+  "bazi-annual": 3.99,
+  "bazi-personality": 3.99,
+  "bazi-deep": 5.99,
 } as const;
 
 /** First-time user pricing (flat discount ~70% off) */
@@ -28,6 +32,9 @@ export const SERVICE_NAMES: Record<string, string> = {
   "astrology": "Natal Chart Reading",
   "fengshui": "Feng Shui Consultation",
   "meditation": "Guided Meditation",
+  "bazi-annual": "BaZi Annual Fortune Report",
+  "bazi-personality": "BaZi Personality Analysis",
+  "bazi-deep": "BaZi Deep Life Reading",
 } as const;
 
 /**

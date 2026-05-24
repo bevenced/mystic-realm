@@ -24,6 +24,7 @@ const requestSchema = z.object({
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   birthHour: z.number().int().min(0).max(23),
   gender: z.enum(["male", "female"]),
+  reportType: z.enum(["preview", "full", "annual", "personality", "deep"]).default("preview"),
   orderId: z.string().optional(),
   redeemed: z.string().optional(),
   locale: z.string().optional(),
@@ -41,25 +42,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { birthDate, birthHour, gender, orderId, redeemed, locale } = parsed.data;
+    const { birthDate, birthHour, gender, reportType, orderId, redeemed, locale } = parsed.data;
     const authUser = await getAuthUser(req);
     const userId = authUser?.id || null;
 
+    const needsPayment = reportType !== "preview";
+
     let isPaid = false;
-    if (orderId) {
+    if (needsPayment) {
       if (!userId) {
         return NextResponse.json(
           { error: "Please sign in to use paid readings." },
           { status: 401 },
         );
       }
-      isPaid = await verifyPayPalOrder(orderId, "bazi");
-    }
-
-    if (redeemed && userId) {
-      const redemption = await consumeRedemption(redeemed);
-      if (redemption) {
-        isPaid = true;
+      if (orderId) {
+        isPaid = await verifyPayPalOrder(orderId, `bazi-${reportType}`);
+      }
+      if (redeemed && userId) {
+        const redemption = await consumeRedemption(redeemed);
+        if (redemption) isPaid = true;
       }
     }
 
@@ -159,14 +161,15 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    const prompt = isPaid
+    const isPaidFull = isPaid && needsPayment;
+    const prompt = isPaidFull
       ? buildBaZiUserPrompt({
           birthDate,
           birthHour,
           gender,
           baziData,
           ...(professionalData || {}),
-        })
+        }, reportType)
       : buildBaZiPreviewPrompt({ birthDate, birthHour, gender, baziData });
 
     const completion = await deepseek.chat.completions.create({
@@ -175,12 +178,12 @@ export async function POST(req: NextRequest) {
         { role: "system", content: BAZI_SYSTEM_PROMPT + "\n\n" + getLocaleInstruction(locale || "en") },
         { role: "user", content: prompt },
       ],
-      max_tokens: isPaid ? 2000 : 150,
+      max_tokens: isPaidFull ? 2000 : 150,
       temperature: 0.7,
     });
 
     const content = completion.choices[0]?.message?.content || "";
-    const reading = isPaid
+    const reading = isPaidFull
       ? parseAiJsonResponse(content) || buildBaZiFallback(content, baziData)
       : { preview: extractPreviewText(content, [...PREVIEW_FIELDS.bazi]) };
 

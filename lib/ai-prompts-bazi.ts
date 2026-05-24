@@ -136,7 +136,9 @@ You MUST respond in valid JSON format with this exact structure:
   "affirmation": "A single empowering affirmation based on this chart"
 }`;
 
-export function buildBaZiUserPrompt(req: BaZiRequest): string {
+export type ReportType = "full" | "annual" | "personality" | "deep";
+
+export function buildBaZiUserPrompt(req: BaZiRequest, reportType: ReportType = "full"): string {
   const { baziData } = req;
   let prompt = `Birth Date: ${req.birthDate}
 Birth Hour: ${req.birthHour}:00
@@ -224,7 +226,15 @@ Wood: ${baziData.elementCounts.Wood}  Fire: ${baziData.elementCounts.Fire}  Eart
     prompt += `\n${req.currentYearFortune.description}`;
   }
 
-  prompt += `\n\nPlease provide a complete professional BaZi analysis covering all of the above data. Include the Day Master strength assessment, Useful God recommendation, Da Yun interpretation, and practical life guidance. Be specific and actionable.`;
+  // Report-type-specific instructions
+  const instructions: Record<string, string> = {
+    full: "Please provide a complete professional BaZi analysis covering all of the above data. Include the Day Master strength assessment, Useful God recommendation, Da Yun interpretation, and practical life guidance. Be specific and actionable.",
+    annual: "Focus on the CURRENT YEAR fortune (流年). Analyze how this year's energy interacts with the person's natal chart. Cover: career outlook, wealth prospects, relationship dynamics, health advice, and key months to watch. Be practical and forward-looking.",
+    personality: "Focus on PERSONALITY and character analysis. Use the Day Master element, Ten Gods, and element balance to describe: core traits, strengths, weaknesses, communication style, emotional patterns, and life purpose. Be insightful and psychologically nuanced.",
+    deep: "Provide a DEEP comprehensive life reading covering ALL aspects: personality, career path, wealth potential, love and relationships, health tendencies, life purpose, karmic patterns, current luck cycle, and future outlook. Be thorough, specific, and transformative.",
+  };
+
+  prompt += `\n\n${instructions[reportType] || instructions.full}`;
 
   return prompt;
 }

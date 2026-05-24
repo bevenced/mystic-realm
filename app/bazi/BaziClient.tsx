@@ -9,12 +9,24 @@ import { getAllTenGods, getNaYin, getHiddenStems } from "@/lib/bazi";
 import type { BaZiResult, BaZiPillar } from "@/lib/bazi";
 import Link from "next/link";
 import {
-  Sparkles, Loader2, Lock, Calendar, Clock, Users, ChevronRight, Download, Share2,
+  Sparkles, Loader2, Lock, Calendar, Clock, Users, ChevronRight, Download, Share2, X,
 } from "lucide-react";
+import PayPalButton from "@/components/features/PayPalButton";
 
 interface ApiResponse {
   baziData: BaZiResult;
-  reading: { preview?: string; overview?: string };
+  reading: {
+    preview?: string;
+    overview?: string;
+    dayMaster?: string;
+    elementAnalysis?: { dominant?: string; lacking?: string; balance?: string } | string;
+    lifeAspects?: Record<string, string>;
+    advice?: string;
+    pillars?: Array<{ name: string; stem: string; branch: string; hiddenStems: string; tenGod: string; meaning: string }>;
+    affirmation?: string;
+    luckyElements?: string[];
+    [key: string]: unknown;
+  };
   professionalData?: any;
   birthDate?: string;
   birthHour?: number;
@@ -56,6 +68,33 @@ export default function BaziClient() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<ApiResponse | null>(null);
 
+  // Report payment flow
+  const [selectedReport, setSelectedReport] = useState<"annual" | "personality" | "deep" | null>(null);
+  const [reportResult, setReportResult] = useState<{ type: string; reading: ApiResponse["reading"] } | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+
+  const reportLabels: Record<string, { title: string; desc: string; price: number; serviceKey: string }> = {
+    annual: {
+      title: isZh ? "年度报告" : "Annual Report",
+      desc: isZh ? "2026年度运势详解" : "2026 Yearly Fortune",
+      price: 3.99,
+      serviceKey: "bazi-annual",
+    },
+    personality: {
+      title: isZh ? "个性报告" : "Personality Report",
+      desc: isZh ? "性格与天赋深度分析" : "Personality & Talent Analysis",
+      price: 3.99,
+      serviceKey: "bazi-personality",
+    },
+    deep: {
+      title: isZh ? "深度报告" : "Deep Report",
+      desc: isZh ? "全面命理解读" : "Full Destiny Reading",
+      price: 5.99,
+      serviceKey: "bazi-deep",
+    },
+  };
+
   // Build chart data from API response
   const baziData = result?.baziData;
   const chartData = (() => {
@@ -94,6 +133,49 @@ export default function BaziClient() {
       setError(isZh ? "网络错误，请重试" : "Network error. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle report tab click
+  const handleReportClick = (type: "annual" | "personality" | "deep") => {
+    if (!isSignedIn) {
+      window.location.href = `/sign-in?redirect_url=/bazi`;
+      return;
+    }
+    setSelectedReport(type);
+    setShowPayment(true);
+    setReportResult(null);
+  };
+
+  // Fetch report with orderId
+  const fetchReport = async (orderId: string) => {
+    if (!selectedReport || !birthDate) return;
+    setShowPayment(false);
+    setReportLoading(true);
+
+    try {
+      const res = await fetch("/api/ai-bazi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          birthDate,
+          birthHour,
+          gender,
+          reportType: selectedReport,
+          orderId,
+          locale,
+        }),
+      });
+      const json = await res.json();
+      if (json.error) {
+        setError(json.error);
+      } else {
+        setReportResult({ type: selectedReport, reading: json.reading });
+      }
+    } catch {
+      setError(isZh ? "网络错误，请重试" : "Network error. Please try again.");
+    } finally {
+      setReportLoading(false);
     }
   };
 
@@ -305,59 +387,175 @@ export default function BaziClient() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {[
-                  { key: "annual", title: isZh ? "年度报告" : "Annual Report", desc: isZh ? "2026年度运势详解" : "2026 Yearly Fortune" },
-                  { key: "personality", title: isZh ? "个性报告" : "Personality Report", desc: isZh ? "性格与天赋深度分析" : "Personality & Talent Analysis" },
-                  { key: "deep", title: isZh ? "深度报告" : "Deep Report", desc: isZh ? "全面命理解读" : "Full Destiny Reading" },
-                ].map((report) => (
-                  <div
-                    key={report.key}
-                    className="rounded-xl p-5 relative overflow-hidden group transition-all cursor-pointer"
-                    style={{ background: c.surface, border: `1px solid ${c.primary}14` }}
-                  >
-                    {/* Lock overlay */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2"
-                      style={{ background: `${c.bg}CC` }}
-                    >
-                      <Lock size={20} style={{ color: c.primary }} />
-                      <span className="text-xs font-semibold" style={{ color: c.primary }}>
-                        {isZh ? "登录/付费解锁" : "Login to Unlock"}
-                      </span>
-                      {!isSignedIn && (
-                        <Link
-                          href="/sign-in?redirect_url=/bazi"
-                          className="mt-1 px-4 py-1.5 rounded-full text-xs font-semibold transition-all"
-                          style={{ background: c.primary, color: c.bg }}
-                        >
-                          {isZh ? "免费注册" : "Sign Up Free"}
-                        </Link>
-                      )}
-                      {isSignedIn && (
-                        <Link
-                          href="/membership"
-                          className="mt-1 px-4 py-1.5 rounded-full text-xs font-semibold transition-all"
-                          style={{ background: c.primary, color: c.bg }}
-                        >
-                          {isZh ? "升级会员" : "Upgrade"}
-                        </Link>
-                      )}
-                    </div>
+                {(["annual", "personality", "deep"] as const).map((key) => {
+                  const info = reportLabels[key];
+                  const isSelected = selectedReport === key;
+                  const isDone = reportResult?.type === key && reportResult.reading;
 
-                    {/* Visible content behind lock */}
-                    <h4 className="text-sm font-semibold mb-1" style={{ color: c.text }}>
-                      {report.title}
-                    </h4>
-                    <p className="text-[11px]" style={{ color: c.textMuted }}>
-                      {report.desc}
-                    </p>
-                    <div className="flex items-center gap-1 mt-2 text-[10px]" style={{ color: c.primary }}>
-                      <ChevronRight size={12} />
-                      {isZh ? "查看详情" : "View Details"}
+                  return (
+                    <div
+                      key={key}
+                      onClick={() => !isDone && handleReportClick(key)}
+                      className={`rounded-xl p-5 relative overflow-hidden group transition-all ${
+                        isDone ? "" : "cursor-pointer"
+                      }`}
+                      style={{
+                        background: isSelected ? `${c.primary}0D` : c.surface,
+                        border: `1px solid ${isSelected ? c.primary : c.primary}14`,
+                      }}
+                    >
+                      {!isDone && (
+                        <>
+                          {isSelected && reportLoading ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2" style={{ background: `${c.bg}CC` }}>
+                              <Loader2 size={20} className="animate-spin" style={{ color: c.primary }} />
+                              <span className="text-xs font-semibold" style={{ color: c.primary }}>
+                                {isZh ? "生成中..." : "Generating..."}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2" style={{ background: `${c.bg}CC` }}>
+                              <Lock size={20} style={{ color: c.primary }} />
+                              <span className="text-xs font-semibold" style={{ color: c.primary }}>
+                                {isZh ? "点击解锁" : "Click to Unlock"}
+                              </span>
+                              {!isSignedIn && (
+                                <span className="text-[10px]" style={{ color: c.textMuted }}>
+                                  {isZh ? "登录后查看" : "Sign in to view"}
+                                </span>
+                              )}
+                              {isSignedIn && (
+                                <span className="text-xs font-semibold" style={{ color: c.primary }}>
+                                  ${info.price.toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {isDone && (
+                        <div className="absolute top-3 right-3">
+                          <Sparkles size={14} style={{ color: "#2ECC71" }} />
+                        </div>
+                      )}
+
+                      <h4 className="text-sm font-semibold mb-1" style={{ color: isDone ? c.primary : c.text }}>
+                        {info.title}
+                      </h4>
+                      <p className="text-[11px]" style={{ color: c.textMuted }}>
+                        {info.desc}
+                      </p>
+                      <div className="flex items-center gap-1 mt-2 text-[10px]" style={{ color: isDone ? "#2ECC71" : c.primary }}>
+                        {isDone ? (
+                          <>
+                            <Sparkles size={12} />
+                            {isZh ? "已解锁" : "Unlocked"}
+                          </>
+                        ) : (
+                          <>
+                            <ChevronRight size={12} />
+                            ${info.price.toFixed(2)}
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
+
+            {/* Payment modal for selected report */}
+            {showPayment && selectedReport && (
+              <div
+                className="rounded-xl p-6 animate-fade-in"
+                style={{ background: c.surface, border: `1px solid ${c.primary}18` }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold" style={{ color: c.text }}>
+                    {reportLabels[selectedReport].title}
+                  </h3>
+                  <button
+                    onClick={() => { setShowPayment(false); setSelectedReport(null); }}
+                    className="p-1 rounded-full"
+                    style={{ color: c.textMuted }}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <PayPalButton
+                  amount={reportLabels[selectedReport].price}
+                  spreadKey={reportLabels[selectedReport].serviceKey}
+                  readingId={`bazi-${selectedReport}-${Date.now()}`}
+                  onSuccess={(orderId) => fetchReport(orderId)}
+                  onError={(msg) => setError(msg)}
+                />
+              </div>
+            )}
+
+            {/* Report result display */}
+            {reportResult?.reading && (
+              <div
+                className="rounded-xl p-6 animate-fade-in"
+                style={{ background: c.surface, border: `1px solid ${c.primary}18` }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={14} style={{ color: c.primary }} />
+                    <h3 className="text-xs font-bold tracking-wider uppercase" style={{ color: c.primary }}>
+                      {reportLabels[reportResult.type]?.title || (isZh ? "报告" : "Report")}
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => setReportResult(null)}
+                    className="text-[10px]"
+                    style={{ color: c.textMuted }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                <div
+                  className="text-sm leading-relaxed space-y-3"
+                  style={{ color: c.text }}
+                >
+                  {reportResult.reading.overview && (
+                    <p>{reportResult.reading.overview}</p>
+                  )}
+                  {reportResult.reading.dayMaster && (
+                    <p>{reportResult.reading.dayMaster}</p>
+                  )}
+                  {reportResult.reading.elementAnalysis && typeof reportResult.reading.elementAnalysis === "object" && (
+                    <div className="p-3 rounded-lg" style={{ background: `${c.primary}08` }}>
+                      <p className="text-xs font-semibold mb-1" style={{ color: c.primary }}>
+                        {isZh ? "五行分析" : "Element Analysis"}
+                      </p>
+                      <p>{reportResult.reading.elementAnalysis.balance || reportResult.reading.elementAnalysis.dominant}</p>
+                    </div>
+                  )}
+                  {reportResult.reading.lifeAspects && typeof reportResult.reading.lifeAspects === "object" && (
+                    <div className="space-y-2">
+                      {Object.entries(reportResult.reading.lifeAspects as Record<string, string>).map(([k, v]) => (
+                        <div key={k} className="p-2 rounded" style={{ background: `${c.primary}04` }}>
+                          <span className="text-xs font-semibold" style={{ color: c.primary }}>{k}: </span>
+                          <span className="text-xs">{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {reportResult.reading.advice && (
+                    <div
+                      className="p-3 rounded-lg"
+                      style={{
+                        background: `linear-gradient(135deg, ${c.primary}10 0%, ${c.primary}04 100%)`,
+                        borderLeft: `3px solid ${c.primary}`,
+                      }}
+                    >
+                      <p className="text-xs italic">&ldquo;{reportResult.reading.advice}&rdquo;</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* CTA for non signed-in */}
             {!isSignedIn && (
