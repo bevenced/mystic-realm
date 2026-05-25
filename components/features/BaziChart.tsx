@@ -108,7 +108,12 @@ export default function BaziChart({
       </div>
 
       {/* ── Four Pillars Table ── */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto relative">
+        {/* Corner brackets */}
+        <span className="absolute -top-px -left-px w-2.5 h-2.5 border-t border-l rounded-tl" style={{ borderColor: `${c.primary}40` }} />
+        <span className="absolute -top-px -right-px w-2.5 h-2.5 border-t border-r rounded-tr" style={{ borderColor: `${c.primary}40` }} />
+        <span className="absolute -bottom-px -left-px w-2.5 h-2.5 border-b border-l rounded-bl" style={{ borderColor: `${c.primary}40` }} />
+        <span className="absolute -bottom-px -right-px w-2.5 h-2.5 border-b border-r rounded-br" style={{ borderColor: `${c.primary}40` }} />
         <div className="grid grid-cols-[50px_1fr_1fr_1fr_1fr] gap-px rounded-lg overflow-hidden" style={{ background: c.primary + "18" }}>
           {/* Column headers — first cell empty for row label column */}
           <div className="text-center py-2" style={{ background: `${c.primary}0D` }} />
@@ -238,7 +243,8 @@ export default function BaziChart({
 
       {/* ── Five Elements Bar ── */}
       <div className="space-y-1.5">
-        <div className="text-[10px] font-semibold tracking-wider uppercase" style={{ color: c.textMuted }}>
+        <div className="flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase" style={{ color: c.textMuted }}>
+          <span className="inline-block w-1 h-1 rotate-45 rounded-sm flex-shrink-0" style={{ background: c.primary }} />
           {t.bazi.fiveElements}
         </div>
         <div className="flex h-3 rounded-full overflow-hidden">

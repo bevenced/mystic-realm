@@ -52,10 +52,16 @@ const HOUR_OPTIONS = [
 ];
 
 export default function BaziClient() {
-  const { currentTheme } = useTheme();
+  const { currentTheme, setTheme } = useTheme();
   const c = currentTheme.colors;
   const { isSignedIn } = useAuth();
   const { locale, t } = useLocale();
+
+  // Activate BaZi theme
+  useEffect(() => {
+    setTheme("bazi");
+    return () => setTheme("meditation");
+  }, []);
 
   // Restore form state from URL params (after sign-in redirect)
   useEffect(() => {
@@ -86,6 +92,7 @@ export default function BaziClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ApiResponse | null>(null);
+  const [formExpanded, setFormExpanded] = useState(true);
 
   // Report payment flow
   const [selectedReport, setSelectedReport] = useState<"annual" | "personality" | "deep" | null>(null);
@@ -147,6 +154,7 @@ export default function BaziClient() {
         setError(json.details ? `${json.error} (${JSON.stringify(json.details)})` : json.error);
       } else {
         setResult(json);
+        setFormExpanded(false);
       }
     } catch {
       setError(t.bazi.networkError);
@@ -166,8 +174,10 @@ export default function BaziClient() {
   // Rotating loading messages
   const loadingMessages = [
     t.bazi.submitting,
-    "🔮",
-    "✨",
+    "排定四柱...",
+    "分析五行...",
+    "推演十神...",
+    "解读命理...",
   ];
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   useEffect(() => {
@@ -284,9 +294,35 @@ export default function BaziClient() {
           <p className="text-sm mt-3 max-w-md mx-auto" style={{ color: c.textMuted }}>
             {t.bazi.subtitle}
           </p>
+          <div
+            className="mx-auto mt-4 w-10 h-0.5 rounded-full opacity-60"
+            style={{ background: c.primary }}
+          />
         </div>
 
-        {/* Form */}
+        {/* Form / Summary Bar */}
+        {result && !formExpanded ? (
+          /* Collapsed summary bar */
+          <div
+            className="flex flex-wrap items-center gap-3 px-5 py-3 mb-8 rounded-lg animate-fade-in cursor-pointer"
+            style={{ background: c.surface, border: `1px solid ${c.primary}18` }}
+            onClick={() => setFormExpanded(true)}
+          >
+            <span className="text-xs" style={{ color: c.textMuted }}>
+              {formatDate(birthDate)}
+            </span>
+            <span className="text-xs font-semibold" style={{ color: c.primary }}>
+              {(HOUR_OPTIONS.find((h) => h.v === birthHour)?.[locale.startsWith("zh") ? "label" : "en"] || "").split(" ")[0]}
+            </span>
+            <span className="text-xs" style={{ color: c.textMuted }}>
+              {gender === "male" ? t.bazi.male : t.bazi.female}
+            </span>
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full" style={{ background: `${c.primary}14`, color: c.primary }}>
+              {t.bazi.submit}
+            </span>
+          </div>
+        ) : (
+          /* Expanded form */
         <div
           className="relative rounded-xl p-6 mb-8 animate-fade-in"
           style={{ background: c.surface, border: `1px solid ${c.primary}18` }}
@@ -418,31 +454,11 @@ export default function BaziClient() {
             </div>
           )}
         </div>
+        )}
 
         {/* Results */}
         {baziData && (
           <div className="space-y-6 animate-fade-in">
-            {/* User info bar */}
-            <div
-              className="flex flex-wrap items-center gap-4 px-4 py-3 rounded-lg text-xs"
-              style={{ background: `${c.primary}06`, border: `1px solid ${c.primary}12` }}
-            >
-              <span style={{ color: c.textMuted }}>
-                {formatDate(birthDate)}
-              </span>
-              <span style={{ color: c.primary }}>
-                {(HOUR_OPTIONS.find((h) => h.v === birthHour)?.[locale.startsWith("zh") ? "label" : "en"] || "").split(" ")[0]}
-              </span>
-              <span style={{ color: c.textMuted }}>
-                {gender === "male" ? t.bazi.male : t.bazi.female}
-              </span>
-              {result?.tokensUsed && (
-                <span className="ml-auto" style={{ color: c.textMuted }}>
-                  {result.tokensUsed} tokens
-                </span>
-              )}
-            </div>
-
             {/* BaZi Chart */}
             {chartData && (
               <BaziChart
@@ -459,20 +475,92 @@ export default function BaziClient() {
             )}
 
             {/* AI interpretation */}
-            {result?.reading && (result.reading.preview || result.reading.overview) && (
+            {result?.reading && (
               <div
-                className="rounded-xl p-6"
+                className="rounded-xl p-6 space-y-4"
                 style={{ background: c.surface, border: `1px solid ${c.primary}18` }}
               >
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2">
                   <Sparkles size={14} style={{ color: c.primary }} />
                   <h3 className="text-xs font-bold tracking-wider uppercase" style={{ color: c.primary }}>
                     {t.bazi.aiReading}
                   </h3>
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: c.text }}>
-                  {result.reading.preview || result.reading.overview}
-                </p>
+
+                {/* Overview */}
+                {(result.reading.preview || result.reading.overview) && (
+                  <p className="text-sm leading-relaxed" style={{ color: c.text }}>
+                    {result.reading.preview || result.reading.overview}
+                  </p>
+                )}
+
+                {/* Day Master */}
+                {result.reading.dayMaster && (
+                  <div
+                    className="p-3 rounded-lg"
+                    style={{ background: `${c.primary}08`, borderLeft: `3px solid ${c.primary}` }}
+                  >
+                    <p className="text-xs leading-relaxed" style={{ color: c.text }}>
+                      {result.reading.dayMaster}
+                    </p>
+                  </div>
+                )}
+
+                {/* Element Analysis */}
+                {result.reading.elementAnalysis && (
+                  <div className="p-3 rounded-lg" style={{ background: `${c.primary}06` }}>
+                    <p className="text-[10px] font-semibold mb-1 tracking-wider uppercase" style={{ color: c.primary }}>
+                      {t.bazi.elementAnalysis}
+                    </p>
+                    {typeof result.reading.elementAnalysis === "string" ? (
+                      <p className="text-xs leading-relaxed" style={{ color: c.text }}>
+                        {result.reading.elementAnalysis}
+                      </p>
+                    ) : (
+                      <p className="text-xs leading-relaxed" style={{ color: c.text }}>
+                        {(result.reading.elementAnalysis as any).balance
+                          || (result.reading.elementAnalysis as any).dominant
+                          || (result.reading.elementAnalysis as any).lacking}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Life Aspects */}
+                {result.reading.lifeAspects && typeof result.reading.lifeAspects === "object" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {Object.entries(result.reading.lifeAspects as Record<string, string>).map(([k, v]) => (
+                      <div key={k} className="p-2 rounded" style={{ background: `${c.primary}04` }}>
+                        <span className="text-[10px] font-semibold" style={{ color: c.primary }}>{k}</span>
+                        <p className="text-xs mt-0.5" style={{ color: c.text }}>{v}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Pillars detail */}
+                {result.reading.pillars && Array.isArray(result.reading.pillars) && result.reading.pillars.length > 0 && (
+                  <div className="space-y-2">
+                    {result.reading.pillars.map((p: any, idx: number) => (
+                      <div key={idx} className="p-2 rounded" style={{ background: `${c.primary}04` }}>
+                        <span className="text-[10px] font-semibold" style={{ color: c.primary }}>{p.name || p.stem + p.branch}:</span>
+                        <span className="text-xs ml-1" style={{ color: c.text }}>{p.meaning || p.tenGod}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Affirmation */}
+                {result.reading.affirmation && (
+                  <div
+                    className="p-3 rounded-lg text-center"
+                    style={{ background: `linear-gradient(135deg, ${c.primary}10, ${c.primary}04)`, border: `1px solid ${c.primary}18` }}
+                  >
+                    <p className="text-sm font-serif italic" style={{ color: c.primary }}>
+                      &ldquo;{result.reading.affirmation}&rdquo;
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -501,6 +589,7 @@ export default function BaziClient() {
                         background: isActive ? `${c.primary}14` : "transparent",
                         color: isDone ? "#2ECC71" : isActive ? c.primary : c.textMuted,
                         borderRight: idx < 2 ? `1px solid ${c.primary}18` : "none",
+                        borderBottom: isActive ? `2px solid ${c.primary}` : "2px solid transparent",
                       }}
                     >
                       {isDone ? (
