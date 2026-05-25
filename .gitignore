@@ -36,3 +36,6 @@ tsconfig.tsbuildinfo
 # debug screenshots
 pictures/
 public/_screenshots/
+
+# Tesseract OCR data
+*.traineddata
