@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 const ELEMENT_COLORS: Record<string, string> = {
   Wood: "#4CAF50",
@@ -17,8 +18,6 @@ const ELEMENT_BG: Record<string, string> = {
   Metal: "#B0B0B018",
   Water: "#42A5F518",
 };
-
-const COLUMN_LABELS = ["年柱 Year", "月柱 Month", "日柱 Day", "时柱 Hour"];
 
 interface PillarData {
   stem: string;
@@ -44,15 +43,14 @@ interface BaziChartProps {
     day: PillarData;
     hour: PillarData;
   };
-  tenGods: string[];       // 4 strings, day pillar is "日主" or similar
-  naYin: string[];          // 4 strings
-  hiddenStems: HiddenStemData[][]; // 4 arrays
+  tenGods: string[];
+  naYin: string[];
+  hiddenStems: HiddenStemData[][];
   dayMasterIndex: number;
   dayMasterElement: string;
   dayMasterYinYang: string;
   elementCounts: Record<string, number>;
   zodiac: string;
-  locale?: string;
 }
 
 export default function BaziChart({
@@ -65,14 +63,21 @@ export default function BaziChart({
   dayMasterYinYang,
   elementCounts,
   zodiac,
-  locale,
 }: BaziChartProps) {
   const { currentTheme } = useTheme();
+  const { t } = useLocale();
   const c = currentTheme.colors;
-  const isZh = locale === "zh-CN" || locale === "zh-TW";
 
   const pillarKeys = ["year", "month", "day", "hour"] as const;
+  const pillarLabels = [t.bazi.yearPillar, t.bazi.monthPillar, t.bazi.dayPillar, t.bazi.hourPillar];
   const maxElement = Object.entries(elementCounts).sort((a, b) => b[1] - a[1])[0];
+
+  const elLabel = (elem: string) => (t.dailyFortune.elements as Record<string, string>)[elem] || elem;
+  const zodiacName = (z: string) => {
+    const name = z.split(" ")[0];
+    return (t.dailyFortune.zodiacs as Record<string, string>)[name] || name;
+  };
+  const yy = (v: string) => (t.dailyFortune.yinYang as Record<string, string>)[v] || v;
 
   return (
     <div className="space-y-4">
@@ -88,14 +93,14 @@ export default function BaziChart({
             background: ELEMENT_BG[dayMasterElement],
           }}
         >
-          {dayMasterYinYang === "Yang" ? "阳" : "阴"}
+          {yy(dayMasterYinYang)}
         </span>
         <div>
           <div className="text-xs" style={{ color: c.textMuted }}>
-            {isZh ? "日主" : "Day Master"}
+            {t.bazi.dayMaster}
           </div>
           <div className="text-sm font-bold" style={{ color: c.text }}>
-            {isZh ? "日主" : "Day Master"}: {dayMasterYinYang} {dayMasterElement} / {zodiac}
+            {t.bazi.dayMaster}: {yy(dayMasterYinYang)} {elLabel(dayMasterElement)} / {zodiacName(zodiac)}
           </div>
         </div>
       </div>
@@ -111,7 +116,7 @@ export default function BaziChart({
               style={{ background: `${c.primary}0D` }}
             >
               <div className="text-[10px] font-bold tracking-wider uppercase" style={{ color: c.primary }}>
-                {isZh ? COLUMN_LABELS[i].split(" ")[0] : COLUMN_LABELS[i]}
+                {pillarLabels[i]}
               </div>
             </div>
           ))}
@@ -136,7 +141,7 @@ export default function BaziChart({
                   {p.stem}
                 </div>
                 <div className="text-[10px] mt-0.5" style={{ color: c.textMuted }}>
-                  {isDayMaster ? (isZh ? "日主" : "DM") : p.stemElement}
+                  {isDayMaster ? "DM" : elLabel(p.stemElement)}
                 </div>
               </div>
             );
@@ -177,7 +182,7 @@ export default function BaziChart({
                   {p.branch}
                 </div>
                 <div className="text-[10px] mt-0.5" style={{ color: c.textMuted }}>
-                  {p.zodiac.replace(/ [^ ]+$/, "")}
+                  {zodiacName(p.zodiac)}
                 </div>
               </div>
             );
@@ -216,13 +221,13 @@ export default function BaziChart({
       {/* ── Five Elements Bar ── */}
       <div className="space-y-1">
         <div className="text-[10px] font-semibold tracking-wider uppercase" style={{ color: c.textMuted }}>
-          {isZh ? "五行分布" : "Five Elements"}
+          {t.bazi.fiveElements}
         </div>
         <div className="flex h-2 rounded-full overflow-hidden">
           {Object.entries(elementCounts).map(([elem, count]) => (
             <div
               key={elem}
-              title={`${elem}: ${count}`}
+              title={`${elLabel(elem)}: ${count}`}
               style={{
                 width: `${(count / 7) * 100}%`,
                 background: ELEMENT_COLORS[elem],
@@ -234,7 +239,7 @@ export default function BaziChart({
         <div className="flex gap-3 text-[10px]">
           {Object.entries(elementCounts).map(([elem, count]) => (
             <span key={elem} style={{ color: ELEMENT_COLORS[elem] }}>
-              {elem} {count}
+              {elLabel(elem)} {count}
               {maxElement && maxElement[0] === elem ? " ★" : ""}
             </span>
           ))}

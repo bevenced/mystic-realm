@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -56,7 +56,6 @@ export default function BaziClient() {
   const c = currentTheme.colors;
   const { isSignedIn } = useAuth();
   const { locale, t } = useLocale();
-  const isZh = locale === "zh-CN" || locale === "zh-TW";
 
   // Form state
   const [birthDate, setBirthDate] = useState("");
@@ -76,20 +75,20 @@ export default function BaziClient() {
 
   const reportLabels: Record<string, { title: string; desc: string; price: number; serviceKey: string }> = {
     annual: {
-      title: isZh ? "年度报告" : "Annual Report",
-      desc: isZh ? "2026年度运势详解" : "2026 Yearly Fortune",
+      title: t.bazi.annual.title,
+      desc: t.bazi.annual.desc,
       price: 3.99,
       serviceKey: "bazi-annual",
     },
     personality: {
-      title: isZh ? "个性报告" : "Personality Report",
-      desc: isZh ? "性格与天赋深度分析" : "Personality & Talent Analysis",
+      title: t.bazi.personality.title,
+      desc: t.bazi.personality.desc,
       price: 3.99,
       serviceKey: "bazi-personality",
     },
     deep: {
-      title: isZh ? "深度报告" : "Deep Report",
-      desc: isZh ? "全面命理解读" : "Full Destiny Reading",
+      title: t.bazi.deep.title,
+      desc: t.bazi.deep.desc,
       price: 5.99,
       serviceKey: "bazi-deep",
     },
@@ -130,7 +129,7 @@ export default function BaziClient() {
         setResult(json);
       }
     } catch {
-      setError(isZh ? "网络错误，请重试" : "Network error. Please try again.");
+      setError(t.bazi.networkError);
     } finally {
       setLoading(false);
     }
@@ -178,7 +177,7 @@ export default function BaziClient() {
       setRedeemingPoints(false);
       await loadReport({ redeemed: redeemData.token });
     } catch {
-      setError(isZh ? "积分兑换失败，请重试" : "Points redemption failed. Please try again.");
+      setError(t.bazi.redeemFailed);
       setRedeemingPoints(false);
     }
   };
@@ -206,7 +205,7 @@ export default function BaziClient() {
         setReportResult({ type: selectedReport!, reading: json.reading });
       }
     } catch {
-      setError(isZh ? "网络错误，请重试" : "Network error. Please try again.");
+      setError(t.bazi.networkError);
     } finally {
       setReportLoading(false);
     }
@@ -236,15 +235,13 @@ export default function BaziClient() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase mb-4"
             style={{ background: `${c.primary}14`, color: c.primary }}>
             <Sparkles size={12} />
-            {isZh ? "免费 · 无需注册" : "Free · No Registration"}
+            {t.bazi.badge}
           </div>
           <h1 className="text-3xl md:text-4xl font-bold font-serif" style={{ color: c.text }}>
-            {isZh ? "八字排盘" : "BaZi Destiny Chart"}
+            {t.bazi.title}
           </h1>
           <p className="text-sm mt-3 max-w-md mx-auto" style={{ color: c.textMuted }}>
-            {isZh
-              ? "输入你的出生日期和时辰，获取免费的四柱八字排盘和 AI 解读。无需注册。"
-              : "Enter your birth date and time to receive a free Four Pillars BaZi chart with AI interpretation. No registration required."}
+            {t.bazi.subtitle}
           </p>
         </div>
 
@@ -258,7 +255,7 @@ export default function BaziClient() {
             <div>
               <label className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase mb-2" style={{ color: c.textMuted }}>
                 <Calendar size={13} />
-                {isZh ? "出生日期" : "Birth Date"}
+                {t.bazi.birthDate}
               </label>
               <input
                 type="date"
@@ -278,7 +275,7 @@ export default function BaziClient() {
             <div>
               <label className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase mb-2" style={{ color: c.textMuted }}>
                 <Clock size={13} />
-                {isZh ? "出生时辰" : "Birth Hour"}
+                {t.bazi.birthHour}
               </label>
               <select
                 value={birthHour}
@@ -291,11 +288,11 @@ export default function BaziClient() {
                 }}
               >
                 {HOUR_OPTIONS.map((h) => (
-                  <option key={h.v} value={h.v}>{isZh ? h.label : h.en}</option>
+                  <option key={h.v} value={h.v}>{locale.startsWith("zh") ? h.label : h.en}</option>
                 ))}
               </select>
               <p className="text-[10px] mt-1" style={{ color: c.textMuted }}>
-                {isZh ? "如不确定，可留默认" : "Leave default if unsure"}
+                {t.bazi.birthHourHint}
               </p>
             </div>
 
@@ -303,7 +300,7 @@ export default function BaziClient() {
             <div>
               <label className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase mb-2" style={{ color: c.textMuted }}>
                 <Users size={13} />
-                {isZh ? "性别" : "Gender"}
+                {t.bazi.gender}
               </label>
               <div className="flex gap-3">
                 {(["male", "female"] as const).map((g) => (
@@ -318,7 +315,7 @@ export default function BaziClient() {
                       border: `1px solid ${gender === g ? c.primary : `${c.primary}14`}`,
                     }}
                   >
-                    {isZh ? (g === "male" ? "男" : "女") : (g === "male" ? "Male" : "Female")}
+                    {g === "male" ? t.bazi.male : t.bazi.female}
                   </button>
                 ))}
               </div>
@@ -342,8 +339,8 @@ export default function BaziClient() {
                 <Sparkles size={16} />
               )}
               {loading
-                ? (isZh ? "正在解读命盘..." : "Reading your destiny...")
-                : (isZh ? "生成八字排盘" : "Generate BaZi Chart")}
+                ? t.bazi.submitting
+                : t.bazi.submit}
             </button>
           </form>
 
@@ -367,10 +364,10 @@ export default function BaziClient() {
                 {formatDate(birthDate)}
               </span>
               <span style={{ color: c.primary }}>
-                {HOUR_OPTIONS.find((h) => h.v === birthHour)?.label.split(" ")[0]}
+                {(HOUR_OPTIONS.find((h) => h.v === birthHour)?.[locale.startsWith("zh") ? "label" : "en"] || "").split(" ")[0]}
               </span>
               <span style={{ color: c.textMuted }}>
-                {gender === "male" ? (isZh ? "男" : "Male") : (isZh ? "女" : "Female")}
+                {gender === "male" ? t.bazi.male : t.bazi.female}
               </span>
               {result?.tokensUsed && (
                 <span className="ml-auto" style={{ color: c.textMuted }}>
@@ -391,7 +388,6 @@ export default function BaziClient() {
                 dayMasterYinYang={baziData.dayMasterYinYang}
                 elementCounts={baziData.elementCounts}
                 zodiac={baziData.day.zodiac.split(" ")[0]}
-                locale={locale}
               />
             )}
 
@@ -404,7 +400,7 @@ export default function BaziClient() {
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles size={14} style={{ color: c.primary }} />
                   <h3 className="text-xs font-bold tracking-wider uppercase" style={{ color: c.primary }}>
-                    {isZh ? "AI 解读" : "AI Interpretation"}
+                    {t.bazi.aiReading}
                   </h3>
                 </div>
                 <p className="text-sm leading-relaxed" style={{ color: c.text }}>
@@ -416,7 +412,7 @@ export default function BaziClient() {
             {/* Locked report tabs */}
             <div className="space-y-3">
               <div className="text-xs font-bold tracking-wider uppercase" style={{ color: c.textMuted }}>
-                {isZh ? "深度报告" : "In-Depth Reports"}
+                {t.bazi.inDepthReports}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -443,18 +439,18 @@ export default function BaziClient() {
                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2" style={{ background: `${c.bg}CC` }}>
                               <Loader2 size={20} className="animate-spin" style={{ color: c.primary }} />
                               <span className="text-xs font-semibold" style={{ color: c.primary }}>
-                                {isZh ? "生成中..." : "Generating..."}
+                                {t.bazi.generating}
                               </span>
                             </div>
                           ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2" style={{ background: `${c.bg}CC` }}>
                               <Lock size={20} style={{ color: c.primary }} />
                               <span className="text-xs font-semibold" style={{ color: c.primary }}>
-                                {isZh ? "点击解锁" : "Click to Unlock"}
+                                {t.bazi.clickToUnlock}
                               </span>
                               {!isSignedIn && (
                                 <span className="text-[10px]" style={{ color: c.textMuted }}>
-                                  {isZh ? "登录后查看" : "Sign in to view"}
+                                  {t.bazi.signInToView}
                                 </span>
                               )}
                               {isSignedIn && (
@@ -483,7 +479,7 @@ export default function BaziClient() {
                         {isDone ? (
                           <>
                             <Sparkles size={12} />
-                            {isZh ? "已解锁" : "Unlocked"}
+                            {t.bazi.unlocked}
                           </>
                         ) : (
                           <>
@@ -533,13 +529,13 @@ export default function BaziClient() {
                   ) : (
                     <Sparkles size={14} />
                   )}
-                  {isZh ? "用 50 积分兑换" : "Unlock with 50 Points"}
+                  {t.bazi.unlockWithPoints}
                 </button>
 
                 <div className="flex items-center gap-3 mb-3">
                   <div className="flex-1 h-px" style={{ background: c.primary + "18" }} />
                   <span className="text-[10px] uppercase tracking-wider" style={{ color: c.textMuted }}>
-                    {isZh ? "或" : "or"}
+                    {t.bazi.or}
                   </span>
                   <div className="flex-1 h-px" style={{ background: c.primary + "18" }} />
                 </div>
@@ -564,7 +560,7 @@ export default function BaziClient() {
                   <div className="flex items-center gap-2">
                     <Sparkles size={14} style={{ color: c.primary }} />
                     <h3 className="text-xs font-bold tracking-wider uppercase" style={{ color: c.primary }}>
-                      {reportLabels[reportResult.type]?.title || (isZh ? "报告" : "Report")}
+                      {reportLabels[reportResult.type]?.title || t.bazi.report}
                     </h3>
                   </div>
                   <button
@@ -588,7 +584,7 @@ export default function BaziClient() {
                   {reportResult.reading.elementAnalysis && typeof reportResult.reading.elementAnalysis === "object" && (
                     <div className="p-3 rounded-lg" style={{ background: `${c.primary}08` }}>
                       <p className="text-xs font-semibold mb-1" style={{ color: c.primary }}>
-                        {isZh ? "五行分析" : "Element Analysis"}
+                        {t.bazi.elementAnalysis}
                       </p>
                       <p>{reportResult.reading.elementAnalysis.balance || reportResult.reading.elementAnalysis.dominant}</p>
                     </div>
@@ -625,7 +621,7 @@ export default function BaziClient() {
                 style={{ background: `linear-gradient(135deg, ${c.primary}10, ${c.primary}04)`, border: `1px solid ${c.primary}18` }}
               >
                 <p className="text-sm font-semibold mb-3" style={{ color: c.text }}>
-                  {isZh ? "想要完整的命理解读？" : "Want the full destiny reading?"}
+                  {t.bazi.wantFull}
                 </p>
                 <div className="flex items-center justify-center gap-3">
                   <Link
@@ -633,14 +629,14 @@ export default function BaziClient() {
                     className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all"
                     style={{ background: c.primary, color: c.bg, boxShadow: `0 0 15px ${currentTheme.glow}` }}
                   >
-                    {isZh ? "登录 / 注册" : "Sign In / Register"}
+                    {t.bazi.signInRegister}
                   </Link>
                   <Link
                     href="/membership"
                     className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all"
                     style={{ background: "transparent", color: c.primary, border: `1px solid ${c.primary}30` }}
                   >
-                    {isZh ? "查看会员方案" : "View Plans"}
+                    {t.bazi.viewPlans}
                   </Link>
                 </div>
               </div>
