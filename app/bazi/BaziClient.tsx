@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -56,6 +56,26 @@ export default function BaziClient() {
   const c = currentTheme.colors;
   const { isSignedIn } = useAuth();
   const { locale, t } = useLocale();
+
+  // Restore form state from URL params (after sign-in redirect)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const bd = params.get("birthDate");
+    const bh = params.get("birthHour");
+    const g = params.get("gender");
+    if (bd) setBirthDate(bd);
+    if (bh) setBirthHour(Number(bh));
+    if (g === "male" || g === "female") setGender(g);
+    // If we came back from sign-in with form data, auto-submit
+    if (bd && bh) {
+      // Clean URL without reload
+      const url = new URL(window.location.href);
+      url.searchParams.delete("birthDate");
+      url.searchParams.delete("birthHour");
+      url.searchParams.delete("gender");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  }, []);
 
   // Form state
   const [birthDate, setBirthDate] = useState("");
@@ -140,7 +160,8 @@ export default function BaziClient() {
   // Handle report tab click
   const handleReportClick = (type: "annual" | "personality" | "deep") => {
     if (!isSignedIn) {
-      window.location.href = `/sign-in?redirect_url=/bazi`;
+      const returnParams = new URLSearchParams({ birthDate, birthHour: String(birthHour), gender });
+      window.location.href = `/sign-in?redirect_url=${encodeURIComponent(`/bazi?${returnParams.toString()}`)}`;
       return;
     }
     setSelectedReport(type);
