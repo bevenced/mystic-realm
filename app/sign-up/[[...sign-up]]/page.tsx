@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import SignUpClient from "../SignUpClient";
 import { cookies } from "next/headers";
 import type { Locale } from "@/lib/i18n/config";
@@ -17,5 +18,9 @@ export async function generateMetadata() {
 }
 
 export default function SignUpPage() {
-  return <SignUpClient />;
+  return (
+    <Suspense>
+      <SignUpClient />
+    </Suspense>
+  );
 }

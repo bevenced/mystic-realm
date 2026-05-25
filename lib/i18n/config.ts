@@ -167,6 +167,7 @@ export interface Dictionary {
     aiPowered: string;
     shareImage: string;
     sharePointsEarned: string;
+    subscriberBonus: string;
     brandFooter: string;
     aspectNames: Record<string, string>;
     yinYang: Record<string, string>;
@@ -470,6 +471,10 @@ export interface Dictionary {
     viewPlans: string;
     networkError: string;
     redeemFailed: string;
-    subscriberBonus: string;
+    heavenlyStem: string;
+    tenGod: string;
+    earthlyBranch: string;
+    hiddenStem: string;
+    naYin: string;
   };
 }

@@ -4,10 +4,11 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Flame, Sparkles, UserCircle } from "lucide-react";
 import Link from "next/link";
 
-const COPY: Record<string, { title: string; desc: string; items: { num: string; icon: string; title: string; desc: string; href: string }[] }> = {
+const COPY: Record<string, { title: string; desc: string; learnMore: string; items: { num: string; icon: string; title: string; desc: string; href: string }[] }> = {
   en: {
     title: "Core Features",
     desc: "Three paths to self-discovery — each powered by AI and rooted in ancient tradition.",
+    learnMore: "Learn more",
     items: [
       { num: "01", icon: "🔥", title: "Daily Fortune", desc: "AI-powered BaZi reading with personalized insights for your day ahead.", href: "/dailyfortune" },
       { num: "02", icon: "✨", title: "Daily Wish", desc: "Set intentions and manifest your dreams with guided daily wishes.", href: "/wish" },
@@ -17,6 +18,7 @@ const COPY: Record<string, { title: string; desc: string; items: { num: string; 
   "zh-CN": {
     title: "核心功能",
     desc: "三条自我探索之路——每条都由 AI 驱动，根植于古老传统。",
+    learnMore: "了解更多",
     items: [
       { num: "01", icon: "🔥", title: "每日运势", desc: "AI 驱动的八字解读，为你提供量身定制的当日指引。", href: "/dailyfortune" },
       { num: "02", icon: "✨", title: "每日许愿", desc: "设定意图，在引导下每日许愿，助你实现梦想。", href: "/wish" },
@@ -26,6 +28,7 @@ const COPY: Record<string, { title: string; desc: string; items: { num: string; 
   "zh-TW": {
     title: "核心功能",
     desc: "三條自我探索之路——每條都由 AI 驅動，根植於古老傳統。",
+    learnMore: "了解更多",
     items: [
       { num: "01", icon: "🔥", title: "每日運勢", desc: "AI 驅動的八字解讀，為你提供量身定制的當日指引。", href: "/dailyfortune" },
       { num: "02", icon: "✨", title: "每日許願", desc: "設定意圖，在引導下每日許願，助你實現夢想。", href: "/wish" },
@@ -90,7 +93,7 @@ export default function CantianFeatures() {
 
                 {/* Arrow link */}
                 <span className="link-arrow">
-                  {locale === "en" ? "Learn more" : "了解更多"}
+                  {t.learnMore}
                   <span>&rarr;</span>
                 </span>
               </div>

@@ -209,6 +209,7 @@ export const dictionary: Dictionary = {
     aiPowered: "AI-powered",
     shareImage: "Share as Image",
     sharePointsEarned: "+5 pts earned!",
+    subscriberBonus: "Mystic Bonus",
     brandFooter: "Orient Wisdom ✦",
     aspectNames: {
       Wealth: "Wealth",
@@ -743,6 +744,10 @@ export const dictionary: Dictionary = {
     viewPlans: "View Plans",
     networkError: "Network error. Please try again.",
     redeemFailed: "Points redemption failed. Please try again.",
-    subscriberBonus: "Mystic Bonus",
+    heavenlyStem: "Stem",
+    tenGod: "10 Gods",
+    earthlyBranch: "Branch",
+    hiddenStem: "Hidden",
+    naYin: "Na Yin",
   },
 } as const;

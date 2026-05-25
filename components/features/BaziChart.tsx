@@ -70,7 +70,9 @@ export default function BaziChart({
 
   const pillarKeys = ["year", "month", "day", "hour"] as const;
   const pillarLabels = [t.bazi.yearPillar, t.bazi.monthPillar, t.bazi.dayPillar, t.bazi.hourPillar];
+  const rowLabels = [t.bazi.heavenlyStem, t.bazi.tenGod, t.bazi.earthlyBranch, t.bazi.hiddenStem, t.bazi.naYin];
   const maxElement = Object.entries(elementCounts).sort((a, b) => b[1] - a[1])[0];
+  const elementTotal = Object.values(elementCounts).reduce((s, c) => s + c, 0);
 
   const elLabel = (elem: string) => (t.dailyFortune.elements as Record<string, string>)[elem] || elem;
   const zodiacName = (z: string) => {
@@ -107,8 +109,9 @@ export default function BaziChart({
 
       {/* ── Four Pillars Table ── */}
       <div className="overflow-x-auto">
-        <div className="grid grid-cols-4 gap-px rounded-lg overflow-hidden" style={{ background: c.primary + "18" }}>
-          {/* Column headers */}
+        <div className="grid grid-cols-[50px_1fr_1fr_1fr_1fr] gap-px rounded-lg overflow-hidden" style={{ background: c.primary + "18" }}>
+          {/* Column headers — first cell empty for row label column */}
+          <div className="text-center py-2" style={{ background: `${c.primary}0D` }} />
           {pillarKeys.map((key, i) => (
             <div
               key={`hdr-${key}`}
@@ -121,7 +124,10 @@ export default function BaziChart({
             </div>
           ))}
 
-          {/* Heavenly Stems */}
+          {/* Row 1: Heavenly Stems */}
+          <div className="flex items-center justify-center py-2.5" style={{ background: `${c.primary}08` }}>
+            <span className="text-[10px] font-semibold" style={{ color: c.textMuted }}>{rowLabels[0]}</span>
+          </div>
           {pillarKeys.map((key, i) => {
             const p = pillars[key];
             const isDayMaster = key === "day";
@@ -147,7 +153,10 @@ export default function BaziChart({
             );
           })}
 
-          {/* Ten Gods */}
+          {/* Row 2: Ten Gods */}
+          <div className="flex items-center justify-center py-1.5" style={{ background: `${c.primary}06` }}>
+            <span className="text-[10px] font-semibold" style={{ color: c.textMuted }}>{rowLabels[1]}</span>
+          </div>
           {pillarKeys.map((key, i) => (
             <div
               key={`tg-${key}`}
@@ -166,7 +175,10 @@ export default function BaziChart({
             </div>
           ))}
 
-          {/* Earthly Branches */}
+          {/* Row 3: Earthly Branches */}
+          <div className="flex items-center justify-center py-2.5" style={{ background: `${c.primary}08` }}>
+            <span className="text-[10px] font-semibold" style={{ color: c.textMuted }}>{rowLabels[2]}</span>
+          </div>
           {pillarKeys.map((key, i) => {
             const p = pillars[key];
             return (
@@ -188,22 +200,28 @@ export default function BaziChart({
             );
           })}
 
-          {/* Hidden Stems */}
+          {/* Row 4: Hidden Stems (with qi) */}
+          <div className="flex items-center justify-center py-1.5" style={{ background: `${c.primary}06` }}>
+            <span className="text-[10px] font-semibold" style={{ color: c.textMuted }}>{rowLabels[3]}</span>
+          </div>
           {pillarKeys.map((key, i) => (
             <div
               key={`hs-${key}`}
               className="text-center py-1.5"
               style={{ background: key === "day" ? `${c.primary}0A` : "transparent" }}
             >
-              <span className="text-[11px]" style={{ color: c.textMuted }}>
+              <span className="text-[11px] leading-relaxed" style={{ color: c.textMuted }}>
                 {hiddenStems[i] && hiddenStems[i].length > 0
-                  ? hiddenStems[i].map((h) => h.stem).join(" ")
+                  ? hiddenStems[i].map((h) => `${h.stem}${h.qi ? h.qi[0] : ""}`).join(" ")
                   : "—"}
               </span>
             </div>
           ))}
 
-          {/* Na Yin */}
+          {/* Row 5: Na Yin */}
+          <div className="flex items-center justify-center py-1.5" style={{ background: `${c.primary}06` }}>
+            <span className="text-[10px] font-semibold" style={{ color: c.textMuted }}>{rowLabels[4]}</span>
+          </div>
           {pillarKeys.map((key, i) => (
             <div
               key={`ny-${key}`}
@@ -219,30 +237,34 @@ export default function BaziChart({
       </div>
 
       {/* ── Five Elements Bar ── */}
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         <div className="text-[10px] font-semibold tracking-wider uppercase" style={{ color: c.textMuted }}>
           {t.bazi.fiveElements}
         </div>
-        <div className="flex h-2 rounded-full overflow-hidden">
+        <div className="flex h-3 rounded-full overflow-hidden">
           {Object.entries(elementCounts).map(([elem, count]) => (
             <div
               key={elem}
               title={`${elLabel(elem)}: ${count}`}
               style={{
-                width: `${(count / 7) * 100}%`,
+                width: `${elementTotal > 0 ? (count / elementTotal) * 100 : 0}%`,
                 background: ELEMENT_COLORS[elem],
-                opacity: count > 0 ? 1 : 0.2,
+                opacity: count > 0 ? 1 : 0.15,
               }}
             />
           ))}
         </div>
-        <div className="flex gap-3 text-[10px]">
-          {Object.entries(elementCounts).map(([elem, count]) => (
-            <span key={elem} style={{ color: ELEMENT_COLORS[elem] }}>
-              {elLabel(elem)} {count}
-              {maxElement && maxElement[0] === elem ? " ★" : ""}
-            </span>
-          ))}
+        <div className="flex gap-3 text-[10px] flex-wrap">
+          {Object.entries(elementCounts).map(([elem, count]) => {
+            const pct = elementTotal > 0 ? Math.round((count / elementTotal) * 100) : 0;
+            return (
+              <span key={elem} style={{ color: ELEMENT_COLORS[elem] }}>
+                <span className="font-semibold">{elLabel(elem)}</span> {count}
+                <span style={{ opacity: 0.7 }}>（{pct}%）</span>
+                {maxElement && maxElement[0] === elem ? " ★" : ""}
+              </span>
+            );
+          })}
         </div>
       </div>
     </div>

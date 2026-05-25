@@ -261,7 +261,7 @@ export default forwardRef<HTMLDivElement, DailyFortuneCardProps>(function DailyF
           }}
         >
           <p className="text-xs leading-relaxed italic" style={{ color: c.text }}>
-            &ldquo;{fortuneData.advice}&rdquo;
+            &ldquo;{fortuneData.advice || ""}&rdquo;
           </p>
         </div>
 
@@ -277,8 +277,8 @@ export default forwardRef<HTMLDivElement, DailyFortuneCardProps>(function DailyF
             <span>🍀</span>
             <span className="font-medium" style={{ color: c.text }}>
               {t.dailyFortune.luckyColor}{" "}
-              <span className="inline-block w-3 h-3 rounded-full align-middle mx-1" style={{ backgroundColor: fortuneData.luckyColor.toLowerCase() }} />
-              <span style={{ color: c.primary }}>{t.dailyFortune.colorNames[fortuneData.luckyColor] || fortuneData.luckyColor}</span>
+              <span className="inline-block w-3 h-3 rounded-full align-middle mx-1" style={{ backgroundColor: (fortuneData.luckyColor || "#ccc").toLowerCase() }} />
+              <span style={{ color: c.primary }}>{t.dailyFortune.colorNames[fortuneData.luckyColor] || fortuneData.luckyColor || ""}</span>
             </span>
           </div>
           <div
@@ -290,7 +290,7 @@ export default forwardRef<HTMLDivElement, DailyFortuneCardProps>(function DailyF
           >
             <span>🔢</span>
             <span className="font-medium" style={{ color: c.text }}>
-              {t.dailyFortune.luckyNumber} <span style={{ color: c.primary }}>{fortuneData.luckyNumber}</span>
+              {t.dailyFortune.luckyNumber} <span style={{ color: c.primary }}>{fortuneData.luckyNumber ?? "—"}</span>
             </span>
           </div>
         </div>

@@ -123,7 +123,8 @@ export default function SignInClient() {
 
   function handleGoogleSignIn() {
     setGoogleLoading(true);
-    window.location.href = "/api/auth/google";
+    const encoded = encodeURIComponent(redirect);
+    window.location.href = `/api/auth/google?redirect_url=${encoded}`;
   }
 
   return (
@@ -339,7 +340,7 @@ export default function SignInClient() {
 
         <p className="text-sm text-center mt-6" style={{ color: "var(--color-text-muted)" }}>
           {t.signIn.noAccount}{" "}
-          <Link href="/sign-up" style={{ color: "var(--color-primary)" }}>
+          <Link href={`/sign-up${redirect !== "/dashboard" ? `?redirect_url=${encodeURIComponent(redirect)}` : ""}`} style={{ color: "var(--color-primary)" }}>
             {t.signIn.signUp}
           </Link>
         </p>

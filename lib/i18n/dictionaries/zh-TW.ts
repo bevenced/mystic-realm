@@ -207,6 +207,7 @@ export const dictionary: Dictionary = {
     aiPowered: "AI 驅動",
     shareImage: "分享為圖片",
     sharePointsEarned: "+5 積分已到賬！",
+    subscriberBonus: "會員月禮",
     brandFooter: "東方智慧 ✦",
     aspectNames: {
       Wealth: "財運",
@@ -741,6 +742,10 @@ export const dictionary: Dictionary = {
     viewPlans: "查看會員方案",
     networkError: "網路錯誤，請重試",
     redeemFailed: "積分兌換失敗，請重試",
-    subscriberBonus: "會員月禮",
+    heavenlyStem: "天干",
+    tenGod: "十神",
+    earthlyBranch: "地支",
+    hiddenStem: "藏干",
+    naYin: "納音",
   },
 } as const;

@@ -12,10 +12,10 @@ const TOOLS = [
   { emoji: "💞", key: "compatibility", href: "/compatibility" },
 ];
 
-const COPY: Record<string, { title: string; desc: string; eyebrow: string }> = {
-  en: { title: "All Tools", desc: "Six divination arts at your fingertips — each one a doorway to deeper understanding.", eyebrow: "Skills Platform" },
-  "zh-CN": { title: "全部工具", desc: "六种占卜技艺尽在指尖——每一种都是一扇通往更深理解的窗口。", eyebrow: "技能平台" },
-  "zh-TW": { title: "全部工具", desc: "六種占卜技藝盡在指尖——每一種都是一扇通往更深理解的窗口。", eyebrow: "技能平台" },
+const COPY: Record<string, { title: string; desc: string; eyebrow: string; enter: string }> = {
+  en: { title: "All Tools", desc: "Six divination arts at your fingertips — each one a doorway to deeper understanding.", eyebrow: "Skills Platform", enter: "Enter" },
+  "zh-CN": { title: "全部工具", desc: "六种占卜技艺尽在指尖——每一种都是一扇通往更深理解的窗口。", eyebrow: "技能平台", enter: "进入" },
+  "zh-TW": { title: "全部工具", desc: "六種占卜技藝盡在指尖——每一種都是一扇通往更深理解的窗口。", eyebrow: "技能平台", enter: "進入" },
 };
 
 export default function CantianShowcase() {
@@ -80,7 +80,7 @@ export default function CantianShowcase() {
                     </h3>
                     <p className="text-xs mt-1" style={{ color: "#9a8a7a" }}>
                       <span className="link-arrow text-xs">
-                        {locale === "en" ? "Enter" : "进入"}
+                        {t.enter}
                         <span>&rarr;</span>
                       </span>
                     </p>

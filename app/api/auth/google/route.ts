@@ -84,8 +84,10 @@ export async function GET(request: NextRequest) {
       });
 
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || getSiteUrl(request);
-      const res = NextResponse.redirect(`${siteUrl}/dashboard`);
+      const finalRedirect = request.cookies.get("oauth_redirect")?.value || "/dashboard";
+      const res = NextResponse.redirect(`${siteUrl}${finalRedirect}`);
       res.headers.append("Set-Cookie", setSessionCookie(sessionToken));
+      res.cookies.set("oauth_redirect", "", { path: "/", maxAge: 0 });
       return res;
     } catch (error) {
       console.error("Google OAuth error:", error);
@@ -97,6 +99,9 @@ export async function GET(request: NextRequest) {
   const redirectUri = getRedirectUri(request);
   const oauthState = crypto.randomUUID();
 
+  // Preserve post-login redirect URL (from sign-in page)
+  const redirectUrl = searchParams.get("redirect_url") || "/dashboard";
+
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
     redirect_uri: redirectUri,
@@ -107,5 +112,6 @@ export async function GET(request: NextRequest) {
 
   const res = NextResponse.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
   res.cookies.set("oauth_state", oauthState, { httpOnly: true, path: "/", maxAge: 600, sameSite: "lax" });
+  res.cookies.set("oauth_redirect", redirectUrl, { httpOnly: true, path: "/", maxAge: 600, sameSite: "lax" });
   return res;
 }

@@ -184,7 +184,10 @@ export async function generateStructuredFortune(
 export function tryParseStructured(fortune: string): StructuredFortune | null {
   try {
     const parsed = JSON.parse(fortune) as StructuredFortune;
-    if (parsed.aspects && Array.isArray(parsed.aspects) && parsed.aspects.length === 5) {
+    if (
+      parsed.aspects && Array.isArray(parsed.aspects) && parsed.aspects.length === 5 &&
+      parsed.advice && parsed.luckyColor && typeof parsed.luckyNumber === "number"
+    ) {
       return parsed;
     }
     return null;

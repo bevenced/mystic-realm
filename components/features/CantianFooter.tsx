@@ -4,13 +4,37 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import Link from "next/link";
 import { Moon } from "lucide-react";
 
-const COPY: Record<string, { tagline: string; knowledge: string; related: string; partners: string; copyright: string }> = {
+const COPY: Record<string, {
+  tagline: string;
+  knowledge: string;
+  related: string;
+  partners: string;
+  copyright: string;
+  linkBaziReadings: string;
+  linkTarot: string;
+  linkAstrology: string;
+  linkFengShui: string;
+  linkAbout: string;
+  linkFAQ: string;
+  linkPrivacy: string;
+  linkTerms: string;
+  linkContactUs: string;
+}> = {
   en: {
     tagline: "Bringing ancient wisdom to the modern world through the power of AI.",
     knowledge: "Knowledge",
     related: "Links",
     partners: "Partners",
     copyright: "Orient Wisdom. All rights reserved.",
+    linkBaziReadings: "BaZi Readings",
+    linkTarot: "Tarot",
+    linkAstrology: "Astrology",
+    linkFengShui: "Feng Shui",
+    linkAbout: "About",
+    linkFAQ: "FAQ",
+    linkPrivacy: "Privacy",
+    linkTerms: "Terms",
+    linkContactUs: "Contact Us",
   },
   "zh-CN": {
     tagline: "通过 AI 的力量，将古老智慧带入现代世界。",
@@ -18,6 +42,15 @@ const COPY: Record<string, { tagline: string; knowledge: string; related: string
     related: "相关链接",
     partners: "合作网站",
     copyright: "Orient Wisdom. 保留所有权利。",
+    linkBaziReadings: "八字解读",
+    linkTarot: "塔罗",
+    linkAstrology: "占星",
+    linkFengShui: "风水",
+    linkAbout: "关于",
+    linkFAQ: "常见问题",
+    linkPrivacy: "隐私政策",
+    linkTerms: "服务条款",
+    linkContactUs: "联系我们",
   },
   "zh-TW": {
     tagline: "透過 AI 的力量，將古老智慧帶入現代世界。",
@@ -25,6 +58,15 @@ const COPY: Record<string, { tagline: string; knowledge: string; related: string
     related: "相關連結",
     partners: "合作網站",
     copyright: "Orient Wisdom. 保留所有權利。",
+    linkBaziReadings: "八字解讀",
+    linkTarot: "塔羅",
+    linkAstrology: "占星",
+    linkFengShui: "風水",
+    linkAbout: "關於",
+    linkFAQ: "常見問題",
+    linkPrivacy: "隱私政策",
+    linkTerms: "服務條款",
+    linkContactUs: "聯絡我們",
   },
 };
 
@@ -55,10 +97,10 @@ export default function CantianFooter() {
             </h4>
             <ul className="space-y-2.5">
               {[
-                { label: locale === "en" ? "BaZi Readings" : "八字解读", href: "/dailyfortune" },
-                { label: locale === "en" ? "Tarot" : "塔罗", href: "/tools?service=tarot" },
-                { label: locale === "en" ? "Astrology" : "占星", href: "/tools?service=astrology" },
-                { label: locale === "en" ? "Feng Shui" : "风水", href: "/tools?service=fengshui" },
+                { label: t.linkBaziReadings, href: "/dailyfortune" },
+                { label: t.linkTarot, href: "/tools?service=tarot" },
+                { label: t.linkAstrology, href: "/tools?service=astrology" },
+                { label: t.linkFengShui, href: "/tools?service=fengshui" },
               ].map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm transition-colors hover:opacity-80" style={{ color: "#9a8a7a" }}>
@@ -76,10 +118,10 @@ export default function CantianFooter() {
             </h4>
             <ul className="space-y-2.5">
               {[
-                { label: locale === "en" ? "About" : "关于", href: "/about" },
-                { label: locale === "en" ? "FAQ" : "常见问题", href: "/faq" },
-                { label: locale === "en" ? "Privacy" : "隐私政策", href: "/privacy" },
-                { label: locale === "en" ? "Terms" : "服务条款", href: "/terms" },
+                { label: t.linkAbout, href: "/about" },
+                { label: t.linkFAQ, href: "/faq" },
+                { label: t.linkPrivacy, href: "/privacy" },
+                { label: t.linkTerms, href: "/terms" },
               ].map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm transition-colors hover:opacity-80" style={{ color: "#9a8a7a" }}>
@@ -98,7 +140,7 @@ export default function CantianFooter() {
             <ul className="space-y-2.5">
               <li>
                 <a href="mailto:support@wentchine.shop" className="text-sm transition-colors hover:opacity-80" style={{ color: "#9a8a7a" }}>
-                  {locale === "en" ? "Contact Us" : "联系我们"}
+                  {t.linkContactUs}
                 </a>
               </li>
             </ul>

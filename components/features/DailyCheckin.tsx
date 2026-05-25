@@ -6,9 +6,8 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { StructuredFortune } from "@/lib/ai-fortune";
 import {
-  Sparkles, CheckCircle, Loader2, Flame, UserCircle,
+  Sparkles, CheckCircle, Loader2, Flame,
 } from "lucide-react";
-import Link from "next/link";
 import DailyFortuneCard from "@/components/features/DailyFortuneCard";
 import FortuneShare from "@/components/features/FortuneShare";
 import BaziChart from "@/components/features/BaziChart";
@@ -127,14 +126,21 @@ export default function DailyCheckin({
       });
       const json = await res.json();
       if (json.error) {
-        if (json.code === "PROFILE_REQUIRED") {
-          setError(json.code);
-        } else {
-          setError(json.details ? `${json.error} (${json.details})` : t.common.error);
-        }
+        setError(json.details ? `${json.error} (${json.details})` : t.common.error);
       } else {
-        // Re-fetch full status to get recentHistory
-        await fetchStatus();
+        setData({
+          checkedIn: true,
+          today: {
+            streak: json.streak,
+            pointsEarned: json.pointsEarned,
+            subscriberBonus: json.subscriberBonus,
+            fortune: json.fortune,
+            fortuneData: json.fortuneData,
+          },
+          baziContext: json.baziContext ?? null,
+          totalPoints: json.totalPoints,
+          recentHistory: data?.recentHistory ?? [],
+        });
       }
     } catch {
       setError(t.common.networkError);
@@ -201,56 +207,35 @@ export default function DailyCheckin({
       {/* ── Not checked in ── */}
       {!data?.checkedIn && (
         <div className="px-7 py-10 text-center">
-          {error === "PROFILE_REQUIRED" ? (
-            <div className="animate-fade-in space-y-4">
-              <div className="text-3xl mb-2">🔮</div>
-              <p className="text-sm" style={{ color: c.textMuted }}>
-                {t.dailyFortune.setProfile}
-              </p>
-              <Link
-                href="/profile"
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all"
-                style={{
-                  backgroundColor: c.primary,
-                  color: isDark ? c.bg : "#FFFFFF",
-                  boxShadow: `0 0 15px ${currentTheme.glow}`,
-                }}
-              >
-                <UserCircle size={16} />
-                {t.dailyFortune.completeProfile}
-              </Link>
-            </div>
-          ) : (
-            <div className="animate-fade-in space-y-4">
-              <div className="text-3xl mb-2">✨</div>
-              <p className="text-sm" style={{ color: c.textMuted }}>
-                {t.dailyFortune.checkInPrompt}
-              </p>
-              <button
-                onClick={handleCheckin}
-                disabled={loading}
-                className="inline-flex items-center gap-2 px-7 py-2.5 rounded-full text-sm font-semibold transition-all"
-                style={{
-                  backgroundColor: loading ? `${c.primary}30` : c.primary,
-                  color: loading ? c.textMuted : isDark ? c.bg : "#FFFFFF",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  boxShadow: loading ? "none" : `0 0 20px ${currentTheme.glow}`,
-                }}
-              >
-                {loading ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Sparkles size={16} />
-                )}
-                {loading ? t.dailyFortune.checkingIn : `${t.dailyFortune.checkIn} ✨`}
-              </button>
-              {error && error !== "PROFILE_REQUIRED" && (
-                <p className="text-xs mt-2" style={{ color: "#E74C3C" }}>
-                  {error}
-                </p>
+          <div className="animate-fade-in space-y-4">
+            <div className="text-3xl mb-2">✨</div>
+            <p className="text-sm" style={{ color: c.textMuted }}>
+              {t.dailyFortune.checkInPrompt}
+            </p>
+            <button
+              onClick={handleCheckin}
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-7 py-2.5 rounded-full text-sm font-semibold transition-all"
+              style={{
+                backgroundColor: loading ? `${c.primary}30` : c.primary,
+                color: loading ? c.textMuted : isDark ? c.bg : "#FFFFFF",
+                cursor: loading ? "not-allowed" : "pointer",
+                boxShadow: loading ? "none" : `0 0 20px ${currentTheme.glow}`,
+              }}
+            >
+              {loading ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Sparkles size={16} />
               )}
-            </div>
-          )}
+              {loading ? t.dailyFortune.checkingIn : `${t.dailyFortune.checkIn} ✨`}
+            </button>
+            {error && (
+              <p className="text-xs mt-2" style={{ color: "#E74C3C" }}>
+                {error}
+              </p>
+            )}
+          </div>
         </div>
       )}
 
@@ -286,7 +271,7 @@ export default function DailyCheckin({
               <FortuneShare
                 text={(() => {
                   const name = user?.name || t.dailyFortune.shareNameFallback;
-                  const fortune = `${name} ${t.dailyFortune.todayFortune}\n${fortuneData.advice}\n🍀 ${t.dailyFortune.shareLuckyLabel} ${fortuneData.luckyColor} | 🔢 ${t.dailyFortune.shareLuckyNumLabel} ${fortuneData.luckyNumber}`;
+                  const fortune = `${name} ${t.dailyFortune.todayFortune}\n${fortuneData.advice || ""}\n🍀 ${t.dailyFortune.shareLuckyLabel} ${fortuneData.luckyColor || ""} | 🔢 ${t.dailyFortune.shareLuckyNumLabel} ${fortuneData.luckyNumber ?? ""}`;
                   return tf("dailyFortune.shareTemplate", { fortune });
                 })()}
                 cardRef={cardRef}
@@ -314,7 +299,7 @@ export default function DailyCheckin({
             </span>
             {data.today.subscriberBonus ? (
               <span className="text-xs flex items-center gap-1 font-semibold" style={{ color: c.primary }}>
-                🎖️ +{data.today.subscriberBonus} {t.bazi.subscriberBonus}
+                🎖️ +{data.today.subscriberBonus} {t.dailyFortune.subscriberBonus}
               </span>
             ) : null}
             <span className="text-xs flex items-center gap-1" style={{ color: c.textMuted }}>

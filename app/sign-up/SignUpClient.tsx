@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -13,8 +13,11 @@ export default function SignUpClient() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { refreshUser } = useAuth();
   const { t } = useLocale();
+
+  const redirect = searchParams.get("redirect_url") || "/dashboard";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +38,7 @@ export default function SignUpClient() {
       }
 
       await refreshUser();
-      router.push("/dashboard");
+      router.push(redirect);
       router.refresh();
     } catch {
       setError(t.common.error);
@@ -141,7 +144,7 @@ export default function SignUpClient() {
 
         <p className="text-sm text-center mt-6" style={{ color: "var(--color-text-muted)" }}>
           {t.signUp.hasAccount}{" "}
-          <Link href="/sign-in" style={{ color: "var(--color-primary)" }}>
+          <Link href={`/sign-in${redirect !== "/dashboard" ? `?redirect_url=${encodeURIComponent(redirect)}` : ""}`} style={{ color: "var(--color-primary)" }}>
             {t.signUp.signIn}
           </Link>
         </p>
