@@ -60,6 +60,20 @@ export default function FortuneShare({ text, cardRef }: FortuneShareProps) {
   const c = currentTheme.colors;
   const [copied, setCopied] = useState(false);
   const [sharingImage, setSharingImage] = useState(false);
+  const [pointsMsg, setPointsMsg] = useState<string | null>(null);
+
+  const earnSharePoints = async () => {
+    try {
+      const res = await fetch("/api/points/share", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setPointsMsg(t.dailyFortune.sharePointsEarned);
+        setTimeout(() => setPointsMsg(null), 3000);
+      }
+    } catch {
+      // silent — share still works even if points call fails
+    }
+  };
 
   // ── Image capture & share ──
 
@@ -85,6 +99,7 @@ export default function FortuneShare({ text, cardRef }: FortuneShareProps) {
         link.href = dataUrl;
         link.click();
       }
+      earnSharePoints();
     } catch {
       // user cancelled share or error
     } finally {
@@ -109,6 +124,7 @@ export default function FortuneShare({ text, cardRef }: FortuneShareProps) {
         ]);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+        earnSharePoints();
         return;
       } catch {
         // Image clipboard not supported → text fallback
@@ -128,6 +144,7 @@ export default function FortuneShare({ text, cardRef }: FortuneShareProps) {
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    earnSharePoints();
   };
 
   // ── Image-first mode (when cardRef available) ──
@@ -165,6 +182,15 @@ export default function FortuneShare({ text, cardRef }: FortuneShareProps) {
             <Copy size={14} />
           )}
         </button>
+
+        {pointsMsg && (
+          <span
+            className="text-[11px] font-bold animate-fade-in"
+            style={{ color: "#2ECC71" }}
+          >
+            {pointsMsg}
+          </span>
+        )}
       </div>
     );
   }
@@ -205,6 +231,7 @@ export default function FortuneShare({ text, cardRef }: FortuneShareProps) {
           title={tf("ui.shareTitle", { name: link.name })}
           style={btnStyle(c)}
           className="hover:scale-110 transition-transform"
+          onClick={earnSharePoints}
         >
           <span style={{ color: link.color }}>{link.icon}</span>
         </a>
@@ -226,7 +253,7 @@ export default function FortuneShare({ text, cardRef }: FortuneShareProps) {
       {typeof navigator.share === "function" && (
         <button
           onClick={async () => {
-            try { await navigator.share({ text }); } catch { /* user cancelled */ }
+            try { await navigator.share({ text }); earnSharePoints(); } catch { /* user cancelled */ }
           }}
           title={t.ui.moreShare}
           style={btnStyle(c)}
@@ -234,6 +261,15 @@ export default function FortuneShare({ text, cardRef }: FortuneShareProps) {
         >
           <Share2 size={14} />
         </button>
+      )}
+
+      {pointsMsg && (
+        <span
+          className="text-[11px] font-bold animate-fade-in"
+          style={{ color: "#2ECC71" }}
+        >
+          {pointsMsg}
+        </span>
       )}
     </div>
   );

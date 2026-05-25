@@ -166,6 +166,7 @@ export interface Dictionary {
     shareLuckyNumLabel: string;
     aiPowered: string;
     shareImage: string;
+    sharePointsEarned: string;
     brandFooter: string;
     aspectNames: Record<string, string>;
     yinYang: Record<string, string>;

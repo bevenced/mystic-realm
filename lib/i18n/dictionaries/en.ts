@@ -208,6 +208,7 @@ export const dictionary: Dictionary = {
     shareLuckyNumLabel: "Lucky #:",
     aiPowered: "AI-powered",
     shareImage: "Share as Image",
+    sharePointsEarned: "+5 pts earned!",
     brandFooter: "Orient Wisdom ✦",
     aspectNames: {
       Wealth: "Wealth",

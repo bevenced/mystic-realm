@@ -206,6 +206,7 @@ export const dictionary: Dictionary = {
     shareLuckyNumLabel: "幸運數字：",
     aiPowered: "AI 驅動",
     shareImage: "分享為圖片",
+    sharePointsEarned: "+5 積分已到賬！",
     brandFooter: "東方智慧 ✦",
     aspectNames: {
       Wealth: "財運",
