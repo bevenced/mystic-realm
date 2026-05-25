@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { hashPassword, createSessionToken, setSessionCookie } from "@/lib/auth";
-import { createUser, getUserByEmail } from "@/lib/db";
+import { createUser, getUserByEmail, addUserPoints } from "@/lib/db";
 import { z } from "zod";
 
 const registerSchema = z.object({
@@ -34,11 +34,14 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Failed to create user" }, { status: 500 });
     }
 
+    // Welcome bonus: +50 points for new users
+    const points = await addUserPoints(user.id, 50, "signup_bonus", "Welcome bonus");
+
     const token = createSessionToken({ id: user.id, email: user.email, name: user.name });
     const cookie = setSessionCookie(token);
 
     return Response.json(
-      { user: { id: user.id, email: user.email, name: user.name, plan: user.plan, points: user.points } },
+      { user: { id: user.id, email: user.email, name: user.name, plan: user.plan, points } },
       { status: 201, headers: { "Set-Cookie": cookie } },
     );
   } catch (error) {

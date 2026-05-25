@@ -3,10 +3,10 @@ import { z } from "zod";
 import { getAuthUser } from "@/lib/auth";
 import { redeemPoints, getUserPoints, createRedemption } from "@/lib/db";
 
-const REDEEM_COST = 100;
+const REDEEM_COST = 50;
 
 const redeemSchema = z.object({
-  service: z.enum(["reading", "bazi", "astrology", "fengshui", "meditation"]).default("reading"),
+  service: z.enum(["reading", "bazi-annual", "bazi-personality", "bazi-deep", "bazi", "astrology", "fengshui", "meditation"]).default("reading"),
 });
 
 export async function POST(req: NextRequest) {

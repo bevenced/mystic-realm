@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSessionToken, setSessionCookie } from "@/lib/auth";
 import { sql } from "@/lib/sql";
+import { addUserPoints } from "@/lib/db";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
@@ -71,6 +72,9 @@ export async function GET(request: NextRequest) {
           RETURNING id, email, name, plan, points, created_at
         `;
         user = result.rows[0];
+
+        // Welcome bonus: +50 points for new users
+        await addUserPoints(user.id, 50, "signup_bonus", "Welcome bonus").catch(() => {});
       }
 
       const sessionToken = createSessionToken({

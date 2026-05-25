@@ -136,6 +136,8 @@ export default function BaziClient() {
     }
   };
 
+  const [redeemingPoints, setRedeemingPoints] = useState(false);
+
   // Handle report tab click
   const handleReportClick = (type: "annual" | "personality" | "deep") => {
     if (!isSignedIn) {
@@ -147,12 +149,43 @@ export default function BaziClient() {
     setReportResult(null);
   };
 
-  // Fetch report with orderId
+  // Fetch report with orderId (PayPal)
   const fetchReport = async (orderId: string) => {
     if (!selectedReport || !birthDate) return;
     setShowPayment(false);
     setReportLoading(true);
+    await loadReport({ orderId });
+  };
 
+  // Fetch report with points
+  const fetchReportWithPoints = async () => {
+    if (!selectedReport || !birthDate) return;
+    setRedeemingPoints(true);
+    try {
+      const redeemRes = await fetch("/api/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ service: reportLabels[selectedReport].serviceKey }),
+      });
+      const redeemData = await redeemRes.json();
+      if (redeemData.error) {
+        setError(redeemData.error);
+        setRedeemingPoints(false);
+        return;
+      }
+      setShowPayment(false);
+      setReportLoading(true);
+      setRedeemingPoints(false);
+      await loadReport({ redeemed: redeemData.token });
+    } catch {
+      setError(isZh ? "积分兑换失败，请重试" : "Points redemption failed. Please try again.");
+      setRedeemingPoints(false);
+    }
+  };
+
+  // Common report loader
+  const loadReport = async (extra: { orderId?: string; redeemed?: string }) => {
+    setReportLoading(true);
     try {
       const res = await fetch("/api/ai-bazi", {
         method: "POST",
@@ -162,15 +195,15 @@ export default function BaziClient() {
           birthHour,
           gender,
           reportType: selectedReport,
-          orderId,
           locale,
+          ...extra,
         }),
       });
       const json = await res.json();
       if (json.error) {
         setError(json.error);
       } else {
-        setReportResult({ type: selectedReport, reading: json.reading });
+        setReportResult({ type: selectedReport!, reading: json.reading });
       }
     } catch {
       setError(isZh ? "网络错误，请重试" : "Network error. Please try again.");
@@ -483,6 +516,34 @@ export default function BaziClient() {
                     <X size={16} />
                   </button>
                 </div>
+
+                {/* Points redemption button */}
+                <button
+                  onClick={fetchReportWithPoints}
+                  disabled={redeemingPoints}
+                  className="w-full py-3 rounded-lg font-semibold text-sm mb-3 transition-all flex items-center justify-center gap-2"
+                  style={{
+                    background: `linear-gradient(135deg, ${c.primary}22, ${c.primary}0D)`,
+                    border: `1px solid ${c.primary}44`,
+                    color: c.primary,
+                  }}
+                >
+                  {redeemingPoints ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={14} />
+                  )}
+                  {isZh ? "用 50 积分兑换" : "Unlock with 50 Points"}
+                </button>
+
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex-1 h-px" style={{ background: c.primary + "18" }} />
+                  <span className="text-[10px] uppercase tracking-wider" style={{ color: c.textMuted }}>
+                    {isZh ? "或" : "or"}
+                  </span>
+                  <div className="flex-1 h-px" style={{ background: c.primary + "18" }} />
+                </div>
+
                 <PayPalButton
                   amount={reportLabels[selectedReport].price}
                   spreadKey={reportLabels[selectedReport].serviceKey}

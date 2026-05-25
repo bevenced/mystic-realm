@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyOTPToken, getOTPTokenFromRequest, clearOTPCookie, createSessionToken, setSessionCookie } from "@/lib/auth";
-import { getUserByEmail } from "@/lib/db";
+import { getUserByEmail, addUserPoints } from "@/lib/db";
 import { sql } from "@/lib/sql";
 
 export async function POST(request: NextRequest) {
@@ -23,6 +23,8 @@ export async function POST(request: NextRequest) {
     const email = payload.email;
     let user = await getUserByEmail(email);
 
+    let isNewUser = false;
+
     // Auto-register if user doesn't exist
     if (!user) {
       const id = crypto.randomUUID();
@@ -32,6 +34,10 @@ export async function POST(request: NextRequest) {
         RETURNING id, email, name, plan, points, created_at
       `;
       user = result.rows[0];
+      isNewUser = true;
+
+      // Welcome bonus: +50 points for new users
+      await addUserPoints(user.id, 50, "signup_bonus", "Welcome bonus");
     }
 
     const sessionToken = createSessionToken({

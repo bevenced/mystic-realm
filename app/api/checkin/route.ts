@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
-import { performCheckin, getTodayCheckin, getCheckinHistory, getUserPoints } from "@/lib/db";
+import { performCheckin, getTodayCheckin, getCheckinHistory, getUserPoints, getActiveSubscription, addUserPoints } from "@/lib/db";
+import { sql } from "@/lib/sql";
 import { getDailyFortune } from "@/lib/fortunes";
 import {
   generateFortune,
@@ -128,69 +129,91 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // If user hasn't set birth info, require profile completion first
-    if (!user.birth_date) {
-      return NextResponse.json({
-        error: "Complete your birth profile to receive personalized daily fortunes.",
-        code: "PROFILE_REQUIRED",
-      }, { status: 400 });
+    const hasProfile = user.birth_date;
+    let bazi: ReturnType<typeof calculateBaZi> | null = null;
+    let age = 0;
+    let fortuneContext: FortuneContext | null = null;
+    let todayPillar: ReturnType<typeof getDayPillar> | null = null;
+
+    if (hasProfile) {
+      // Calculate BaZi from birth data
+      const [year, month, day] = user.birth_date instanceof Date
+        ? [user.birth_date.getFullYear(), user.birth_date.getMonth() + 1, user.birth_date.getDate()]
+        : String(user.birth_date).split("-").map(Number);
+      const birthHour = user.birth_hour ?? 0;
+      bazi = calculateBaZi(year, month, day, birthHour);
+
+      age = new Date().getFullYear() - year -
+        (new Date() < new Date(new Date().getFullYear(), month - 1, day) ? 1 : 0);
+
+      fortuneContext = {
+        name: user.name || undefined,
+        gender: user.gender || undefined,
+        age,
+        dayMasterElement: bazi.dayMasterElement,
+        dayMasterYinYang: bazi.dayMasterYinYang,
+        zodiac: bazi.day.zodiac,
+        streak: 0,
+        elementCounts: bazi.elementCounts,
+      };
+
+      // Today's pillar for interaction analysis
+      todayPillar = getDayPillar(new Date());
     }
 
-    // Calculate BaZi from birth data
-    const [year, month, day] = user.birth_date instanceof Date
-      ? [user.birth_date.getFullYear(), user.birth_date.getMonth() + 1, user.birth_date.getDate()]
-      : String(user.birth_date).split("-").map(Number);
-    const birthHour = user.birth_hour ?? 0;
-    const bazi = calculateBaZi(year, month, day, birthHour);
-
-    const age = new Date().getFullYear() - year -
-      (new Date() < new Date(new Date().getFullYear(), month - 1, day) ? 1 : 0);
-
-    const fortuneContext: FortuneContext = {
-      name: user.name || undefined,
-      gender: user.gender || undefined,
-      age,
-      dayMasterElement: bazi.dayMasterElement,
-      dayMasterYinYang: bazi.dayMasterYinYang,
-      zodiac: bazi.day.zodiac,
-      streak: 0,
-      elementCounts: bazi.elementCounts,
-    };
-
-    // Today's pillar for interaction analysis
-    const todayPillar = getDayPillar(new Date());
-
-    // Try structured AI fortune first
+    // Try structured AI fortune first (only with profile)
     let fortune: string;
     let fortuneData: StructuredFortune | null = null;
     let aiGenerated = false;
 
-    const structured = await generateStructuredFortune(fortuneContext, todayPillar, locale);
-    if (structured) {
-      fortuneData = structured;
-      fortune = JSON.stringify(structured);
-      aiGenerated = true;
-    } else {
-      // Fallback to single-sentence AI fortune
-      const single = await generateFortune(fortuneContext, locale);
-      if (single) {
-        fortune = single;
+    if (fortuneContext) {
+      const structured = await generateStructuredFortune(fortuneContext, todayPillar!, locale);
+      if (structured) {
+        fortuneData = structured;
+        fortune = JSON.stringify(structured);
         aiGenerated = true;
       } else {
-        // Final fallback to fortune pool
-        fortune = getDailyFortune(new Date());
+        // Fallback to single-sentence AI fortune
+        const single = await generateFortune(fortuneContext, locale);
+        if (single) {
+          fortune = single;
+          aiGenerated = true;
+        } else {
+          fortune = getDailyFortune(new Date());
+        }
       }
+    } else {
+      // No profile — use generic fortune from pool
+      fortune = getDailyFortune(new Date());
     }
 
     const result = await performCheckin(user.id, fortune);
 
-    const baziContext = buildBaziContext(bazi, todayPillar);
+    // Mystic subscriber monthly bonus: +100 once per calendar month
+    let subscriberBonus = 0;
+    const sub = await getActiveSubscription(user.id);
+    if (sub && sub.status === "active") {
+      const thisMonth = new Date().toISOString().slice(0, 7); // "2026-05"
+      const bonusExists = await sql`
+        SELECT id FROM points_transactions
+        WHERE user_id = ${user.id} AND type = 'subscriber_bonus'
+        AND created_at::text LIKE ${thisMonth + "%"}
+        LIMIT 1
+      `;
+      if (bonusExists.rows.length === 0) {
+        subscriberBonus = 100;
+        await addUserPoints(user.id, 100, "subscriber_bonus", `Mystic monthly bonus — ${thisMonth}`);
+      }
+    }
+
+    const baziContext = bazi && todayPillar ? buildBaziContext(bazi, todayPillar) : undefined;
 
     return NextResponse.json({
       success: true,
       streak: result.streak,
       pointsEarned: result.points_earned,
       totalPoints: result.totalPoints,
+      subscriberBonus,
       fortune: result.fortune,
       fortuneData,
       baziContext,

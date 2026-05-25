@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthUser } from "@/lib/auth";
-import { getTodayCheckin, createWish, getTodayWishes, getTodayWishCount, getUserPoints, redeemPoints, addUserPoints } from "@/lib/db";
+import { getTodayCheckin, createWish, getTodayWishes, getTodayWishCount, getUserPoints, redeemPoints } from "@/lib/db";
 import { sendWishEmail } from "@/lib/mail";
 
 const wishCategories = ["health", "wealth", "luck", "friendship", "love"] as const;
@@ -13,16 +13,7 @@ const wishSchema = z.object({
 });
 
 const MAX_WISHES_PER_DAY = 3;
-const WISH_POINTS_COST = 3;
-
-const VIP_EMAIL = "52475712@qq.com";
-
-function getUserLimits(user: { email?: string }) {
-  if (user.email === VIP_EMAIL) {
-    return { maxWishes: 10000, pointCost: 1 };
-  }
-  return { maxWishes: MAX_WISHES_PER_DAY, pointCost: WISH_POINTS_COST };
-}
+const WISH_POINTS_COST = 5;
 
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request);
@@ -38,15 +29,13 @@ export async function GET(request: NextRequest) {
       getTodayCheckin(user.id),
     ]);
 
-    const limits = getUserLimits(user);
-
     return NextResponse.json({
       wishes,
       wishCount,
       userPoints: points,
       checkedInToday: !!todayCheckin,
-      maxWishes: limits.maxWishes,
-      pointCost: limits.pointCost,
+      maxWishes: MAX_WISHES_PER_DAY,
+      pointCost: WISH_POINTS_COST,
     });
   } catch (error) {
     console.error("Wish GET error:", error);
@@ -82,11 +71,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const limits = getUserLimits(user);
-
     // Check daily limit
     const wishCount = await getTodayWishCount(user.id);
-    if (wishCount >= limits.maxWishes) {
+    if (wishCount >= MAX_WISHES_PER_DAY) {
       return NextResponse.json(
         { error: "Maximum wishes reached for today." },
         { status: 400 },
@@ -96,10 +83,10 @@ export async function POST(request: NextRequest) {
     // Deduct points (redeemPoints atomically checks balance)
     let newPoints: number;
     try {
-      newPoints = await redeemPoints(user.id, limits.pointCost, `Wish: ${category}`);
+      newPoints = await redeemPoints(user.id, WISH_POINTS_COST, `Wish: ${category}`);
     } catch {
       return NextResponse.json(
-        { error: `Insufficient points. Each wish costs ${limits.pointCost} points.` },
+        { error: `Insufficient points. Each wish costs ${WISH_POINTS_COST} points.` },
         { status: 400 },
       );
     }
@@ -109,7 +96,6 @@ export async function POST(request: NextRequest) {
 
     // Send email if recipient provided
     let emailSent = false;
-    let emailBonusEarned = 0;
     if (recipientEmail && recipientEmail.trim()) {
       try {
         await sendWishEmail({
@@ -126,15 +112,6 @@ export async function POST(request: NextRequest) {
 
     // Get updated wishes
     const wishes = await getTodayWishes(user.id);
-
-    // +5 points for email wishes, max 15/day (3 emails)
-    if (emailSent) {
-      const emailWishCount = wishes.filter(w => w.recipient_email).length;
-      if (emailWishCount <= 3) {
-        newPoints = await addUserPoints(user.id, 5, "wish_email_bonus", "Email blessing bonus");
-        emailBonusEarned = 5;
-      }
-    }
     const newWishCount = await getTodayWishCount(user.id);
 
     return NextResponse.json({
@@ -143,10 +120,9 @@ export async function POST(request: NextRequest) {
       wishes,
       wishCount: newWishCount,
       userPoints: newPoints,
-      remainingWishes: limits.maxWishes - newWishCount,
-      pointCost: limits.pointCost,
+      remainingWishes: MAX_WISHES_PER_DAY - newWishCount,
+      pointCost: WISH_POINTS_COST,
       emailSent,
-      emailBonusEarned,
     });
   } catch (error) {
     console.error("Wish POST error:", error);

@@ -58,6 +58,7 @@ interface BaziContext {
 interface CheckinToday {
   streak: number;
   pointsEarned: number;
+  subscriberBonus?: number;
   fortune: string;
   fortuneData?: StructuredFortune | null;
 }
@@ -306,12 +307,17 @@ export default function DailyCheckin({
 
           {/* ── Footer stats ── */}
           <div
-            className="flex items-center gap-5 pt-3"
+            className="flex items-center gap-5 pt-3 flex-wrap"
             style={{ borderTop: `1px solid ${c.primary}10` }}
           >
             <span className="text-xs flex items-center gap-1" style={{ color: c.textMuted }}>
               <Sparkles size={12} />+{data.today.pointsEarned} {t.dailyFortune.pts}
             </span>
+            {data.today.subscriberBonus ? (
+              <span className="text-xs flex items-center gap-1 font-semibold" style={{ color: c.primary }}>
+                🎖️ +{data.today.subscriberBonus} {isZh ? "会员月礼" : "Mystic Bonus"}
+              </span>
+            ) : null}
             <span className="text-xs flex items-center gap-1" style={{ color: c.textMuted }}>
               <Flame size={12} /> {tf("dailyFortune.dayStreak", { n: data.today.streak })}
             </span>
