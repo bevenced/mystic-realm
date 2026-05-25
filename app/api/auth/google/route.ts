@@ -5,6 +5,18 @@ import { sql } from "@/lib/sql";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
 
+function getSiteUrl(request: NextRequest): string {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (siteUrl) return siteUrl;
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
+  const proto = request.headers.get("x-forwarded-proto") || "https";
+  return `${proto}://${host}`;
+}
+
+function getRedirectUri(request: NextRequest): string {
+  return `${getSiteUrl(request)}/api/auth/google`;
+}
+
 export async function GET(request: NextRequest) {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     return NextResponse.json({ error: "Google OAuth is not configured" }, { status: 501 });
@@ -17,7 +29,7 @@ export async function GET(request: NextRequest) {
   // If this is the Google callback (has code param), exchange for tokens
   if (code) {
     try {
-      const redirectUri = new URL("/api/auth/google", request.url).toString();
+      const redirectUri = getRedirectUri(request);
 
       const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
         method: "POST",
@@ -67,7 +79,8 @@ export async function GET(request: NextRequest) {
         name: user.name || user.email,
       });
 
-      const res = NextResponse.redirect(new URL("/dashboard", request.url));
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || getSiteUrl(request);
+      const res = NextResponse.redirect(`${siteUrl}/dashboard`);
       res.headers.append("Set-Cookie", setSessionCookie(sessionToken));
       return res;
     } catch (error) {
@@ -77,7 +90,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Initial request: redirect to Google consent screen
-  const redirectUri = new URL("/api/auth/google", request.url).toString();
+  const redirectUri = getRedirectUri(request);
   const oauthState = crypto.randomUUID();
 
   const params = new URLSearchParams({

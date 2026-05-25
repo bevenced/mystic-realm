@@ -2,9 +2,9 @@
 
 /**
  * Vision MCP Server for Claude Code — multi-provider edition
- * Zero dependencies. Supports OpenAI GPT-4o-mini and Groq Llama-4 Scout.
+ * Zero dependencies. Supports DashScope Qwen-VL, OpenAI GPT-4o-mini, and Groq Llama-4 Scout.
  *
- * Auto-selects backend based on which API key is set.
+ * Auto-selects backend based on which API key is set (DashScope preferred).
  *
  * Usage in .mcp.json:
  *   {
@@ -14,6 +14,7 @@
  *         "command": "node",
  *         "args": ["scripts/vision-mcp-server.js"],
  *         "env": {
+ *           "DASHSCOPE_API_KEY": "sk-...",
  *           "OPENAI_API_KEY": "sk-...",
  *           "GROQ_API_KEY": "gsk_..."
  *         }
@@ -29,13 +30,15 @@ const https = require("https");
 // ---- Config ----
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
+const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY || "";
 
-// Pick backend: OpenAI if key is set, otherwise Groq
-const BACKEND = OPENAI_API_KEY ? "openai" : GROQ_API_KEY ? "groq" : null;
+// Pick backend: DashScope (reachable) > OpenAI (blocked) > Groq (expired)
+const BACKEND = DASHSCOPE_API_KEY ? "dashscope" : OPENAI_API_KEY ? "openai" : GROQ_API_KEY ? "groq" : null;
 
 const PROVIDERS = {
-  openai: { host: "api.openai.com", path: "/v1/chat/completions", key: OPENAI_API_KEY, model: "gpt-4o-mini" },
-  groq:   { host: "api.groq.com",   path: "/openai/v1/chat/completions", key: GROQ_API_KEY, model: "meta-llama/llama-4-scout-17b-16e-instruct" },
+  dashscope: { host: "dashscope.aliyuncs.com", path: "/compatible-mode/v1/chat/completions", key: DASHSCOPE_API_KEY, model: "qwen-vl-plus" },
+  openai:    { host: "api.openai.com",           path: "/v1/chat/completions",                key: OPENAI_API_KEY,      model: "gpt-4o-mini" },
+  groq:      { host: "api.groq.com",             path: "/openai/v1/chat/completions",         key: GROQ_API_KEY,        model: "meta-llama/llama-4-scout-17b-16e-instruct" },
 };
 
 // ---- JSON-RPC Helpers ----
@@ -67,7 +70,7 @@ function imageToBase64(filePath) {
 // ---- Call Vision API (provider-agnostic) ----
 function callVisionAPI(prompt, base64, mime) {
   const provider = PROVIDERS[BACKEND];
-  if (!provider) throw new Error("No API key configured. Set OPENAI_API_KEY or GROQ_API_KEY in .mcp.json env.");
+  if (!provider) throw new Error("No API key configured. Set DASHSCOPE_API_KEY, OPENAI_API_KEY, or GROQ_API_KEY in .mcp.json env.");
 
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
@@ -172,7 +175,7 @@ async function handleRequest(msg) {
       const filePath = args?.file_path;
 
       if (!BACKEND) {
-        throw new Error("No API key configured. Set OPENAI_API_KEY or GROQ_API_KEY in .mcp.json env.");
+        throw new Error("No API key configured. Set DASHSCOPE_API_KEY, OPENAI_API_KEY, or GROQ_API_KEY in .mcp.json env.");
       }
 
       if (!filePath) {

@@ -40,7 +40,7 @@ export default function CantianTestimonials() {
   const t = COPY[locale] || COPY.en;
 
   return (
-    <section className="py-16 md:py-20 px-4" style={{ background: "#ffffff" }}>
+    <section className="py-16 md:py-20 px-4">
       <div className="mx-auto max-w-[1320px]">
         <div className="text-center mb-12">
           <p className="text-[11px] font-semibold tracking-[0.13em] uppercase mb-4" style={{ color: "#d4a85a" }}>
