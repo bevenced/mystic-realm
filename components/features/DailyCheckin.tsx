@@ -315,7 +315,7 @@ export default function DailyCheckin({
             </span>
             {data.today.subscriberBonus ? (
               <span className="text-xs flex items-center gap-1 font-semibold" style={{ color: c.primary }}>
-                🎖️ +{data.today.subscriberBonus} {isZh ? "会员月礼" : "Mystic Bonus"}
+                🎖️ +{data.today.subscriberBonus} {locale.startsWith("zh") ? "会员月礼" : "Mystic Bonus"}
               </span>
             ) : null}
             <span className="text-xs flex items-center gap-1" style={{ color: c.textMuted }}>
