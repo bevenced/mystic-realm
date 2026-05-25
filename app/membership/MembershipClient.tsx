@@ -96,13 +96,13 @@ export default function MembershipClient() {
       .finally(() => setLoading(false));
   }, [isSignedIn]);
 
-  const handleSubscribeSuccess = async (orderId: string) => {
+  const handleSubscribeSuccess = async (orderId: string, planId: string) => {
     setError("");
     try {
       const res = await fetch("/api/subscriptions/activate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, planId: "mystic" }),
+        body: JSON.stringify({ orderId, planId }),
       });
       const data = await res.json();
       if (data.error) {
@@ -277,9 +277,9 @@ export default function MembershipClient() {
                   ) : isSignedIn ? (
                     <PayPalButton
                       amount={plan.price}
-                      spreadKey="mystic"
+                      spreadKey={plan.id}
                       readingId={crypto.randomUUID()}
-                      onSuccess={handleSubscribeSuccess}
+                      onSuccess={(orderId) => handleSubscribeSuccess(orderId, plan.id)}
                       onError={setError}
                     />
                   ) : (

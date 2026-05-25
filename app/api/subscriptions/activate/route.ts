@@ -4,9 +4,15 @@ import { getAuthUser } from "@/lib/auth";
 import { activateSubscription } from "@/lib/db";
 import { verifyPayPalOrder } from "@/lib/verify-paypal-order";
 
+const PLAN_PRICES: Record<string, number> = {
+  "mystic-weekly": 2.99,
+  "mystic": 9.99,
+  "mystic-yearly": 99.99,
+};
+
 const activateSchema = z.object({
   orderId: z.string().min(1),
-  planId: z.enum(["mystic"]).default("mystic"),
+  planId: z.enum(["mystic-weekly", "mystic", "mystic-yearly"]).default("mystic"),
 });
 
 export async function POST(req: NextRequest) {
@@ -25,7 +31,8 @@ export async function POST(req: NextRequest) {
     const { orderId, planId } = parsed.data;
 
     // Verify the PayPal order was paid with correct amount
-    const isValid = await verifyPayPalOrder(orderId, `subscription:${planId}`, 9.99);
+    const expectedAmount = PLAN_PRICES[planId] || 9.99;
+    const isValid = await verifyPayPalOrder(orderId, `subscription:${planId}`, expectedAmount);
     if (!isValid) {
       return NextResponse.json({ error: "Payment not verified. Please complete the PayPal payment first." }, { status: 400 });
     }

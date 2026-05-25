@@ -258,7 +258,9 @@ export async function initDatabase() {
     INSERT INTO subscription_plans (id, name, price_monthly, price_yearly, features, ai_credits_per_month)
     VALUES
       ('free', 'Free', 0, 0, ARRAY['3 free previews per service', 'Basic AI guidance'], 3),
-      ('mystic', 'Mystic', 9.99, 99.99, ARRAY['Unlimited AI readings', 'Full interpretations', 'Reading history', 'Export PDF', 'Priority support'], 999)
+      ('mystic-weekly', 'Mystic Weekly', 2.99, 0, ARRAY['Unlimited AI readings', 'Full interpretations', 'Reading history', 'Export PDF'], 999),
+      ('mystic', 'Mystic Monthly', 9.99, 99.99, ARRAY['Unlimited AI readings', 'Full interpretations', 'Reading history', 'Export PDF', 'Priority support'], 999),
+      ('mystic-yearly', 'Mystic Yearly', 99.99, 0, ARRAY['Unlimited AI readings', 'Full interpretations', 'Reading history', 'Export PDF', 'Priority support'], 999)
     ON CONFLICT (id) DO NOTHING;
   `;
 
@@ -641,6 +643,7 @@ export async function activateSubscription(
       ORDER BY current_period_end DESC LIMIT 1
     `;
 
+    const durationDays = planId === "mystic-weekly" ? 7 : planId === "mystic-yearly" ? 365 : 30;
     let sub;
     if (existing.rows.length > 0) {
       // Extend existing subscription
@@ -648,10 +651,11 @@ export async function activateSubscription(
       const newEnd = new Date(Math.max(
         new Date(row.current_period_end).getTime(),
         Date.now(),
-      ) + 30 * 24 * 60 * 60 * 1000);
+      ) + durationDays * 24 * 60 * 60 * 1000);
       const result = await sql`
         UPDATE subscriptions
         SET current_period_end = ${newEnd.toISOString()},
+            plan_id = ${planId},
             updated_at = NOW()
         WHERE id = ${row.id}
         RETURNING *
@@ -660,7 +664,7 @@ export async function activateSubscription(
     } else {
       // Create new subscription
       const now = new Date();
-      const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const end = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
       const result = await sql`
         INSERT INTO subscriptions (user_id, plan_id, status, current_period_start, current_period_end)
         VALUES (${userId}, ${planId}, 'active', ${now.toISOString()}, ${end.toISOString()})

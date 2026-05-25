@@ -18,6 +18,10 @@ export const SERVICE_PRICES: Record<string, number> = {
   "bazi-annual": 3.99,
   "bazi-personality": 3.99,
   "bazi-deep": 5.99,
+  // Mystic subscription plans
+  "mystic-weekly": 2.99,
+  "mystic": 9.99,
+  "mystic-yearly": 99.99,
 } as const;
 
 /** First-time user pricing (flat discount ~70% off) */
@@ -35,6 +39,10 @@ export const SERVICE_NAMES: Record<string, string> = {
   "bazi-annual": "BaZi Annual Fortune Report",
   "bazi-personality": "BaZi Personality Analysis",
   "bazi-deep": "BaZi Deep Life Reading",
+  // Mystic subscription plans
+  "mystic-weekly": "Mystic Weekly",
+  "mystic": "Mystic Monthly",
+  "mystic-yearly": "Mystic Yearly",
 } as const;
 
 /**
