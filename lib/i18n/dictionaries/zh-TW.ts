@@ -755,6 +755,7 @@ export const dictionary: Dictionary = {
     dayPillarGrade: "日柱等級",
     dayPillarProfile: "日柱檔案",
     dayPillarReading: "日柱解讀",
+    overview: "概述",
     pillarRelations: "四柱關係",
     pillarRelationDiagram: "四柱關係圖示",
     strong: "身強",

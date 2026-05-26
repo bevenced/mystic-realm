@@ -484,6 +484,7 @@ export interface Dictionary {
     dayPillarGrade: string;
     dayPillarProfile: string;
     dayPillarReading: string;
+    overview: string;
     pillarRelations: string;
     pillarRelationDiagram: string;
     strong: string;

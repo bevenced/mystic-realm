@@ -370,6 +370,20 @@ export default function BaziClient() {
               />
             )}
 
+            {/* Overview */}
+            {reading?.overview && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.overview || "概述"}</span>
+              </div>
+              <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
+                <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>
+                  {"📌 "}{reading.overview.slice(0, 200)}{reading.overview.length > 200 ? "…" : ""}
+                </p>
+              </div>
+            </div>)}
+
             {/* Pillar Relations */}
             {pd?.pillarRelations && pd.pillarRelations.length > 0 && (
             <div className="space-y-2">
@@ -378,17 +392,62 @@ export default function BaziClient() {
                 <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.pillarRelations}</span>
               </div>
               <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
-                <p className="text-[11px] leading-relaxed mb-3" style={{ color: c.text }}>
+                {/* Visual pillar relationship grid */}
+                <div className="flex items-center justify-center gap-0 mb-3">
+                  {(["Year","Month","Day","Hour"] as const).map((pk, pi) => (
+                    <div key={pk} className="flex items-center">
+                      <div className="text-center px-2 py-1 rounded" style={{ background: `${c.primary}0F`, border: `1px solid ${c.primary}1A` }}>
+                        <span className="text-[10px] font-semibold" style={{ color: c.primary }}>
+                          {({ Year: t.bazi.yearPillar, Month: t.bazi.monthPillar, Day: t.bazi.dayPillar, Hour: t.bazi.hourPillar })[pk]}
+                        </span>
+                      </div>
+                      {pi < 3 && (() => {
+                        const rel = pd.pillarRelations!.find(r =>
+                          (r.fromIndex === pi && r.toIndex === pi + 1) ||
+                          (r.fromIndex === pi + 1 && r.toIndex === pi)
+                        );
+                        const relSymbol: Record<string, { sym: string; c: string }> = {
+                          combine: { sym: "合", c: "#2ECC71" },
+                          clash: { sym: "冲", c: "#E74C3C" },
+                          harm: { sym: "害", c: "#FF9800" },
+                          punish: { sym: "刑", c: "#9B59B6" },
+                          tripleCombine: { sym: "三合", c: "#3498DB" },
+                        };
+                        const info = rel ? relSymbol[rel.type] : null;
+                        return (
+                          <div className="flex flex-col items-center mx-0.5">
+                            <div className="h-px w-6" style={{ background: info ? info.c : `${c.primary}14` }} />
+                            {info && (
+                              <span className="text-[9px] font-bold px-1 rounded" style={{ color: info.c, background: `${info.c}18` }}>
+                                {info.sym}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ))}
+                </div>
+                {/* Triple combine row if exists */}
+                {pd.pillarRelations.filter(r => r.type === "tripleCombine").map((rel, idx) => (
+                  <div key={`tc-${idx}`} className="text-center mb-2">
+                    <span className="text-[10px] px-2 py-0.5 rounded font-semibold" style={{ background: "#3498DB18", color: "#3498DB", border: "1px solid #3498DB22" }}>
+                      三合 {rel.labelEn} ({rel.pillars.map((p) => ({ Year: t.bazi.yearPillar, Month: t.bazi.monthPillar, Day: t.bazi.dayPillar, Hour: t.bazi.hourPillar })[p] || p).join(" - ")})
+                    </span>
+                  </div>
+                ))}
+                {/* Description */}
+                <p className="text-[11px] leading-relaxed mb-2" style={{ color: c.text }}>
                   {pd.pillarRelations.map((r) => r.description).join("")}
                 </p>
+                {/* Tag chips */}
                 <div className="flex flex-wrap gap-2">
-                  {pd.pillarRelations.map((rel, idx) => {
+                  {pd.pillarRelations.filter(r => r.type !== "tripleCombine").map((rel, idx) => {
                     const typeColors: Record<string, { bg: string; fg: string }> = {
                       combine: { bg: "#2ECC7118", fg: "#2ECC71" },
                       clash: { bg: "#E74C3C18", fg: "#E74C3C" },
                       harm: { bg: "#FF980018", fg: "#FF9800" },
                       punish: { bg: "#9B59B618", fg: "#9B59B6" },
-                      tripleCombine: { bg: "#3498DB18", fg: "#3498DB" },
                     };
                     const tc = typeColors[rel.type] || { bg: `${c.primary}14`, fg: c.primary };
                     const pillarLabelMap: Record<string, string> = {
@@ -492,7 +551,22 @@ export default function BaziClient() {
               </div>
                 {pd?.pattern && (
                   <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
-                    <p className="text-[11px]" style={{ color: c.text }}>{pd.pattern.name} ({pd.pattern.nameEn}) — {pd.pattern.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {(() => {
+                        const categoryColors: Record<string, { bg: string; fg: string }> = {
+                          standard: { bg: "#3498DB18", fg: "#3498DB" },
+                          jianLu: { bg: "#2ECC7118", fg: "#2ECC71" },
+                          yueRen: { bg: "#E74C3C18", fg: "#E74C3C" },
+                        };
+                        const cc = categoryColors[pd.pattern!.category] || { bg: `${c.primary}14`, fg: c.primary };
+                        return (
+                          <span className="text-[10px] px-2 py-1 rounded font-semibold" style={{ background: cc.bg, color: cc.fg, border: `1px solid ${cc.fg}22` }}>
+                            {pd.pattern!.name} ({pd.pattern!.nameEn})
+                          </span>
+                        );
+                      })()}
+                    </div>
+                    <p className="text-[11px] leading-relaxed mt-2" style={{ color: c.text }}>{pd.pattern.description}</p>
                   </div>
                 )}
             </div>

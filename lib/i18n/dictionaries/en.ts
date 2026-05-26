@@ -757,6 +757,7 @@ export const dictionary: Dictionary = {
     dayPillarGrade: "Day Pillar Grade",
     dayPillarProfile: "Day Pillar Profile",
     dayPillarReading: "Day Pillar Reading",
+    overview: "Overview",
     pillarRelations: "Pillar Relations",
     pillarRelationDiagram: "Pillar Relation Diagram",
     strong: "Strong",

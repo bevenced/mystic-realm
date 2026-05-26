@@ -49,47 +49,47 @@ export default function BaziChart({ pillars, naYin, hiddenStems, fortuneStages =
   const tableRows: { label: string; render: (key: keyof typeof pillars, i: number) => React.ReactNode }[] = [
     {
       label: "天干",
-      render: (key, i) => {
+      render: (key) => {
         const p = pillars[key];
         return (
-          <div className="flex flex-col items-center gap-0.5">
-            <span style={{ fontSize: 22, fontWeight: 700, color: ELEMENT_COLORS[p.stemElement] }}>
-              {p.stem}
-            </span>
-            {tenGods && tenGodElements && (
-              <span style={{
-                fontSize: 10, fontWeight: 600,
-                padding: "0 4px", borderRadius: 2,
-                background: `${ELEMENT_COLORS[tenGodElements[i]] || c.primary}18`,
-                color: ELEMENT_COLORS[tenGodElements[i]] || c.primary,
-              }}>
-                {tenGods[i]}
-              </span>
-            )}
-          </div>
+          <span style={{ fontSize: 18, fontWeight: 700, color: ELEMENT_COLORS[p.stemElement] }}>
+            {p.stem}
+          </span>
+        );
+      },
+    },
+    ...(tenGods && tenGodElements ? [{
+      label: "十神",
+      render: (_key: keyof typeof pillars, i: number) => (
+        <span style={{ fontSize: 12, fontWeight: 600, color: ELEMENT_COLORS[tenGodElements[i]] || c.text }}>
+          {tenGods[i]}
+        </span>
+      ),
+    }] : []),
+    {
+      label: "地支",
+      render: (key) => {
+        const p = pillars[key];
+        return (
+          <span style={{ fontSize: 18, fontWeight: 700, color: ELEMENT_COLORS[p.branchElement] }}>
+            {p.branch}
+          </span>
         );
       },
     },
     {
-      label: "地支",
-      render: (key, i) => {
-        const p = pillars[key];
+      label: "藏干",
+      render: (_key, i) => {
         const hs = hiddenStems[i] || [];
+        if (hs.length === 0) return <span style={{ fontSize: 11, color: c.textMuted }}>—</span>;
         return (
-          <div className="flex flex-col items-center gap-0.5">
-            <span style={{ fontSize: 22, fontWeight: 700, color: ELEMENT_COLORS[p.branchElement] }}>
-              {p.branch}
-            </span>
-            {hs.length > 0 && (
-              <span style={{ fontSize: 10, color: c.textMuted, letterSpacing: 1 }}>
-                {hs.map((h, j) => (
-                  <span key={j} style={{ color: ELEMENT_COLORS[h.element] || c.textMuted }}>
-                    {h.stem}
-                  </span>
-                ))}
+          <span style={{ fontSize: 11, letterSpacing: 1 }}>
+            {hs.map((h, j) => (
+              <span key={j} style={{ color: ELEMENT_COLORS[h.element] || c.textMuted }}>
+                {h.stem}{j < hs.length - 1 ? " " : ""}
               </span>
-            )}
-          </div>
+            ))}
+          </span>
         );
       },
     },
