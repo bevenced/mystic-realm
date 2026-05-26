@@ -499,6 +499,7 @@ export interface Dictionary {
     namePlaceholder: string;
     unclear: string;
     kongWang: string;
+    selfSitting: string;
     dayPillarTab: string;
     tenGodTab: string;
     usefulGodTab: string;

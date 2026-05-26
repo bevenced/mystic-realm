@@ -772,6 +772,7 @@ export const dictionary: Dictionary = {
     namePlaceholder: "Enter name (optional)",
     unclear: "Unclear",
     kongWang: "Kong Wang",
+    selfSitting: "Self-Sitting",
     dayPillarTab: "Overview",
     tenGodTab: "Ten Gods",
     usefulGodTab: "Useful God",

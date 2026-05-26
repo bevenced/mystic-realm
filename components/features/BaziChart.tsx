@@ -27,15 +27,19 @@ interface BaziChartProps {
   dayMasterYinYang: string;
   elementCounts: Record<string, number>;
   zodiac: string;
+  tenGods?: string[];
+  tenGodElements?: string[];
+  selfSitting?: string[];
 }
 
-export default function BaziChart({ pillars, naYin, hiddenStems, fortuneStages = [], shenshaByPillar = [[], [], [], []], dayMasterIndex, dayMasterElement, dayMasterYinYang, elementCounts, zodiac }: BaziChartProps) {
+export default function BaziChart({ pillars, naYin, hiddenStems, fortuneStages = [], shenshaByPillar = [[], [], [], []], dayMasterIndex, dayMasterElement, dayMasterYinYang, elementCounts, zodiac, tenGods, tenGodElements, selfSitting }: BaziChartProps) {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
   const pillarKeys = ["year", "month", "day", "hour"] as const;
   const pillarLabels = ["年柱", "月柱", "日柱", "时柱"];
   const hasShensha = shenshaByPillar.some(arr => arr.length > 0);
   const hasFortune = fortuneStages.length === 4;
+  const hasSelfSitting = selfSitting && selfSitting.length === 4;
   const elementLabels: Record<string, string> = { Wood: "木", Fire: "火", Earth: "土", Metal: "金", Water: "水" };
   const elementKeys = ["Wood", "Fire", "Earth", "Metal", "Water"] as const;
   const totalEl = elementKeys.reduce((s, k) => s + (elementCounts?.[k] || 0), 0);
@@ -48,9 +52,21 @@ export default function BaziChart({ pillars, naYin, hiddenStems, fortuneStages =
       render: (key, i) => {
         const p = pillars[key];
         return (
-          <span style={{ fontSize: 22, fontWeight: 700, color: ELEMENT_COLORS[p.stemElement] }}>
-            {p.stem}
-          </span>
+          <div className="flex flex-col items-center gap-0.5">
+            <span style={{ fontSize: 22, fontWeight: 700, color: ELEMENT_COLORS[p.stemElement] }}>
+              {p.stem}
+            </span>
+            {tenGods && tenGodElements && (
+              <span style={{
+                fontSize: 10, fontWeight: 600,
+                padding: "0 4px", borderRadius: 2,
+                background: `${ELEMENT_COLORS[tenGodElements[i]] || c.primary}18`,
+                color: ELEMENT_COLORS[tenGodElements[i]] || c.primary,
+              }}>
+                {tenGods[i]}
+              </span>
+            )}
+          </div>
         );
       },
     },
@@ -58,21 +74,22 @@ export default function BaziChart({ pillars, naYin, hiddenStems, fortuneStages =
       label: "地支",
       render: (key, i) => {
         const p = pillars[key];
-        return (
-          <span style={{ fontSize: 22, fontWeight: 700, color: ELEMENT_COLORS[p.branchElement] }}>
-            {p.branch}
-          </span>
-        );
-      },
-    },
-    {
-      label: "藏干",
-      render: (_, i) => {
         const hs = hiddenStems[i] || [];
         return (
-          <span style={{ fontSize: 12, color: c.text }}>
-            {hs.map(h => h.stem).join("")}
-          </span>
+          <div className="flex flex-col items-center gap-0.5">
+            <span style={{ fontSize: 22, fontWeight: 700, color: ELEMENT_COLORS[p.branchElement] }}>
+              {p.branch}
+            </span>
+            {hs.length > 0 && (
+              <span style={{ fontSize: 10, color: c.textMuted, letterSpacing: 1 }}>
+                {hs.map((h, j) => (
+                  <span key={j} style={{ color: ELEMENT_COLORS[h.element] || c.textMuted }}>
+                    {h.stem}
+                  </span>
+                ))}
+              </span>
+            )}
+          </div>
         );
       },
     },
@@ -86,6 +103,12 @@ export default function BaziChart({ pillars, naYin, hiddenStems, fortuneStages =
       label: "星运",
       render: (_key: keyof typeof pillars, i: number) => (
         <span style={{ fontSize: 12, color: c.text }}>{fortuneStages[i]}</span>
+      ),
+    }] : []),
+    ...(hasSelfSitting ? [{
+      label: "自坐",
+      render: (_key: keyof typeof pillars, i: number) => (
+        <span style={{ fontSize: 12, color: c.text }}>{selfSitting![i]}</span>
       ),
     }] : []),
     {

@@ -770,6 +770,7 @@ export const dictionary: Dictionary = {
     namePlaceholder: "輸入姓名（選填）",
     unclear: "不清楚",
     kongWang: "空亡",
+    selfSitting: "自坐",
     dayPillarTab: "本柱",
     tenGodTab: "十神",
     usefulGodTab: "用神",

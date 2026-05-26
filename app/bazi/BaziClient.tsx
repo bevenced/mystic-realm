@@ -5,7 +5,7 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import BaziChart from "@/components/features/BaziChart";
-import { getAllTenGods, getNaYin, getHiddenStems, getAllFortuneStages } from "@/lib/bazi";
+import { getAllTenGods, getNaYin, getHiddenStems, getFortuneStage, getAllFortuneStages } from "@/lib/bazi";
 import type { BaZiResult, BaZiPillar } from "@/lib/bazi";
 import type { PatternResult, ElementStrengthResult, ShenShaResult, TiaoHouResult, DayPillarGradeResult, PillarRelation } from "@/lib/bazi-engine";
 import Link from "next/link";
@@ -134,18 +134,21 @@ export default function BaziClient() {
   const chartData = (() => {
     if (!baziData) return null;
     const pillarKeys: ("year" | "month" | "day" | "hour")[] = ["year", "month", "day", "hour"];
-    const tenGods = getAllTenGods(baziData.dayMasterIndex, [
+    const tenGodResults = getAllTenGods(baziData.dayMasterIndex, [
       baziData.year.stemIndex, baziData.month.stemIndex, baziData.day.stemIndex, baziData.hour.stemIndex,
-    ]).map((t) => t.tenGodName);
+    ]);
+    const tenGods = tenGodResults.map((t) => t.tenGodName);
+    const tenGodElements = tenGodResults.map((t) => t.element);
     const naYin = pillarKeys.map((k) => getNaYin(baziData[k].stemIndex, baziData[k].branchIndex).toneName);
     const hiddenStems = pillarKeys.map((k) => getHiddenStems(baziData[k].branchIndex));
     const branchIndices = pillarKeys.map((k) => baziData[k].branchIndex);
     const fortuneStages = getAllFortuneStages(baziData.dayMasterIndex, branchIndices);
+    const selfSitting = pillarKeys.map((k) => getFortuneStage(baziData[k].stemIndex, baziData[k].branchIndex));
     const shenshaByPillar: ShenShaResult[][] = pillarKeys.map((pk) => {
       const locName = { year: "Year", month: "Month", day: "Day", hour: "Hour" }[pk];
       return (pd?.shensha || []).filter((s: ShenShaResult) => s.locations.includes(locName));
     });
-    return { tenGods, naYin, hiddenStems, fortuneStages, shenshaByPillar };
+    return { tenGods, tenGodElements, naYin, hiddenStems, fortuneStages, selfSitting, shenshaByPillar };
   })();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -361,9 +364,50 @@ export default function BaziClient() {
                 dayMasterYinYang={baziData.dayMasterYinYang}
                 elementCounts={baziData.elementCounts}
                 zodiac={baziData.day.zodiac.split(" ")[0]}
+                tenGods={chartData.tenGods}
+                tenGodElements={chartData.tenGodElements}
+                selfSitting={chartData.selfSitting}
               />
             )}
 
+            {/* Pillar Relations */}
+            {pd?.pillarRelations && pd.pillarRelations.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.pillarRelations}</span>
+              </div>
+              <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
+                <p className="text-[11px] leading-relaxed mb-3" style={{ color: c.text }}>
+                  {pd.pillarRelations.map((r) => r.description).join("")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {pd.pillarRelations.map((rel, idx) => {
+                    const typeColors: Record<string, { bg: string; fg: string }> = {
+                      combine: { bg: "#2ECC7118", fg: "#2ECC71" },
+                      clash: { bg: "#E74C3C18", fg: "#E74C3C" },
+                      harm: { bg: "#FF980018", fg: "#FF9800" },
+                      punish: { bg: "#9B59B618", fg: "#9B59B6" },
+                      tripleCombine: { bg: "#3498DB18", fg: "#3498DB" },
+                    };
+                    const tc = typeColors[rel.type] || { bg: `${c.primary}14`, fg: c.primary };
+                    const pillarLabelMap: Record<string, string> = {
+                      Year: t.bazi.yearPillar, Month: t.bazi.monthPillar,
+                      Day: t.bazi.dayPillar, Hour: t.bazi.hourPillar,
+                    };
+                    return (
+                      <div key={idx} className="text-[10px] px-2 py-1 rounded flex items-center gap-1"
+                        style={{ background: tc.bg, color: tc.fg, border: `1px solid ${tc.fg}22` }}>
+                        <span className="font-semibold">{rel.labelEn}</span>
+                        <span style={{ opacity: 0.7 }}>
+                          ({rel.pillars.map((p) => pillarLabelMap[p] || p).join(" - ")})
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>)}
 
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-3">
@@ -377,30 +421,6 @@ export default function BaziClient() {
                       <span className="text-[10px] font-bold" style={{ color: c.primary }}>{pd.dayPillarGrade.grade}</span>
                     </div>
                     <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{pd.dayPillarGrade.profile}</p>
-                  </div>
-                )}
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.tenGodTab}</span>
-              </div>
-                {pd?.tenGods && (
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {pd.tenGods.map((tg, idx) => {
-                      const pk = ["year", "month", "day", "hour"][idx];
-                      const pl = [t.bazi.yearPillar, t.bazi.monthPillar, t.bazi.dayPillar, t.bazi.hourPillar][idx];
-                      return (
-                        <div key={pk} className="rounded-lg p-2 text-center" style={{ background: idx === 2 ? `${c.primary}18` : `${c.primary}08` }}>
-                          <div className="text-[10px] font-semibold mb-1" style={{ color: c.primary }}>{pl}</div>
-                          <div className="text-lg font-bold" style={{ color: elColor(tg.element) }}>{tg.stem}</div>
-                          <div className="text-[10px] mt-0.5" style={{ color: c.textMuted }}>{tg.element}</div>
-                          <div className="text-[10px] font-semibold mt-1 px-1 py-0.5 rounded" style={{ background: `${c.primary}12`, color: c.primary }}>{tg.tenGodName}</div>
-                          <div className="text-[10px] mt-0.5" style={{ color: c.textMuted }}>{tg.relationship}</div>
-                        </div>
-                      );
-                    })}
                   </div>
                 )}
             </div>
@@ -510,27 +530,6 @@ export default function BaziClient() {
                   </div>
                 ) : (
                   <p className="text-[11px] text-center py-4" style={{ color: c.textMuted }}>—</p>
-                )}
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.hiddenStem}</span>
-              </div>
-                {pd?.hiddenStems && (
-                  <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
-                    <div className="grid grid-cols-4 gap-1 text-[10px]">
-                      {pd.hiddenStems.map((hs, idx) => (
-                        <div key={idx}>
-                          <div className="font-semibold mb-0.5" style={{ color: c.primary }}>{[t.bazi.yearPillar, t.bazi.monthPillar, t.bazi.dayPillar, t.bazi.hourPillar][idx]}</div>
-                          {hs.stems.map((s) => (
-                            <div key={s.stem} style={{ color: c.textMuted }}>{s.stem}({s.qi[0]})</div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                 )}
             </div>
 

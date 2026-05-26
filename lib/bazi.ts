@@ -28,4 +28,4 @@ export type { NaYinResult } from "./bazi-engine/nayin";
 export { getAllHiddenStems, getHiddenStems } from "./bazi-engine/hidden-stems";
 export type { HiddenStem } from "./bazi-engine/hidden-stems";
 
-export { getAllFortuneStages } from "./bazi-engine/twelve-fortune";
+export { getFortuneStage, getAllFortuneStages } from "./bazi-engine/twelve-fortune";
