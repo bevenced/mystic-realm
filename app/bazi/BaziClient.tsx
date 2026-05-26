@@ -358,8 +358,6 @@ export default function BaziClient() {
                 naYin={chartData.naYin}
                 hiddenStems={chartData.hiddenStems}
                 fortuneStages={chartData.fortuneStages}
-                shenshaByPillar={chartData.shenshaByPillar}
-                dayMasterIndex={baziData.dayMasterIndex}
                 dayMasterElement={baziData.dayMasterElement}
                 dayMasterYinYang={baziData.dayMasterYinYang}
                 elementCounts={baziData.elementCounts}
@@ -367,6 +365,10 @@ export default function BaziClient() {
                 tenGods={chartData.tenGods}
                 tenGodElements={chartData.tenGodElements}
                 selfSitting={chartData.selfSitting}
+                pillarRelations={pd?.pillarRelations}
+                dayPillarGrade={pd?.dayPillarGrade}
+                elementStrength={pd?.elementStrength}
+                pattern={pd?.pattern}
               />
             )}
 
@@ -384,192 +386,6 @@ export default function BaziClient() {
               </div>
             </div>)}
 
-            {/* Pillar Relations */}
-            {pd?.pillarRelations && pd.pillarRelations.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.pillarRelations}</span>
-              </div>
-              <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
-                {/* Visual pillar relationship grid */}
-                <div className="flex items-center justify-center gap-0 mb-3">
-                  {(["Year","Month","Day","Hour"] as const).map((pk, pi) => (
-                    <div key={pk} className="flex items-center">
-                      <div className="text-center px-2 py-1 rounded" style={{ background: `${c.primary}0F`, border: `1px solid ${c.primary}1A` }}>
-                        <span className="text-[10px] font-semibold" style={{ color: c.primary }}>
-                          {({ Year: t.bazi.yearPillar, Month: t.bazi.monthPillar, Day: t.bazi.dayPillar, Hour: t.bazi.hourPillar })[pk]}
-                        </span>
-                      </div>
-                      {pi < 3 && (() => {
-                        const rel = pd.pillarRelations!.find(r =>
-                          (r.fromIndex === pi && r.toIndex === pi + 1) ||
-                          (r.fromIndex === pi + 1 && r.toIndex === pi)
-                        );
-                        const relSymbol: Record<string, { sym: string; c: string }> = {
-                          combine: { sym: "合", c: "#2ECC71" },
-                          clash: { sym: "冲", c: "#E74C3C" },
-                          harm: { sym: "害", c: "#FF9800" },
-                          punish: { sym: "刑", c: "#9B59B6" },
-                          tripleCombine: { sym: "三合", c: "#3498DB" },
-                        };
-                        const info = rel ? relSymbol[rel.type] : null;
-                        return (
-                          <div className="flex flex-col items-center mx-0.5">
-                            <div className="h-px w-6" style={{ background: info ? info.c : `${c.primary}14` }} />
-                            {info && (
-                              <span className="text-[9px] font-bold px-1 rounded" style={{ color: info.c, background: `${info.c}18` }}>
-                                {info.sym}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  ))}
-                </div>
-                {/* Triple combine row if exists */}
-                {pd.pillarRelations.filter(r => r.type === "tripleCombine").map((rel, idx) => (
-                  <div key={`tc-${idx}`} className="text-center mb-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded font-semibold" style={{ background: "#3498DB18", color: "#3498DB", border: "1px solid #3498DB22" }}>
-                      三合 {rel.labelEn} ({rel.pillars.map((p) => ({ Year: t.bazi.yearPillar, Month: t.bazi.monthPillar, Day: t.bazi.dayPillar, Hour: t.bazi.hourPillar })[p] || p).join(" - ")})
-                    </span>
-                  </div>
-                ))}
-                {/* Description */}
-                <p className="text-[11px] leading-relaxed mb-2" style={{ color: c.text }}>
-                  {pd.pillarRelations.map((r) => r.description).join("")}
-                </p>
-                {/* Tag chips */}
-                <div className="flex flex-wrap gap-2">
-                  {pd.pillarRelations.filter(r => r.type !== "tripleCombine").map((rel, idx) => {
-                    const typeColors: Record<string, { bg: string; fg: string }> = {
-                      combine: { bg: "#2ECC7118", fg: "#2ECC71" },
-                      clash: { bg: "#E74C3C18", fg: "#E74C3C" },
-                      harm: { bg: "#FF980018", fg: "#FF9800" },
-                      punish: { bg: "#9B59B618", fg: "#9B59B6" },
-                    };
-                    const tc = typeColors[rel.type] || { bg: `${c.primary}14`, fg: c.primary };
-                    const pillarLabelMap: Record<string, string> = {
-                      Year: t.bazi.yearPillar, Month: t.bazi.monthPillar,
-                      Day: t.bazi.dayPillar, Hour: t.bazi.hourPillar,
-                    };
-                    return (
-                      <div key={idx} className="text-[10px] px-2 py-1 rounded flex items-center gap-1"
-                        style={{ background: tc.bg, color: tc.fg, border: `1px solid ${tc.fg}22` }}>
-                        <span className="font-semibold">{rel.labelEn}</span>
-                        <span style={{ opacity: 0.7 }}>
-                          ({rel.pillars.map((p) => pillarLabelMap[p] || p).join(" - ")})
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>)}
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.dayPillarGrade}</span>
-              </div>
-                {pd?.dayPillarGrade && (
-                  <div className="rounded-lg p-3" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}0F` }}>
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-sm" style={{ color: c.accent }}>{"★".repeat(pd.dayPillarGrade.stars)}{"☆".repeat(5 - pd.dayPillarGrade.stars)}</span>
-                      <span className="text-[10px] font-bold" style={{ color: c.primary }}>{pd.dayPillarGrade.grade}</span>
-                    </div>
-                    <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{pd.dayPillarGrade.profile}</p>
-                  </div>
-                )}
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.dayMasterStrength}</span>
-              </div>
-                {pd?.elementStrength && (
-                  <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: `${c.primary}12` }}>
-                        <div className="h-full rounded-full transition-all" style={{ width: `${pd.elementStrength.dayMasterStrength.score}%`, background: c.primary }} />
-                      </div>
-                      <span className="text-xs font-bold" style={{ color: c.primary }}>{pd.elementStrength.dayMasterStrength.score}/100</span>
-                    </div>
-                    <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{pd.elementStrength.dayMasterStrength.description}</p>
-                    <div className="flex gap-2 mt-2 text-[10px]">
-                      {Object.entries(pd.elementStrength.weightedScores).map(([el, sc]) => (
-                        <span key={el} style={{ color: elColor(el) }}>{elLabel(el)} {sc}</span>
-                      ))}
-                    </div>
-                    {pd.elementStrength.seasonalStrength && (
-                      <p className="text-[10px] mt-1" style={{ color: c.textMuted }}>
-                        {pd.elementStrength.seasonalStrength.dmInSeason ? `· ${t.bazi.strong}` : `· ${t.bazi.weak}`}
-                      </p>
-                    )}
-                  </div>
-                )}
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.usefulGodTab}</span>
-              </div>
-                {pd?.elementStrength?.usefulGod && (
-                  <div className="rounded-lg p-3" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}0F` }}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm font-bold" style={{ color: elColor(pd.elementStrength.usefulGod.element) }}>{elLabel(pd.elementStrength.usefulGod.element)}</span>
-                    </div>
-                    <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{pd.elementStrength.usefulGod.reason}</p>
-                  </div>
-                )}
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.tiaoHou}</span>
-              </div>
-                {pd?.tiaoHou && pd.tiaoHou.stems.length > 0 && (
-                  <div className="rounded-lg p-3" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}0F` }}>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {pd.tiaoHou.stems.map((s) => (
-                        <span key={s} className="text-sm font-bold px-2 py-1 rounded" style={{ color: c.primary, background: `${c.primary}14`, border: `1px solid ${c.primary}30` }}>{s}</span>
-                      ))}
-                    </div>
-                    <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{pd.tiaoHou.reason}</p>
-                  </div>
-                )}
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.chartPattern}</span>
-              </div>
-                {pd?.pattern && (
-                  <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
-                    <div className="flex flex-wrap gap-2">
-                      {(() => {
-                        const categoryColors: Record<string, { bg: string; fg: string }> = {
-                          standard: { bg: "#3498DB18", fg: "#3498DB" },
-                          jianLu: { bg: "#2ECC7118", fg: "#2ECC71" },
-                          yueRen: { bg: "#E74C3C18", fg: "#E74C3C" },
-                        };
-                        const cc = categoryColors[pd.pattern!.category] || { bg: `${c.primary}14`, fg: c.primary };
-                        return (
-                          <span className="text-[10px] px-2 py-1 rounded font-semibold" style={{ background: cc.bg, color: cc.fg, border: `1px solid ${cc.fg}22` }}>
-                            {pd.pattern!.name} ({pd.pattern!.nameEn})
-                          </span>
-                        );
-                      })()}
-                    </div>
-                    <p className="text-[11px] leading-relaxed mt-2" style={{ color: c.text }}>{pd.pattern.description}</p>
-                  </div>
-                )}
-            </div>
 
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-3">
@@ -607,10 +423,39 @@ export default function BaziClient() {
                 )}
             </div>
 
+            {/* Useful God + Tiao Hou merged row */}
+            {(pd?.elementStrength?.usefulGod || pd?.tiaoHou) && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>大运</span>
+                <span className="text-base font-bold" style={{ color: c.text }}>{t.bazi.usefulGodTab} · {t.bazi.tiaoHou}</span>
+              </div>
+              <div className="flex gap-2">
+                {pd.elementStrength?.usefulGod && (
+                  <div className="flex-1 rounded-lg p-3" style={{ background: `${c.primary}06`, border: `1px solid ${c.primary}0E` }}>
+                    <div className="text-sm font-bold mb-1" style={{ color: c.textMuted }}>{t.bazi.usefulGodTab}</div>
+                    <span className="text-base font-bold" style={{ color: elColor(pd.elementStrength.usefulGod.element) }}>{elLabel(pd.elementStrength.usefulGod.element)}</span>
+                    <p className="text-sm leading-relaxed mt-1" style={{ color: c.text }}>{pd.elementStrength.usefulGod.reason}</p>
+                  </div>
+                )}
+                {pd?.tiaoHou && pd.tiaoHou.stems.length > 0 && (
+                  <div className="flex-1 rounded-lg p-3" style={{ background: `${c.primary}06`, border: `1px solid ${c.primary}0E` }}>
+                    <div className="text-sm font-bold mb-1" style={{ color: c.textMuted }}>{t.bazi.tiaoHou}</div>
+                    <div className="flex flex-wrap gap-1.5 mb-1.5">
+                      {pd.tiaoHou.stems.map((s) => (
+                        <span key={s} className="text-base font-bold px-2 py-0.5 rounded" style={{ color: c.primary, background: `${c.primary}14`, border: `1px solid ${c.primary}2A` }}>{s}</span>
+                      ))}
+                    </div>
+                    <p className="text-sm leading-relaxed" style={{ color: c.text }}>{pd.tiaoHou.reason}</p>
+                  </div>
+                )}
+              </div>
+            </div>)}
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-base font-bold" style={{ color: c.text }}>大运</span>
               </div>
                 {pd?.daYun && (
                   <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>

@@ -248,7 +248,6 @@ export default function DailyCheckin({
               pillars={baziCtx.pillars}
               naYin={baziCtx.naYin || []}
               hiddenStems={baziCtx.hiddenStems || []}
-              dayMasterIndex={baziCtx.dayMasterIndex}
               dayMasterElement={baziCtx.dayMasterElement}
               dayMasterYinYang={baziCtx.dayMasterYinYang}
               elementCounts={baziCtx.elementCounts}
