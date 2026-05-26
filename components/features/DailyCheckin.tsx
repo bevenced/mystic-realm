@@ -246,7 +246,6 @@ export default function DailyCheckin({
           {baziCtx?.pillars && (
             <BaziChart
               pillars={baziCtx.pillars}
-              tenGods={baziCtx.tenGods || []}
               naYin={baziCtx.naYin || []}
               hiddenStems={baziCtx.hiddenStems || []}
               dayMasterIndex={baziCtx.dayMasterIndex}

@@ -19,6 +19,20 @@ export type { ShenShaResult } from "./shensha";
 export { calculateElementStrength } from "./elements";
 export type { ElementStrengthResult } from "./elements";
 
+export { calculatePattern } from "./pattern";
+export type { PatternResult } from "./pattern";
+
+export { getTiaoHou } from "./tiaohou";
+export type { TiaoHouResult } from "./tiaohou";
+
+export { getDayPillarGrade } from "./day-pillar-grade";
+export type { DayPillarGradeResult } from "./day-pillar-grade";
+
+export { calculatePillarRelations } from "./pillar-relations";
+export type { PillarRelation } from "./pillar-relations";
+
+export { getFortuneStage, getAllFortuneStages } from "./twelve-fortune";
+
 export { calculateDaYun, getDaYunDirection, getCurrentDaYun } from "./luck";
 export type { DaYunResult, DaYunCycle } from "./luck";
 

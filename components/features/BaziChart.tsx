@@ -1,51 +1,27 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { useLocale } from "@/components/i18n/LocaleProvider";
+import type { ShenShaResult } from "@/lib/bazi-engine";
 
 const ELEMENT_COLORS: Record<string, string> = {
-  Wood: "#4CAF50",
-  Fire: "#FF5722",
-  Earth: "#FFC107",
-  Metal: "#B0B0B0",
-  Water: "#42A5F5",
+  Wood: "#4CAF50", Fire: "#FF5722", Earth: "#FFC107", Metal: "#909090", Water: "#42A5F5",
 };
+const BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
 
-const ELEMENT_BG: Record<string, string> = {
-  Wood: "#4CAF5018",
-  Fire: "#FF572218",
-  Earth: "#FFC10718",
-  Metal: "#B0B0B018",
-  Water: "#42A5F518",
-};
-
-interface PillarData {
-  stem: string;
-  stemIndex: number;
-  branch: string;
-  branchIndex: number;
-  stemElement: string;
-  branchElement: string;
-  zodiac: string;
+function getKongWang(stemIndex: number, branchIndex: number): string {
+  const j = stemIndex + 10 * (((stemIndex - branchIndex) / 2 + 6) % 6);
+  const xun = Math.floor(j / 10);
+  return BRANCHES[(12 - 2 * xun) % 12] + BRANCHES[(13 - 2 * xun) % 12];
 }
 
-interface HiddenStemData {
-  stem: string;
-  stemIndex: number;
-  qi: string;
-  element: string;
-}
-
+interface PillarData { stem: string; stemIndex: number; branch: string; branchIndex: number; stemElement: string; branchElement: string; zodiac: string; }
+interface HiddenStemData { stem: string; stemIndex: number; qi: string; element: string; }
 interface BaziChartProps {
-  pillars: {
-    year: PillarData;
-    month: PillarData;
-    day: PillarData;
-    hour: PillarData;
-  };
-  tenGods: string[];
+  pillars: { year: PillarData; month: PillarData; day: PillarData; hour: PillarData };
   naYin: string[];
   hiddenStems: HiddenStemData[][];
+  fortuneStages?: string[];
+  shenshaByPillar?: ShenShaResult[][];
   dayMasterIndex: number;
   dayMasterElement: string;
   dayMasterYinYang: string;
@@ -53,222 +29,188 @@ interface BaziChartProps {
   zodiac: string;
 }
 
-export default function BaziChart({
-  pillars,
-  tenGods,
-  naYin,
-  hiddenStems,
-  dayMasterIndex,
-  dayMasterElement,
-  dayMasterYinYang,
-  elementCounts,
-  zodiac,
-}: BaziChartProps) {
+export default function BaziChart({ pillars, naYin, hiddenStems, fortuneStages = [], shenshaByPillar = [[], [], [], []], dayMasterIndex, dayMasterElement, dayMasterYinYang, elementCounts, zodiac }: BaziChartProps) {
   const { currentTheme } = useTheme();
-  const { t } = useLocale();
   const c = currentTheme.colors;
-
   const pillarKeys = ["year", "month", "day", "hour"] as const;
-  const pillarLabels = [t.bazi.yearPillar, t.bazi.monthPillar, t.bazi.dayPillar, t.bazi.hourPillar];
-  const rowLabels = [t.bazi.heavenlyStem, t.bazi.tenGod, t.bazi.earthlyBranch, t.bazi.hiddenStem, t.bazi.naYin];
-  const maxElement = Object.entries(elementCounts).sort((a, b) => b[1] - a[1])[0];
-  const elementTotal = Object.values(elementCounts).reduce((s, c) => s + c, 0);
+  const pillarLabels = ["年柱", "月柱", "日柱", "时柱"];
+  const hasShensha = shenshaByPillar.some(arr => arr.length > 0);
+  const hasFortune = fortuneStages.length === 4;
+  const elementLabels: Record<string, string> = { Wood: "木", Fire: "火", Earth: "土", Metal: "金", Water: "水" };
+  const elementKeys = ["Wood", "Fire", "Earth", "Metal", "Water"] as const;
+  const totalEl = elementKeys.reduce((s, k) => s + (elementCounts?.[k] || 0), 0);
+  const maxEl = Math.max(...elementKeys.map(k => elementCounts?.[k] || 0), 1);
 
-  const elLabel = (elem: string) => (t.dailyFortune.elements as Record<string, string>)[elem] || elem;
-  const zodiacName = (z: string) => {
-    const name = z.split(" ")[0];
-    return (t.dailyFortune.zodiacs as Record<string, string>)[name] || name;
-  };
-  const yy = (v: string) => (t.dailyFortune.yinYang as Record<string, string>)[v] || v;
+  // Table row data
+  const tableRows: { label: string; render: (key: keyof typeof pillars, i: number) => React.ReactNode }[] = [
+    {
+      label: "天干",
+      render: (key, i) => {
+        const p = pillars[key];
+        return (
+          <span style={{ fontSize: 22, fontWeight: 700, color: ELEMENT_COLORS[p.stemElement] }}>
+            {p.stem}
+          </span>
+        );
+      },
+    },
+    {
+      label: "地支",
+      render: (key, i) => {
+        const p = pillars[key];
+        return (
+          <span style={{ fontSize: 22, fontWeight: 700, color: ELEMENT_COLORS[p.branchElement] }}>
+            {p.branch}
+          </span>
+        );
+      },
+    },
+    {
+      label: "藏干",
+      render: (_, i) => {
+        const hs = hiddenStems[i] || [];
+        return (
+          <span style={{ fontSize: 12, color: c.text }}>
+            {hs.map(h => h.stem).join("")}
+          </span>
+        );
+      },
+    },
+    {
+      label: "纳音",
+      render: (_, i) => (
+        <span style={{ fontSize: 12, color: c.textMuted }}>{naYin[i]}</span>
+      ),
+    },
+    ...(hasFortune ? [{
+      label: "星运",
+      render: (_key: keyof typeof pillars, i: number) => (
+        <span style={{ fontSize: 12, color: c.text }}>{fortuneStages[i]}</span>
+      ),
+    }] : []),
+    {
+      label: "空亡",
+      render: (key, i) => {
+        const p = pillars[key];
+        return (
+          <span style={{ fontSize: 12, color: "#C0392B" }}>
+            {getKongWang(p.stemIndex, p.branchIndex)}
+          </span>
+        );
+      },
+    },
+    ...(hasShensha ? [{
+      label: "神煞",
+      render: (_key: keyof typeof pillars, i: number) => {
+        const stars = shenshaByPillar[i] || [];
+        if (stars.length === 0) return <span style={{ fontSize: 11, color: c.textMuted }}>—</span>;
+        return (
+          <div className="flex flex-wrap gap-0.5">
+            {stars.slice(0, 5).map((s) => (
+              <span key={s.name}
+                style={{
+                  fontSize: 10, padding: "0 3px", borderRadius: 2,
+                  background: s.type === "auspicious" ? "#2ECC7118" : s.type === "sinister" ? "#E74C3C18" : "#FFC10718",
+                  color: s.type === "auspicious" ? "#2ECC71" : s.type === "sinister" ? "#E74C3C" : "#FFC107",
+                }}>
+                {s.name.replace(/[吉凶]/g, "")}
+              </span>
+            ))}
+          </div>
+        );
+      },
+    }] : []),
+  ];
 
   return (
     <div className="space-y-4">
-      {/* ── Day Master Summary ── */}
-      <div
-        className="flex items-center gap-3 px-4 py-3 rounded-lg"
-        style={{ background: `${c.primary}0A`, border: `1px solid ${c.primary}14` }}
-      >
-        <span
-          className="text-xl font-bold w-10 h-10 flex items-center justify-center rounded-full"
-          style={{
-            color: ELEMENT_COLORS[dayMasterElement],
-            background: ELEMENT_BG[dayMasterElement],
-          }}
-        >
-          {yy(dayMasterYinYang)}
+      {/* Day Master identifier */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-bold" style={{ color: c.primary }}>
+          日主:{" "}
+          <span style={{ color: ELEMENT_COLORS[dayMasterElement] }}>
+            {dayMasterYinYang}{dayMasterElement}
+          </span>
         </span>
-        <div>
-          <div className="text-xs" style={{ color: c.textMuted }}>
-            {t.bazi.dayMaster}
-          </div>
-          <div className="text-sm font-bold" style={{ color: c.text }}>
-            {t.bazi.dayMaster}: {yy(dayMasterYinYang)} {elLabel(dayMasterElement)} / {zodiacName(zodiac)}
-          </div>
-        </div>
+        <span className="text-xs" style={{ color: c.textMuted }}>
+          ({zodiac})
+        </span>
       </div>
 
-      {/* ── Four Pillars Table ── */}
-      <div className="overflow-x-auto relative">
-        {/* Corner brackets */}
-        <span className="absolute -top-px -left-px w-2.5 h-2.5 border-t border-l rounded-tl" style={{ borderColor: `${c.primary}40` }} />
-        <span className="absolute -top-px -right-px w-2.5 h-2.5 border-t border-r rounded-tr" style={{ borderColor: `${c.primary}40` }} />
-        <span className="absolute -bottom-px -left-px w-2.5 h-2.5 border-b border-l rounded-bl" style={{ borderColor: `${c.primary}40` }} />
-        <span className="absolute -bottom-px -right-px w-2.5 h-2.5 border-b border-r rounded-br" style={{ borderColor: `${c.primary}40` }} />
-        <div className="grid grid-cols-[50px_1fr_1fr_1fr_1fr] gap-px rounded-lg overflow-hidden" style={{ background: c.primary + "18" }}>
-          {/* Column headers — first cell empty for row label column */}
-          <div className="text-center py-2" style={{ background: `${c.primary}0D` }} />
-          {pillarKeys.map((key, i) => (
-            <div
-              key={`hdr-${key}`}
-              className="text-center py-2"
-              style={{ background: `${c.primary}0D` }}
-            >
-              <div className="text-[10px] font-bold tracking-wider uppercase" style={{ color: c.primary }}>
-                {pillarLabels[i]}
-              </div>
-            </div>
-          ))}
-
-          {/* Row 1: Heavenly Stems */}
-          <div className="flex items-center justify-center py-2.5" style={{ background: `${c.primary}08` }}>
-            <span className="text-[10px] font-semibold" style={{ color: c.textMuted }}>{rowLabels[0]}</span>
-          </div>
-          {pillarKeys.map((key, i) => {
-            const p = pillars[key];
-            const isDayMaster = key === "day";
-            return (
-              <div
-                key={`stem-${key}`}
-                className="text-center py-2.5"
+      {/* Four Pillars Table */}
+      <div className="overflow-hidden rounded-lg" style={{ border: `1px solid ${c.primary}20` }}>
+        <table className="w-full text-center" style={{ borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ background: c.primary }}>
+              <th style={{ padding: "6px 8px", color: "#FFF", fontSize: 12, fontWeight: 600, borderRight: `1px solid ${c.primary}30` }}>
+                四柱
+              </th>
+              {pillarLabels.map((label, i) => (
+                <th key={label} style={{
+                  padding: "6px 8px", color: "#FFF", fontSize: 12, fontWeight: 600,
+                  borderLeft: i > 0 ? `1px solid ${c.primary}30` : "none",
+                }}>
+                  {label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {tableRows.map((row, ri) => (
+              <tr key={row.label}
                 style={{
-                  background: isDayMaster ? `${c.primary}0F` : c.surface,
-                  borderBottom: isDayMaster ? `2px solid ${c.primary}` : "1px solid transparent",
-                }}
-              >
-                <div
-                  className="text-2xl font-bold"
-                  style={{ color: ELEMENT_COLORS[p.stemElement] }}
-                >
-                  {p.stem}
-                </div>
-                <div className="text-[10px] mt-0.5" style={{ color: c.textMuted }}>
-                  {isDayMaster ? "DM" : elLabel(p.stemElement)}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Row 2: Ten Gods */}
-          <div className="flex items-center justify-center py-1.5" style={{ background: `${c.primary}06` }}>
-            <span className="text-[10px] font-semibold" style={{ color: c.textMuted }}>{rowLabels[1]}</span>
-          </div>
-          {pillarKeys.map((key, i) => (
-            <div
-              key={`tg-${key}`}
-              className="text-center py-1.5"
-              style={{ background: key === "day" ? `${c.primary}0A` : "transparent" }}
-            >
-              <span
-                className="text-[11px] font-semibold px-1.5 py-0.5 rounded"
-                style={{
-                  color: key === "day" ? c.primary : c.textMuted,
-                  background: key === "day" ? `${c.primary}12` : "transparent",
-                }}
-              >
-                {tenGods[i] || "—"}
-              </span>
-            </div>
-          ))}
-
-          {/* Row 3: Earthly Branches */}
-          <div className="flex items-center justify-center py-2.5" style={{ background: `${c.primary}08` }}>
-            <span className="text-[10px] font-semibold" style={{ color: c.textMuted }}>{rowLabels[2]}</span>
-          </div>
-          {pillarKeys.map((key, i) => {
-            const p = pillars[key];
-            return (
-              <div
-                key={`br-${key}`}
-                className="text-center py-2.5"
-                style={{ background: c.surface }}
-              >
-                <div
-                  className="text-2xl font-bold"
-                  style={{ color: ELEMENT_COLORS[p.branchElement] }}
-                >
-                  {p.branch}
-                </div>
-                <div className="text-[10px] mt-0.5" style={{ color: c.textMuted }}>
-                  {zodiacName(p.zodiac)}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Row 4: Hidden Stems (with qi) */}
-          <div className="flex items-center justify-center py-1.5" style={{ background: `${c.primary}06` }}>
-            <span className="text-[10px] font-semibold" style={{ color: c.textMuted }}>{rowLabels[3]}</span>
-          </div>
-          {pillarKeys.map((key, i) => (
-            <div
-              key={`hs-${key}`}
-              className="text-center py-1.5"
-              style={{ background: key === "day" ? `${c.primary}0A` : "transparent" }}
-            >
-              <span className="text-[11px] leading-relaxed" style={{ color: c.textMuted }}>
-                {hiddenStems[i] && hiddenStems[i].length > 0
-                  ? hiddenStems[i].map((h) => `${h.stem}${h.qi ? h.qi[0] : ""}`).join(" ")
-                  : "—"}
-              </span>
-            </div>
-          ))}
-
-          {/* Row 5: Na Yin */}
-          <div className="flex items-center justify-center py-1.5" style={{ background: `${c.primary}06` }}>
-            <span className="text-[10px] font-semibold" style={{ color: c.textMuted }}>{rowLabels[4]}</span>
-          </div>
-          {pillarKeys.map((key, i) => (
-            <div
-              key={`ny-${key}`}
-              className="text-center py-1.5"
-              style={{ background: `${c.primary}08` }}
-            >
-              <span className="text-[10px]" style={{ color: c.textMuted }}>
-                {naYin[i] || "—"}
-              </span>
-            </div>
-          ))}
-        </div>
+                  background: ri % 2 === 0 ? "#FFF" : "#F5F0E8",
+                  borderTop: `1px solid ${c.primary}10`,
+                }}>
+                <td style={{
+                  padding: "5px 8px", fontSize: 11, fontWeight: 600,
+                  color: c.primary, whiteSpace: "nowrap",
+                  borderRight: `1px solid ${c.primary}10`,
+                }}>
+                  {row.label}
+                </td>
+                {pillarKeys.map((key, ci) => (
+                  <td key={key} style={{
+                    padding: "5px 8px", minWidth: 64,
+                    borderLeft: ci > 0 ? `1px solid ${c.primary}08` : "none",
+                  }}>
+                    {row.render(key, ci)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* ── Five Elements Bar ── */}
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase" style={{ color: c.textMuted }}>
-          <span className="inline-block w-1 h-1 rotate-45 rounded-sm flex-shrink-0" style={{ background: c.primary }} />
-          {t.bazi.fiveElements}
+      {/* Element Distribution */}
+      <div className="rounded-lg p-4" style={{ background: c.surface, border: `1px solid ${c.primary}10` }}>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+          <span className="text-[11px] font-bold tracking-wider" style={{ color: c.textMuted }}>五行分布</span>
         </div>
-        <div className="flex h-3 rounded-full overflow-hidden">
-          {Object.entries(elementCounts).map(([elem, count]) => (
-            <div
-              key={elem}
-              title={`${elLabel(elem)}: ${count}`}
-              style={{
-                width: `${elementTotal > 0 ? (count / elementTotal) * 100 : 0}%`,
-                background: ELEMENT_COLORS[elem],
-                opacity: count > 0 ? 1 : 0.15,
-              }}
-            />
-          ))}
-        </div>
-        <div className="flex gap-3 text-[10px] flex-wrap">
-          {Object.entries(elementCounts).map(([elem, count]) => {
-            const pct = elementTotal > 0 ? Math.round((count / elementTotal) * 100) : 0;
+        <div className="flex items-end justify-around px-1">
+          {elementKeys.map((el) => {
+            const count = elementCounts?.[el] || 0;
+            const pct = totalEl > 0 ? (count / totalEl) * 100 : 0;
+            const barH = maxEl > 0 ? Math.max(20, (count / maxEl) * 100) : 20;
             return (
-              <span key={elem} style={{ color: ELEMENT_COLORS[elem] }}>
-                <span className="font-semibold">{elLabel(elem)}</span> {count}
-                <span style={{ opacity: 0.7 }}>（{pct}%）</span>
-                {maxElement && maxElement[0] === elem ? " ★" : ""}
-              </span>
+              <div key={el} className="flex flex-col items-center gap-1.5" style={{ flex: 1 }}>
+                <span className="text-[11px] font-bold" style={{ color: ELEMENT_COLORS[el] }}>
+                  {pct.toFixed(0)}%
+                </span>
+                <div className="w-full rounded-t-md" style={{
+                  height: barH,
+                  background: `linear-gradient(to top, ${ELEMENT_COLORS[el]} 0%, ${ELEMENT_COLORS[el]}80 100%)`,
+                  borderRadius: "4px 4px 0 0",
+                  minWidth: 24,
+                  maxWidth: 44,
+                  transition: "height 0.5s ease",
+                }} />
+                <span className="text-[11px]" style={{ color: c.textMuted }}>
+                  {elementLabels[el]}
+                </span>
+              </div>
             );
           })}
         </div>

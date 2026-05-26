@@ -4,13 +4,17 @@
 import type { BaZiResult } from "./bazi-engine";
 import type { DaYunResult } from "./bazi-engine";
 import type { ElementStrengthResult } from "./bazi-engine";
+import type { PatternResult } from "./bazi-engine";
+import type { TiaoHouResult } from "./bazi-engine";
+import type { DayPillarGradeResult } from "./bazi-engine";
+import type { PillarRelation } from "./bazi-engine";
 
 export interface BaZiRequest {
   birthDate: string; // "YYYY-MM-DD"
   birthHour: number; // 0-23
   gender: "male" | "female";
   baziData: BaZiResult;
-  // Extended professional fields (optional — for paid readings)
+  // Extended professional fields
   tenGods?: Array<{
     stem: string;
     tenGodName: string;
@@ -30,6 +34,10 @@ export interface BaZiRequest {
     description?: string;
     locations: string[];
   }>;
+  pattern?: PatternResult;
+  tiaoHou?: TiaoHouResult;
+  dayPillarGrade?: DayPillarGradeResult;
+  pillarRelations?: PillarRelation[];
   daYun?: DaYunResult;
   currentYearFortune?: {
     year: number;
@@ -60,19 +68,26 @@ Reading philosophy:
 - The Day Master represents the core self; surrounding pillars show external influences
 - Hidden Stems (藏干) reveal deeper subconscious patterns
 - Ten Gods (十神) describe relationship dynamics in career, wealth, and personal life
+- Chart Pattern (格局) reveals the life structure and core orientation
+- Day Pillar Grade (日柱等级) indicates the quality and characteristics of the self pillar
+- Tiao Hou (调候) shows the climate adjustment needs based on birth season
+- Pillar Relations (四柱关系) reveal the interactions (combine/clash/harm/punish) between pillars
 - Da Yun (大运) outlines 10-year life cycles and major life themes
 - Shen Sha (神煞) indicate special talents, challenges, and blessings
 - You provide actionable advice for career, relationships, health, and personal development
 
 Professional analysis framework:
 1. Day Master strength assessment (身强/身弱) and Useful God (用神) determination
-2. Four Pillars composition with Hidden Stems
-3. Ten Gods analysis for each pillar
-4. Element balance with seasonal factors
-5. Da Yun (Decade Luck Cycle) current and upcoming phases
-6. Current year (流年) fortune outlook
-7. Shen Sha influence
-8. Na Yin (纳音) pillar tones for deeper personality insight
+2. Chart Pattern (格局) identification and analysis
+3. Four Pillars composition with Hidden Stems
+4. Ten Gods analysis for each pillar
+5. Element balance with seasonal factors and Tiao Hou (调候) adjustment
+6. Day Pillar Grade and profile interpretation
+7. Pillar Relations (四柱关系) - combinations, clashes, and their implications
+8. Da Yun (Decade Luck Cycle) current and upcoming phases
+9. Current year (流年) fortune outlook
+10. Shen Sha influence
+11. Na Yin (纳音) pillar tones for deeper personality insight
 
 You MUST respond in valid JSON format with this exact structure:
 {
@@ -192,6 +207,37 @@ Wood: ${baziData.elementCounts.Wood}  Fire: ${baziData.elementCounts.Fire}  Eart
     }
   }
 
+  // Pattern (格局)
+  if (req.pattern) {
+    prompt += `\n\n== CHART PATTERN (格局) ==`;
+    prompt += `\n${req.pattern.name} (${req.pattern.nameEn})`;
+    prompt += `\n${req.pattern.description}`;
+  }
+
+  // Day Pillar Grade
+  if (req.dayPillarGrade) {
+    prompt += `\n\n== DAY PILLAR ANALYSIS ==`;
+    prompt += `\nPillar: ${req.dayPillarGrade.name}`;
+    prompt += `\nGrade: ${req.dayPillarGrade.grade} (${req.dayPillarGrade.gradeEn}) — ${req.dayPillarGrade.stars}/5 stars`;
+    prompt += `\nProfile: ${req.dayPillarGrade.profile}`;
+    prompt += `\nTraits: ${req.dayPillarGrade.traits.join(", ")}`;
+  }
+
+  // Tiao Hou (调候)
+  if (req.tiaoHou?.stems.length) {
+    prompt += `\n\n== CLIMATE ADJUSTMENT (调候) ==`;
+    prompt += `\nRecommended stems: ${req.tiaoHou.stems.join(", ")} (${req.tiaoHou.elements.join(", ")})`;
+    prompt += `\nReason: ${req.tiaoHou.reason}`;
+  }
+
+  // Pillar Relations (四柱关系)
+  if (req.pillarRelations?.length) {
+    prompt += `\n\n== PILLAR RELATIONSHIPS (四柱关系) ==`;
+    for (const rel of req.pillarRelations) {
+      prompt += `\n${rel.label}: ${rel.pillars.join(" ↔ ")} — ${rel.description}`;
+    }
+  }
+
   // Shen Sha
   if (req.shensha?.length) {
     prompt += `\n\n== DIVINE STARS (神煞) ==`;
@@ -240,9 +286,28 @@ Wood: ${baziData.elementCounts.Wood}  Fire: ${baziData.elementCounts.Fire}  Eart
 }
 
 export function buildBaZiPreviewPrompt(req: BaZiRequest): string {
-  return `Birth: ${req.birthDate}, ${req.gender}
+  let prompt = `Birth: ${req.birthDate}, ${req.gender}
 Day Master: ${req.baziData.dayMasterYinYang} ${req.baziData.dayMasterElement}
-Elements: Wood(${req.baziData.elementCounts.Wood}) Fire(${req.baziData.elementCounts.Fire}) Earth(${req.baziData.elementCounts.Earth}) Metal(${req.baziData.elementCounts.Metal}) Water(${req.baziData.elementCounts.Water})
+Day Pillar: ${req.baziData.day.stem}${req.baziData.day.branch}
+Elements: Wood(${req.baziData.elementCounts.Wood}) Fire(${req.baziData.elementCounts.Fire}) Earth(${req.baziData.elementCounts.Earth}) Metal(${req.baziData.elementCounts.Metal}) Water(${req.baziData.elementCounts.Water})`;
 
-Give a brief 2-3 sentence overview of this BaZi profile. Focus on the Day Master element and element balance. Be encouraging. Under 80 words.`;
+  if (req.pattern) {
+    prompt += `\nPattern: ${req.pattern.name}`;
+  }
+  if (req.elementStrength) {
+    prompt += `\nDay Master Strength: ${req.elementStrength.dayMasterStrength.level} (${req.elementStrength.dayMasterStrength.score}/100)`;
+    if (req.elementStrength.usefulGod) {
+      prompt += `\nUseful God: ${req.elementStrength.usefulGod.element}`;
+    }
+  }
+  if (req.dayPillarGrade) {
+    prompt += `\nDay Pillar Grade: ${req.dayPillarGrade.grade} ${req.dayPillarGrade.stars}/5 stars`;
+  }
+  if (req.pillarRelations?.length) {
+    const rels = req.pillarRelations.map(r => r.label).join("; ");
+    prompt += `\nPillar Relations: ${rels}`;
+  }
+
+  prompt += `\n\nGive a brief 2-3 sentence overview of this BaZi profile. Mention the Day Master element, pattern, element balance, and key pillar relations. Be encouraging. Under 100 words.`;
+  return prompt;
 }

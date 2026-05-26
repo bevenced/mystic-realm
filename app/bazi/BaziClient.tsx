@@ -5,11 +5,12 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import BaziChart from "@/components/features/BaziChart";
-import { getAllTenGods, getNaYin, getHiddenStems } from "@/lib/bazi";
+import { getAllTenGods, getNaYin, getHiddenStems, getAllFortuneStages } from "@/lib/bazi";
 import type { BaZiResult, BaZiPillar } from "@/lib/bazi";
+import type { PatternResult, ElementStrengthResult, ShenShaResult, TiaoHouResult, DayPillarGradeResult, PillarRelation } from "@/lib/bazi-engine";
 import Link from "next/link";
 import {
-  Sparkles, Loader2, Lock, Calendar, Clock, Users,
+  Sparkles, Loader2, Lock, Calendar, Clock,
 } from "lucide-react";
 import PayPalButton from "@/components/features/PayPalButton";
 
@@ -25,9 +26,23 @@ interface ApiResponse {
     pillars?: Array<{ name: string; stem: string; branch: string; hiddenStems: string; tenGod: string; meaning: string }>;
     affirmation?: string;
     luckyElements?: string[];
+    dayMasterStrength?: string;
+    usefulGod?: string;
     [key: string]: unknown;
   };
-  professionalData?: any;
+  professionalData?: {
+    tenGods?: Array<{ stem: string; tenGodName: string; tenGodEn: string; element: string; relationship: string }>;
+    elementStrength?: ElementStrengthResult;
+    hiddenStems?: Array<{ branchIndex: number; stems: Array<{ stem: string; element: string; qi: string }> }>;
+    shensha?: ShenShaResult[];
+    pattern?: PatternResult;
+    tiaoHou?: TiaoHouResult;
+    dayPillarGrade?: DayPillarGradeResult;
+    pillarRelations?: PillarRelation[];
+    nayin?: Array<{ pillar: string; element: string; toneName: string; toneNameEn: string }>;
+    daYun?: { direction?: string; startAge?: number; cycles?: Array<{ startAge: number; endAge: number; stem: string; branch: string; stemEn?: string; branchElement?: string; isCurrent?: boolean }> };
+    currentYearFortune?: { year: number; stem: string; branch: string; description: string };
+  };
   birthDate?: string;
   birthHour?: number;
   gender?: string;
@@ -51,6 +66,10 @@ const HOUR_OPTIONS = [
   { v: 11, label: "亥时 21:00-23:00", en: "Hai 21:00-23:00" },
 ];
 
+const ELEMENT_COLORS: Record<string, string> = {
+  Wood: "#4CAF50", Fire: "#FF5722", Earth: "#FFC107", Metal: "#B0B0B0", Water: "#42A5F5",
+};
+
 export default function BaziClient() {
   const { currentTheme, setTheme } = useTheme();
   const c = currentTheme.colors;
@@ -69,21 +88,23 @@ export default function BaziClient() {
     const bd = params.get("birthDate");
     const bh = params.get("birthHour");
     const g = params.get("gender");
+    const nm = params.get("name");
     if (bd) setBirthDate(bd);
     if (bh) setBirthHour(Number(bh));
     if (g === "male" || g === "female") setGender(g);
-    // If we came back from sign-in with form data, auto-submit
+    if (nm) setUserName(nm);
     if (bd && bh) {
-      // Clean URL without reload
       const url = new URL(window.location.href);
       url.searchParams.delete("birthDate");
       url.searchParams.delete("birthHour");
       url.searchParams.delete("gender");
+      url.searchParams.delete("name");
       window.history.replaceState({}, "", url.pathname);
     }
   }, []);
 
   // Form state
+  const [userName, setUserName] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [birthHour, setBirthHour] = useState<number>(8);
   const [gender, setGender] = useState<"male" | "female">("male");
@@ -101,40 +122,30 @@ export default function BaziClient() {
   const [showPayment, setShowPayment] = useState(false);
 
   const reportLabels: Record<string, { title: string; desc: string; price: number; serviceKey: string }> = {
-    annual: {
-      title: t.bazi.annual.title,
-      desc: t.bazi.annual.desc,
-      price: 3.99,
-      serviceKey: "bazi-annual",
-    },
-    personality: {
-      title: t.bazi.personality.title,
-      desc: t.bazi.personality.desc,
-      price: 3.99,
-      serviceKey: "bazi-personality",
-    },
-    deep: {
-      title: t.bazi.deep.title,
-      desc: t.bazi.deep.desc,
-      price: 5.99,
-      serviceKey: "bazi-deep",
-    },
+    annual: { title: t.bazi.annual.title, desc: t.bazi.annual.desc, price: 3.99, serviceKey: "bazi-annual" },
+    personality: { title: t.bazi.personality.title, desc: t.bazi.personality.desc, price: 3.99, serviceKey: "bazi-personality" },
+    deep: { title: t.bazi.deep.title, desc: t.bazi.deep.desc, price: 5.99, serviceKey: "bazi-deep" },
   };
 
   // Build chart data from API response
   const baziData = result?.baziData;
+  const pd = result?.professionalData;
+  const reading = result?.reading;
   const chartData = (() => {
     if (!baziData) return null;
     const pillarKeys: ("year" | "month" | "day" | "hour")[] = ["year", "month", "day", "hour"];
     const tenGods = getAllTenGods(baziData.dayMasterIndex, [
-      baziData.year.stemIndex,
-      baziData.month.stemIndex,
-      baziData.day.stemIndex,
-      baziData.hour.stemIndex,
+      baziData.year.stemIndex, baziData.month.stemIndex, baziData.day.stemIndex, baziData.hour.stemIndex,
     ]).map((t) => t.tenGodName);
     const naYin = pillarKeys.map((k) => getNaYin(baziData[k].stemIndex, baziData[k].branchIndex).toneName);
     const hiddenStems = pillarKeys.map((k) => getHiddenStems(baziData[k].branchIndex));
-    return { tenGods, naYin, hiddenStems };
+    const branchIndices = pillarKeys.map((k) => baziData[k].branchIndex);
+    const fortuneStages = getAllFortuneStages(baziData.dayMasterIndex, branchIndices);
+    const shenshaByPillar: ShenShaResult[][] = pillarKeys.map((pk) => {
+      const locName = { year: "Year", month: "Month", day: "Day", hour: "Hour" }[pk];
+      return (pd?.shensha || []).filter((s: ShenShaResult) => s.locations.includes(locName));
+    });
+    return { tenGods, naYin, hiddenStems, fortuneStages, shenshaByPillar };
   })();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,7 +153,6 @@ export default function BaziClient() {
     setLoading(true);
     setError("");
     setResult(null);
-
     try {
       const res = await fetch("/api/ai-bazi", {
         method: "POST",
@@ -165,41 +175,26 @@ export default function BaziClient() {
 
   const [redeemingPoints, setRedeemingPoints] = useState(false);
 
-  // Build sign-in URL that preserves form state
   const signInWithReturnUrl = () => {
-    const returnParams = new URLSearchParams({ birthDate, birthHour: String(birthHour), gender });
+    const returnParams = new URLSearchParams({ birthDate, birthHour: String(birthHour), gender, name: userName });
     return `/sign-in?redirect_url=${encodeURIComponent(`/bazi?${returnParams.toString()}`)}`;
   };
 
-  // Rotating loading messages
-  const loadingMessages = [
-    t.bazi.submitting,
-    "排定四柱...",
-    "分析五行...",
-    "推演十神...",
-    "解读命理...",
-  ];
+  const loadingMessages = [t.bazi.submitting, "排定四柱...", "分析五行...", "推演十神...", "解读命理..."];
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   useEffect(() => {
     if (!loading) return;
-    const timer = setInterval(() => {
-      setLoadingMsgIdx((i) => (i + 1) % loadingMessages.length);
-    }, 1800);
+    const timer = setInterval(() => setLoadingMsgIdx((i) => (i + 1) % loadingMessages.length), 1800);
     return () => clearInterval(timer);
   }, [loading]);
 
-  // Handle report tab click
   const handleReportClick = (type: "annual" | "personality" | "deep") => {
-    if (!isSignedIn) {
-      window.location.href = signInWithReturnUrl();
-      return;
-    }
+    if (!isSignedIn) { window.location.href = signInWithReturnUrl(); return; }
     setSelectedReport(type);
     setShowPayment(true);
     setReportResult(null);
   };
 
-  // Fetch report with orderId (PayPal)
   const fetchReport = async (orderId: string) => {
     if (!selectedReport || !birthDate) return;
     setShowPayment(false);
@@ -207,265 +202,160 @@ export default function BaziClient() {
     await loadReport({ orderId });
   };
 
-  // Fetch report with points
   const fetchReportWithPoints = async () => {
     if (!selectedReport || !birthDate) return;
     setRedeemingPoints(true);
     try {
       const redeemRes = await fetch("/api/redeem", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ service: reportLabels[selectedReport].serviceKey }),
       });
       const redeemData = await redeemRes.json();
-      if (redeemData.error) {
-        setError(redeemData.error);
-        setRedeemingPoints(false);
-        return;
-      }
+      if (redeemData.error) { setError(redeemData.error); setRedeemingPoints(false); return; }
       setShowPayment(false);
       setReportLoading(true);
       setRedeemingPoints(false);
       await loadReport({ redeemed: redeemData.token });
-    } catch {
-      setError(t.bazi.redeemFailed);
-      setRedeemingPoints(false);
-    }
+    } catch { setError(t.bazi.redeemFailed); setRedeemingPoints(false); }
   };
 
-  // Common report loader
   const loadReport = async (extra: { orderId?: string; redeemed?: string }) => {
     setReportLoading(true);
     try {
       const res = await fetch("/api/ai-bazi", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          birthDate,
-          birthHour,
-          gender,
-          reportType: selectedReport,
-          locale,
-          ...extra,
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ birthDate, birthHour, gender, reportType: selectedReport, locale, ...extra }),
       });
       const json = await res.json();
-      if (json.error) {
-        setError(json.error);
-      } else {
-        setReportResult({ type: selectedReport!, reading: json.reading });
-      }
-    } catch {
-      setError(t.bazi.networkError);
-    } finally {
-      setReportLoading(false);
-    }
+      if (json.error) setError(json.error);
+      else setReportResult({ type: selectedReport!, reading: json.reading });
+    } catch { setError(t.bazi.networkError); }
+    finally { setReportLoading(false); }
   };
 
-  // Format date helper
   const formatDate = (d: string) => {
     if (!d) return "";
     const dt = new Date(d + "T00:00:00");
     return dt.toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" });
   };
 
+  const elLabel = (elem: string) => (t.dailyFortune.elements as Record<string, string>)[elem] || elem;
+
+  const elColor = (elem: string) => ELEMENT_COLORS[elem] || c.textMuted;
+
   return (
     <main className="min-h-screen">
-      {/* Hero gradient */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          height: "400px",
-          background: `radial-gradient(ellipse at 50% 0%, ${c.primary}10 0%, transparent 70%)`,
-        }}
-      />
+      <div className="absolute inset-0 pointer-events-none" style={{ height: "400px", background: `radial-gradient(ellipse at 50% 0%, ${c.primary}10 0%, transparent 70%)` }} />
 
-      <div className="relative mx-auto max-w-2xl px-6 pt-20 pb-20">
+      <div className="relative mx-auto max-w-2xl px-4 sm:px-6 pt-12 pb-20">
         {/* Header */}
-        <div className="text-center mb-10 animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase mb-4"
-            style={{ background: `${c.primary}14`, color: c.primary }}>
-            <Sparkles size={12} />
-            {t.bazi.badge}
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold font-serif" style={{ color: c.text }}>
-            {t.bazi.title}
-          </h1>
-          <p className="text-sm mt-3 max-w-md mx-auto" style={{ color: c.textMuted }}>
-            {t.bazi.subtitle}
-          </p>
-          <div
-            className="mx-auto mt-4 w-10 h-0.5 rounded-full opacity-60"
-            style={{ background: c.primary }}
-          />
+        <div className="text-center mb-8 animate-fade-in">
+          <h1 className="text-2xl md:text-3xl font-bold font-serif" style={{ color: c.text }}>{t.bazi.title} | BaZi Natal Chart</h1>
         </div>
 
         {/* Form / Summary Bar */}
         {result && !formExpanded ? (
-          /* Collapsed summary bar */
           <div
-            className="flex flex-wrap items-center gap-3 px-5 py-3 mb-8 rounded-lg animate-fade-in cursor-pointer"
-            style={{ background: c.surface, border: `1px solid ${c.primary}18` }}
+            className="flex flex-wrap items-center gap-2 px-4 py-2 mb-6 rounded-lg animate-fade-in cursor-pointer"
+            style={{ background: c.surface, border: `1px solid ${c.primary}0F` }}
             onClick={() => setFormExpanded(true)}
           >
-            <span className="text-xs" style={{ color: c.textMuted }}>
-              {formatDate(birthDate)}
-            </span>
-            <span className="text-xs font-semibold" style={{ color: c.primary }}>
-              {(HOUR_OPTIONS.find((h) => h.v === birthHour)?.[locale.startsWith("zh") ? "label" : "en"] || "").split(" ")[0]}
-            </span>
-            <span className="text-xs" style={{ color: c.textMuted }}>
-              {gender === "male" ? t.bazi.male : t.bazi.female}
-            </span>
-            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full" style={{ background: `${c.primary}14`, color: c.primary }}>
-              {t.bazi.submit}
-            </span>
+            {userName && <span className="text-xs font-semibold" style={{ color: c.text }}>{userName}</span>}
+            <span className="text-[10px]" style={{ color: c.textMuted }}>{formatDate(birthDate)}</span>
+            <span className="text-[10px] font-semibold" style={{ color: c.primary }}>{(HOUR_OPTIONS.find((h) => h.v === birthHour)?.[locale.startsWith("zh") ? "label" : "en"] || "").split(" ")[0]}</span>
+            <span className="text-[10px]" style={{ color: c.textMuted }}>{gender === "male" ? t.bazi.male : t.bazi.female}</span>
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full" style={{ background: `${c.primary}14`, color: c.primary }}>{t.bazi.submit}</span>
           </div>
         ) : (
-          /* Expanded form */
-        <div
-          className="relative rounded-xl p-6 mb-8 animate-fade-in"
-          style={{ background: c.surface, border: `1px solid ${c.primary}18` }}
-        >
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Birth Date */}
-            <div>
-              <label className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase mb-2" style={{ color: c.textMuted }}>
-                <Calendar size={13} />
-                {t.bazi.birthDate}
-              </label>
-              <input
-                type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                required
-                className="w-full px-4 py-2.5 rounded-lg text-sm border outline-none transition-colors"
-                style={{
-                  background: `${c.primary}06`,
-                  color: c.text,
-                  borderColor: `${c.primary}22`,
-                }}
-              />
-            </div>
-
-            {/* Birth Hour */}
-            <div>
-              <label className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase mb-2" style={{ color: c.textMuted }}>
-                <Clock size={13} />
-                {t.bazi.birthHour}
-              </label>
-              <select
-                value={birthHour}
-                onChange={(e) => setBirthHour(Number(e.target.value))}
-                className="w-full px-4 py-2.5 rounded-lg text-sm border outline-none transition-colors"
-                style={{
-                  background: `${c.primary}06`,
-                  color: c.text,
-                  borderColor: `${c.primary}22`,
-                }}
-              >
-                {HOUR_OPTIONS.map((h) => (
-                  <option key={h.v} value={h.v}>{locale.startsWith("zh") ? h.label : h.en}</option>
-                ))}
-              </select>
-              <p className="text-[10px] mt-1" style={{ color: c.textMuted }}>
-                {t.bazi.birthHourHint}
-              </p>
-            </div>
-
-            {/* Gender */}
-            <div>
-              <label className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase mb-2" style={{ color: c.textMuted }}>
-                <Users size={13} />
-                {t.bazi.gender}
-              </label>
+          <div className="relative rounded-xl p-4 mb-6 animate-fade-in" style={{ background: c.surface, border: `1px solid ${c.primary}0F` }}>
+            <form onSubmit={handleSubmit} className="space-y-3">
+              {/* Row 1: Name + Gender */}
               <div className="flex gap-3">
-                {(["male", "female"] as const).map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => setGender(g)}
-                    className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-all"
-                    style={{
-                      background: gender === g ? `${c.primary}18` : `${c.primary}06`,
-                      color: gender === g ? c.primary : c.textMuted,
-                      border: `1px solid ${gender === g ? c.primary : `${c.primary}14`}`,
-                    }}
-                  >
-                    {g === "male" ? t.bazi.male : t.bazi.female}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading || !birthDate}
-              className="w-full py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
-              style={{
-                background: loading || !birthDate ? `${c.primary}30` : c.primary,
-                color: loading ? c.textMuted : c.bg,
-                cursor: loading || !birthDate ? "not-allowed" : "pointer",
-                boxShadow: loading ? "none" : `0 0 20px ${currentTheme.glow}`,
-              }}
-            >
-              <Sparkles size={16} />
-              {t.bazi.submit}
-            </button>
-
-            {/* Loading overlay */}
-            {loading && (
-              <div
-                className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-xl z-10"
-                style={{ background: `${c.surface}F2` }}
-              >
-                <div className="relative w-14 h-14">
-                  <div
-                    className="absolute inset-0 rounded-full animate-spin"
-                    style={{
-                      border: `2px solid transparent`,
-                      borderTopColor: c.primary,
-                      borderRightColor: `${c.primary}60`,
-                    }}
+                <div className="flex-1">
+                  <label className="block text-[10px] font-semibold tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>{t.bazi.name}</label>
+                  <input
+                    type="text" value={userName} onChange={(e) => setUserName(e.target.value)}
+                    placeholder={t.bazi.namePlaceholder}
+                    className="w-full px-3 py-2 rounded-lg text-xs border outline-none"
+                    style={{ background: `${c.primary}06`, color: c.text, borderColor: `${c.primary}14` }}
                   />
-                  <div
-                    className="absolute inset-2 rounded-full"
-                    style={{
-                      border: `2px solid transparent`,
-                      borderBottomColor: `${c.primary}40`,
-                      borderLeftColor: `${c.primary}20`,
-                      animation: "spin 2s linear infinite reverse",
-                    }}
-                  />
-                  <span className="absolute inset-0 flex items-center justify-center text-lg">☯️</span>
                 </div>
-                <p className="text-xs font-semibold animate-pulse" style={{ color: c.primary }}>
-                  {loadingMessages[loadingMsgIdx]}
-                </p>
+                <div className="flex-shrink-0">
+                  <label className="block text-[10px] font-semibold tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>{t.bazi.gender}</label>
+                  <div className="flex gap-1.5">
+                    {(["male", "female"] as const).map((g) => (
+                      <button key={g} type="button" onClick={() => setGender(g)}
+                        className="px-3 py-2 rounded-lg text-xs font-medium transition-all"
+                        style={{ background: gender === g ? `${c.primary}18` : `${c.primary}06`, color: gender === g ? c.primary : c.textMuted, border: `1px solid ${gender === g ? c.primary : `${c.primary}14`}` }}>
+                        {g === "male" ? t.bazi.male : t.bazi.female}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            )}
-          </form>
 
-          {/* Error */}
-          {error && (
-            <div className="mt-4 p-3 rounded-lg text-xs" style={{ background: "#E74C3C14", color: "#E74C3C", border: "1px solid #E74C3C22" }}>
-              {error}
-            </div>
-          )}
-        </div>
+              {/* Row 2: Date + Hour */}
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="flex items-center gap-1 text-[10px] font-semibold tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>
+                    <Calendar size={11} />{t.bazi.birthDate}
+                  </label>
+                  <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required
+                    className="w-full px-3 py-2 rounded-lg text-xs border outline-none"
+                    style={{ background: `${c.primary}06`, color: c.text, borderColor: `${c.primary}14` }} />
+                </div>
+                <div className="flex-1">
+                  <label className="flex items-center gap-1 text-[10px] font-semibold tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>
+                    <Clock size={11} />{t.bazi.birthHour}
+                  </label>
+                  <select value={birthHour} onChange={(e) => setBirthHour(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-lg text-xs border outline-none"
+                    style={{ background: `${c.primary}06`, color: c.text, borderColor: `${c.primary}14` }}>
+                    {HOUR_OPTIONS.map((h) => (
+                      <option key={h.v} value={h.v}>{locale.startsWith("zh") ? h.label : h.en}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <p className="text-[10px]" style={{ color: c.textMuted }}>{t.bazi.birthHourHint}</p>
+
+              {/* Submit */}
+              <button type="submit" disabled={loading || !birthDate}
+                className="w-full py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                style={{ background: loading || !birthDate ? `${c.primary}30` : c.primary, color: loading ? c.textMuted : c.bg, cursor: loading || !birthDate ? "not-allowed" : "pointer", boxShadow: loading ? "none" : `0 0 20px ${currentTheme.glow}` }}>
+                <Sparkles size={16} /> {t.bazi.submit}
+              </button>
+
+              {/* Loading overlay */}
+              {loading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-xl z-10" style={{ background: `${c.surface}F2` }}>
+                  <div className="relative w-14 h-14">
+                    <div className="absolute inset-0 rounded-full animate-spin" style={{ border: `2px solid transparent`, borderTopColor: c.primary, borderRightColor: `${c.primary}60` }} />
+                    <div className="absolute inset-2 rounded-full" style={{ border: `2px solid transparent`, borderBottomColor: `${c.primary}40`, borderLeftColor: `${c.primary}20`, animation: "spin 2s linear infinite reverse" }} />
+                    <span className="absolute inset-0 flex items-center justify-center text-lg">☯️</span>
+                  </div>
+                  <p className="text-xs font-semibold animate-pulse" style={{ color: c.primary }}>{loadingMessages[loadingMsgIdx]}</p>
+                </div>
+              )}
+            </form>
+
+            {error && (
+              <div className="mt-3 p-3 rounded-lg text-xs" style={{ background: "#E74C3C14", color: "#E74C3C", border: "1px solid #E74C3C22" }}>{error}</div>
+            )}
+          </div>
         )}
 
         {/* Results */}
         {baziData && (
-          <div className="space-y-6 animate-fade-in">
+          <div className="space-y-4 animate-fade-in">
             {/* BaZi Chart */}
             {chartData && (
               <BaziChart
                 pillars={baziData}
-                tenGods={chartData.tenGods}
                 naYin={chartData.naYin}
                 hiddenStems={chartData.hiddenStems}
+                fortuneStages={chartData.fortuneStages}
+                shenshaByPillar={chartData.shenshaByPillar}
                 dayMasterIndex={baziData.dayMasterIndex}
                 dayMasterElement={baziData.dayMasterElement}
                 dayMasterYinYang={baziData.dayMasterYinYang}
@@ -474,251 +364,355 @@ export default function BaziClient() {
               />
             )}
 
-            {/* AI interpretation */}
-            {result?.reading && (
-              <div
-                className="rounded-xl p-6 space-y-4"
-                style={{ background: c.surface, border: `1px solid ${c.primary}18` }}
-              >
-                <div className="flex items-center gap-2">
-                  <Sparkles size={14} style={{ color: c.primary }} />
-                  <h3 className="text-xs font-bold tracking-wider uppercase" style={{ color: c.primary }}>
-                    {t.bazi.aiReading}
-                  </h3>
-                </div>
 
-                {/* Overview */}
-                {(result.reading.preview || result.reading.overview) && (
-                  <p className="text-sm leading-relaxed" style={{ color: c.text }}>
-                    {result.reading.preview || result.reading.overview}
-                  </p>
-                )}
-
-                {/* Day Master */}
-                {result.reading.dayMaster && (
-                  <div
-                    className="p-3 rounded-lg"
-                    style={{ background: `${c.primary}08`, borderLeft: `3px solid ${c.primary}` }}
-                  >
-                    <p className="text-xs leading-relaxed" style={{ color: c.text }}>
-                      {result.reading.dayMaster}
-                    </p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.dayPillarGrade}</span>
+              </div>
+                {pd?.dayPillarGrade && (
+                  <div className="rounded-lg p-3" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}0F` }}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-sm" style={{ color: c.accent }}>{"★".repeat(pd.dayPillarGrade.stars)}{"☆".repeat(5 - pd.dayPillarGrade.stars)}</span>
+                      <span className="text-[10px] font-bold" style={{ color: c.primary }}>{pd.dayPillarGrade.grade}</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{pd.dayPillarGrade.profile}</p>
                   </div>
                 )}
+            </div>
 
-                {/* Element Analysis */}
-                {result.reading.elementAnalysis && (
-                  <div className="p-3 rounded-lg" style={{ background: `${c.primary}06` }}>
-                    <p className="text-[10px] font-semibold mb-1 tracking-wider uppercase" style={{ color: c.primary }}>
-                      {t.bazi.elementAnalysis}
-                    </p>
-                    {typeof result.reading.elementAnalysis === "string" ? (
-                      <p className="text-xs leading-relaxed" style={{ color: c.text }}>
-                        {result.reading.elementAnalysis}
-                      </p>
-                    ) : (
-                      <p className="text-xs leading-relaxed" style={{ color: c.text }}>
-                        {(result.reading.elementAnalysis as any).balance
-                          || (result.reading.elementAnalysis as any).dominant
-                          || (result.reading.elementAnalysis as any).lacking}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.tenGodTab}</span>
+              </div>
+                {pd?.tenGods && (
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {pd.tenGods.map((tg, idx) => {
+                      const pk = ["year", "month", "day", "hour"][idx];
+                      const pl = [t.bazi.yearPillar, t.bazi.monthPillar, t.bazi.dayPillar, t.bazi.hourPillar][idx];
+                      return (
+                        <div key={pk} className="rounded-lg p-2 text-center" style={{ background: idx === 2 ? `${c.primary}18` : `${c.primary}08` }}>
+                          <div className="text-[10px] font-semibold mb-1" style={{ color: c.primary }}>{pl}</div>
+                          <div className="text-lg font-bold" style={{ color: elColor(tg.element) }}>{tg.stem}</div>
+                          <div className="text-[10px] mt-0.5" style={{ color: c.textMuted }}>{tg.element}</div>
+                          <div className="text-[10px] font-semibold mt-1 px-1 py-0.5 rounded" style={{ background: `${c.primary}12`, color: c.primary }}>{tg.tenGodName}</div>
+                          <div className="text-[10px] mt-0.5" style={{ color: c.textMuted }}>{tg.relationship}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.dayMasterStrength}</span>
+              </div>
+                {pd?.elementStrength && (
+                  <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: `${c.primary}12` }}>
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pd.elementStrength.dayMasterStrength.score}%`, background: c.primary }} />
+                      </div>
+                      <span className="text-xs font-bold" style={{ color: c.primary }}>{pd.elementStrength.dayMasterStrength.score}/100</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{pd.elementStrength.dayMasterStrength.description}</p>
+                    <div className="flex gap-2 mt-2 text-[10px]">
+                      {Object.entries(pd.elementStrength.weightedScores).map(([el, sc]) => (
+                        <span key={el} style={{ color: elColor(el) }}>{elLabel(el)} {sc}</span>
+                      ))}
+                    </div>
+                    {pd.elementStrength.seasonalStrength && (
+                      <p className="text-[10px] mt-1" style={{ color: c.textMuted }}>
+                        {pd.elementStrength.seasonalStrength.dmInSeason ? `· ${t.bazi.strong}` : `· ${t.bazi.weak}`}
                       </p>
                     )}
                   </div>
                 )}
+            </div>
 
-                {/* Life Aspects */}
-                {result.reading.lifeAspects && typeof result.reading.lifeAspects === "object" && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.usefulGodTab}</span>
+              </div>
+                {pd?.elementStrength?.usefulGod && (
+                  <div className="rounded-lg p-3" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}0F` }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm font-bold" style={{ color: elColor(pd.elementStrength.usefulGod.element) }}>{elLabel(pd.elementStrength.usefulGod.element)}</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{pd.elementStrength.usefulGod.reason}</p>
+                  </div>
+                )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.tiaoHou}</span>
+              </div>
+                {pd?.tiaoHou && pd.tiaoHou.stems.length > 0 && (
+                  <div className="rounded-lg p-3" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}0F` }}>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {pd.tiaoHou.stems.map((s) => (
+                        <span key={s} className="text-sm font-bold px-2 py-1 rounded" style={{ color: c.primary, background: `${c.primary}14`, border: `1px solid ${c.primary}30` }}>{s}</span>
+                      ))}
+                    </div>
+                    <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{pd.tiaoHou.reason}</p>
+                  </div>
+                )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.chartPattern}</span>
+              </div>
+                {pd?.pattern && (
+                  <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
+                    <p className="text-[11px]" style={{ color: c.text }}>{pd.pattern.name} ({pd.pattern.nameEn}) — {pd.pattern.description}</p>
+                  </div>
+                )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.shenShaTab}</span>
+              </div>
+                {pd?.shensha && pd.shensha.length > 0 ? (
+                  <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
+                    <div className="space-y-2">
+                      {(["Year", "Month", "Day", "Hour"]).map((loc) => {
+                        const stars = (pd.shensha || []).filter((s: ShenShaResult) => s.locations.includes(loc));
+                        if (stars.length === 0) return null;
+                        const locLabel = { Year: t.bazi.yearPillar, Month: t.bazi.monthPillar, Day: t.bazi.dayPillar, Hour: t.bazi.hourPillar }[loc];
+                        return (
+                          <div key={loc}>
+                            <div className="text-[10px] font-semibold mb-1" style={{ color: c.textMuted }}>{locLabel}</div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {stars.map((s) => (
+                                <div key={s.name} className="text-[10px] px-2 py-1 rounded flex items-center gap-1"
+                                  style={{ background: s.type === "auspicious" ? "#2ECC7118" : s.type === "sinister" ? "#E74C3C18" : "#FFC10718", color: s.type === "auspicious" ? "#2ECC71" : s.type === "sinister" ? "#E74C3C" : "#FFC107" }}>
+                                  {s.type === "auspicious" ? t.bazi.auspicious : s.type === "sinister" ? t.bazi.sinister : t.bazi.neutral} {s.name}
+                                </div>
+                              ))}
+                            </div>
+                            {stars.map((s) => (
+                              <p key={s.name} className="text-[10px] mt-0.5" style={{ color: c.textMuted }}>{s.description}</p>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-center py-4" style={{ color: c.textMuted }}>—</p>
+                )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.hiddenStem}</span>
+              </div>
+                {pd?.hiddenStems && (
+                  <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
+                    <div className="grid grid-cols-4 gap-1 text-[10px]">
+                      {pd.hiddenStems.map((hs, idx) => (
+                        <div key={idx}>
+                          <div className="font-semibold mb-0.5" style={{ color: c.primary }}>{[t.bazi.yearPillar, t.bazi.monthPillar, t.bazi.dayPillar, t.bazi.hourPillar][idx]}</div>
+                          {hs.stems.map((s) => (
+                            <div key={s.stem} style={{ color: c.textMuted }}>{s.stem}({s.qi[0]})</div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>大运</span>
+              </div>
+                {pd?.daYun && (
+                  <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
+                    <p className="text-[11px]" style={{ color: c.textMuted }}>{t.bazi.wantFull}</p>
+                  </div>
+                )}
+            </div>
+
+            {/* AI Preview — available for free users */}
+            {reading?.preview && !reading?.overview && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.aiReading}</span>
+              </div>
+                <div className="rounded-lg p-3" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}0F` }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles size={12} style={{ color: c.primary }} />
+                      <span className="text-[10px] font-bold" style={{ color: c.primary }}>{t.bazi.aiReading}</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{reading.preview}</p>
+                  </div>
+            </div>)}
+
+            {/* Full AI Reading — paid users only */}
+            {reading?.overview && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.aiReading}</span>
+              </div>
+                <div className="rounded-lg p-3" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}0F` }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles size={12} style={{ color: c.primary }} />
+                      <span className="text-[10px] font-bold" style={{ color: c.primary }}>{t.bazi.aiReading}</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{reading.overview}</p>
+                  </div>
+            </div>)}
+
+            {reading?.lifeAspects && typeof reading.lifeAspects === "object" && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>人生四维</span>
+              </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {Object.entries(result.reading.lifeAspects as Record<string, string>).map(([k, v]) => (
-                      <div key={k} className="p-2 rounded" style={{ background: `${c.primary}04` }}>
-                        <span className="text-[10px] font-semibold" style={{ color: c.primary }}>{k}</span>
-                        <p className="text-xs mt-0.5" style={{ color: c.text }}>{v}</p>
-                      </div>
-                    ))}
+                    {Object.entries(reading.lifeAspects).map(([k, v]) => {
+                      const sectionLabels: Record<string, string> = {
+                        personality: t.bazi.personality_,
+                        career: t.bazi.career_,
+                        relationships: t.bazi.marriage_,
+                        health: t.bazi.health_,
+                      };
+                      return (
+                        <div key={k} className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
+                          <div className="text-[10px] font-semibold mb-1" style={{ color: c.primary }}>{sectionLabels[k] || k}</div>
+                          <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{v}</p>
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
+            </div>
+            )}
 
-                {/* Pillars detail */}
-                {result.reading.pillars && Array.isArray(result.reading.pillars) && result.reading.pillars.length > 0 && (
-                  <div className="space-y-2">
-                    {result.reading.pillars.map((p: any, idx: number) => (
-                      <div key={idx} className="p-2 rounded" style={{ background: `${c.primary}04` }}>
-                        <span className="text-[10px] font-semibold" style={{ color: c.primary }}>{p.name || p.stem + p.branch}:</span>
-                        <span className="text-xs ml-1" style={{ color: c.text }}>{p.meaning || p.tenGod}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {reading?.dayMaster && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.dayMaster}</span>
+              </div>
+                <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08`}}>
+                  <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{reading.dayMaster}</p>
+                </div>
+            </div>
+            )}
 
-                {/* Affirmation */}
-                {result.reading.affirmation && (
-                  <div
-                    className="p-3 rounded-lg text-center"
-                    style={{ background: `linear-gradient(135deg, ${c.primary}10, ${c.primary}04)`, border: `1px solid ${c.primary}18` }}
-                  >
-                    <p className="text-sm font-serif italic" style={{ color: c.primary }}>
-                      &ldquo;{result.reading.affirmation}&rdquo;
-                    </p>
-                  </div>
-                )}
+            {reading?.elementAnalysis && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
+                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.elementAnalysis}</span>
+              </div>
+                <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08`}}>
+                  <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>
+                    {typeof reading.elementAnalysis === "string" ? reading.elementAnalysis : (reading.elementAnalysis).balance || (reading.elementAnalysis).dominant || (reading.elementAnalysis).lacking}
+                  </p>
+                </div>
+            </div>
+            )}
+
+            {reading?.affirmation && (
+              <div className="rounded-lg p-3 text-center" style={{ background: `linear-gradient(135deg, ${c.primary}10, ${c.primary}04)`, border: `1px solid ${c.primary}0F`}}>
+                <p className="text-[11px] font-serif italic" style={{ color: c.primary }}>&ldquo;{reading.affirmation}&rdquo;</p>
               </div>
             )}
 
             {/* Report tabs */}
             <div className="space-y-4">
-              <div className="text-xs font-bold tracking-wider uppercase" style={{ color: c.textMuted }}>
-                {t.bazi.inDepthReports}
-              </div>
-
-              {/* Tab bar */}
-              <div
-                className="flex rounded-lg overflow-hidden"
-                style={{ border: `1px solid ${c.primary}18` }}
-              >
+              <div className="text-xs font-bold tracking-wider uppercase" style={{ color: c.textMuted }}>{t.bazi.inDepthReports}</div>
+              <div className="flex rounded-lg overflow-hidden" style={{ border: `1px solid ${c.primary}0F` }}>
                 {(["annual", "personality", "deep"] as const).map((key, idx) => {
                   const info = reportLabels[key];
                   const isActive = selectedReport === key;
                   const isDone = reportResult?.type === key && reportResult.reading;
                   return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => handleReportClick(key)}
+                    <button key={key} type="button" onClick={() => handleReportClick(key)}
                       className="flex-1 py-2.5 text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
                       style={{
                         background: isActive ? `${c.primary}14` : "transparent",
                         color: isDone ? "#2ECC71" : isActive ? c.primary : c.textMuted,
                         borderRight: idx < 2 ? `1px solid ${c.primary}18` : "none",
                         borderBottom: isActive ? `2px solid ${c.primary}` : "2px solid transparent",
-                      }}
-                    >
-                      {isDone ? (
-                        <Sparkles size={11} style={{ color: "#2ECC71" }} />
-                      ) : (
-                        <Lock size={11} />
-                      )}
+                      }}>
+                      {isDone ? <Sparkles size={11} style={{ color: "#2ECC71" }} /> : <Lock size={11} />}
                       {info.title}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Tab content panel */}
               {selectedReport && (
-                <div
-                  className="rounded-xl p-5 animate-fade-in"
-                  style={{ background: c.surface, border: `1px solid ${c.primary}18` }}
-                >
-                  {/* Loading state */}
+                <div className="rounded-xl p-5 animate-fade-in" style={{ background: c.surface, border: `1px solid ${c.primary}0F` }}>
                   {reportLoading ? (
                     <div className="flex flex-col items-center justify-center gap-3 py-6">
                       <Loader2 size={24} className="animate-spin" style={{ color: c.primary }} />
-                      <span className="text-xs font-semibold" style={{ color: c.primary }}>
-                        {t.bazi.generating}
-                      </span>
+                      <span className="text-xs font-semibold" style={{ color: c.primary }}>{t.bazi.generating}</span>
                     </div>
                   ) : reportResult?.reading && reportResult.type === selectedReport ? (
-                    /* Report result — shown inline */
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Sparkles size={14} style={{ color: "#2ECC71" }} />
-                        <span className="text-xs font-semibold" style={{ color: "#2ECC71" }}>
-                          {t.bazi.unlocked}
-                        </span>
+                        <span className="text-xs font-semibold" style={{ color: "#2ECC71" }}>{t.bazi.unlocked}</span>
                       </div>
-                      {reportResult.reading.overview && (
-                        <p className="text-sm leading-relaxed" style={{ color: c.text }}>
-                          {reportResult.reading.overview}
-                        </p>
-                      )}
+                      {reportResult.reading.overview && <p className="text-sm leading-relaxed" style={{ color: c.text }}>{reportResult.reading.overview}</p>}
                       {reportResult.reading.advice && (
-                        <div
-                          className="p-3 rounded-lg"
-                          style={{
-                            background: `linear-gradient(135deg, ${c.primary}10 0%, ${c.primary}04 100%)`,
-                            borderLeft: `3px solid ${c.primary}`,
-                          }}
-                        >
+                        <div className="p-3 rounded-lg" style={{ background: `linear-gradient(135deg, ${c.primary}10 0%, ${c.primary}04 100%)`, borderLeft: `3px solid ${c.primary}` }}>
                           <p className="text-xs italic">&ldquo;{reportResult.reading.advice}&rdquo;</p>
                         </div>
                       )}
                     </div>
                   ) : (
-                    /* Payment options */
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold" style={{ color: c.text }}>
-                          {reportLabels[selectedReport].title}
-                        </h3>
-                        <span className="text-xs font-bold" style={{ color: c.primary }}>
-                          ${reportLabels[selectedReport].price.toFixed(2)}
-                        </span>
+                        <h3 className="text-sm font-bold" style={{ color: c.text }}>{reportLabels[selectedReport].title}</h3>
+                        <span className="text-xs font-bold" style={{ color: c.primary }}>${reportLabels[selectedReport].price.toFixed(2)}</span>
                       </div>
-                      <p className="text-[11px]" style={{ color: c.textMuted }}>
-                        {reportLabels[selectedReport].desc}
-                      </p>
-
-                      <button
-                        onClick={fetchReportWithPoints}
-                        disabled={redeemingPoints}
+                      <p className="text-[11px]" style={{ color: c.textMuted }}>{reportLabels[selectedReport].desc}</p>
+                      <button onClick={fetchReportWithPoints} disabled={redeemingPoints}
                         className="w-full py-3 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2"
-                        style={{
-                          background: `linear-gradient(135deg, ${c.primary}22, ${c.primary}0D)`,
-                          border: `1px solid ${c.primary}44`,
-                          color: c.primary,
-                        }}
-                      >
-                        {redeemingPoints ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          <Sparkles size={14} />
-                        )}
+                        style={{ background: `linear-gradient(135deg, ${c.primary}22, ${c.primary}0D)`, border: `1px solid ${c.primary}44`, color: c.primary }}>
+                        {redeemingPoints ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                         {t.bazi.unlockWithPoints}
                       </button>
-
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 h-px" style={{ background: c.primary + "18" }} />
-                        <span className="text-[10px] uppercase tracking-wider" style={{ color: c.textMuted }}>
-                          {t.bazi.or}
-                        </span>
+                        <div className="flex-1 h-px" style={{ background: c.primary + "18" }} /><span className="text-[10px] uppercase tracking-wider" style={{ color: c.textMuted }}>{t.bazi.or}</span>
                         <div className="flex-1 h-px" style={{ background: c.primary + "18" }} />
                       </div>
-
-                      <PayPalButton
-                        amount={reportLabels[selectedReport].price}
-                        spreadKey={reportLabels[selectedReport].serviceKey}
-                        readingId={`bazi-${selectedReport}-${Date.now()}`}
-                        onSuccess={(orderId) => fetchReport(orderId)}
-                        onError={(msg) => setError(msg)}
-                      />
+                      <PayPalButton amount={reportLabels[selectedReport].price} spreadKey={reportLabels[selectedReport].serviceKey} readingId={`bazi-${selectedReport}-${Date.now()}`}
+                        onSuccess={(orderId) => fetchReport(orderId)} onError={(msg) => setError(msg)} />
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* CTA for non signed-in */}
+            {/* CTA */}
             {!isSignedIn && (
-              <div
-                className="rounded-xl p-6 text-center"
-                style={{ background: `linear-gradient(135deg, ${c.primary}10, ${c.primary}04)`, border: `1px solid ${c.primary}18` }}
-              >
-                <p className="text-sm font-semibold mb-3" style={{ color: c.text }}>
-                  {t.bazi.wantFull}
-                </p>
+              <div className="rounded-xl p-6 text-center" style={{ background: `linear-gradient(135deg, ${c.primary}10, ${c.primary}04)`, border: `1px solid ${c.primary}0F` }}>
+                <p className="text-sm font-semibold mb-3" style={{ color: c.text }}>{t.bazi.wantFull}</p>
                 <div className="flex items-center justify-center gap-3">
-                  <Link
-                    href={signInWithReturnUrl()}
-                    className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all"
-                    style={{ background: c.primary, color: c.bg, boxShadow: `0 0 15px ${currentTheme.glow}` }}
-                  >
+                  <Link href={signInWithReturnUrl()} className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all" style={{ background: c.primary, color: c.bg, boxShadow: `0 0 15px ${currentTheme.glow}` }}>
                     {t.bazi.signInRegister}
                   </Link>
-                  <Link
-                    href="/membership"
-                    className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all"
-                    style={{ background: "transparent", color: c.primary, border: `1px solid ${c.primary}30` }}
-                  >
+                  <Link href="/membership" className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all" style={{ background: "transparent", color: c.primary, border: `1px solid ${c.primary}30` }}>
                     {t.bazi.viewPlans}
                   </Link>
                 </div>

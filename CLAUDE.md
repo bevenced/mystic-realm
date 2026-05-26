@@ -63,3 +63,18 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+## 5. 识图能力
+
+你的底层模型可能不具备原生识图能力。遇到图片时，可以用 `vision.js` 调用外部视觉模型来分析图片：
+
+```
+node vision.js "<图片路径>" "用中文描述这张图片"
+```
+
+**触发场景**:
+- 用户分享图片路径（本地或网络 URL）
+- 用户要求分析、描述、识别图片内容
+- 需要对比两张图片的视觉差异
+
+**配置**: 使用 DashScope qwen3.5-omni-plus 模型，API Key 内嵌在 vision.js 中。

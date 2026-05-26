@@ -41,6 +41,18 @@
 [data-theme="bazi"] {
   --font-body: 'Cormorant Garamond', Georgia, serif;
   --font-heading: 'Cinzel', Georgia, serif;
+  --color-bg: #F9F8F6;
+  --color-surface: #FFFFFF;
+  --color-text: #333333;
+  --color-text-muted: #999999;
+  --color-primary: #5D4E37;
+  --color-border: #E0D5C0;
+  --color-border-light: #D0C5B0;
+  --gradient-hero: linear-gradient(180deg, #F9F8F6 0%, #F0EDE6 50%, #F9F8F6 100%);
+}
+[data-theme="bazi"] .card-base {
+  background: #FFFFFF;
+  border-color: #E0D5C0;
 }
 [data-theme="tarot"] {
   --font-body: 'Cormorant Garamond', Georgia, serif;
