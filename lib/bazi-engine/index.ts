@@ -31,7 +31,10 @@ export type { DayPillarGradeResult } from "./day-pillar-grade";
 export { calculatePillarRelations } from "./pillar-relations";
 export type { PillarRelation } from "./pillar-relations";
 
-export { getFortuneStage, getAllFortuneStages } from "./twelve-fortune";
+export { getFortuneStage, getAllFortuneStages, FORTUNE_STAGE_INFO } from "./twelve-fortune";
+export { getShenshaCategory, getKongWang, getAllKongWang } from "./shensha";
+export { getDayPillarProfile } from "./day-pillar-profile";
+export type { DayPillarProfile } from "./day-pillar-profile";
 
 export { calculateDaYun, getDaYunDirection, getCurrentDaYun } from "./luck";
 export type { DaYunResult, DaYunCycle } from "./luck";

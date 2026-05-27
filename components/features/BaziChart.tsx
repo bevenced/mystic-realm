@@ -1,16 +1,17 @@
 "use client";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
-import type { PillarRelation, DayPillarGradeResult, ElementStrengthResult, PatternResult } from "@/lib/bazi-engine";
+import type { PillarRelation, DayPillarGradeResult, ElementStrengthResult, PatternResult, ShenShaResult } from "@/lib/bazi-engine";
+import { FORTUNE_STAGE_INFO, getShenshaCategory } from "@/lib/bazi-engine";
 
-const ELEMENT_COLORS: Record<string, string> = {
-  Wood: "#4CAF50", Fire: "#FF5722", Earth: "#FFC107", Metal: "#909090", Water: "#42A5F5",
+export const ELEMENT_COLORS: Record<string, string> = {
+  Wood: "#5CB85C", Fire: "#D9534F", Earth: "#8B5A2B", Metal: "#F0AD4E", Water: "#428BCA",
 };
 const ELEMENT_LABELS: Record<string, string> = { Wood: "木", Fire: "火", Earth: "土", Metal: "金", Water: "水" };
 const ELEMENT_KEYS = ["Wood", "Fire", "Earth", "Metal", "Water"] as const;
-const BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
 
 function getKongWang(stemIndex: number, branchIndex: number): string {
+  const BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
   const j = stemIndex + 10 * (((stemIndex - branchIndex) / 2 + 6) % 6);
   const xun = Math.floor(j / 10);
   return BRANCHES[(12 - 2 * xun) % 12] + BRANCHES[(13 - 2 * xun) % 12];
@@ -35,6 +36,7 @@ interface BaziChartProps {
   dayPillarGrade?: DayPillarGradeResult;
   elementStrength?: ElementStrengthResult;
   pattern?: PatternResult;
+  shenshaByPillar?: ShenShaResult[][];
 }
 
 const RELATION_SYMBOLS: Record<string, { sym: string; color: string }> = {
@@ -45,11 +47,13 @@ const RELATION_SYMBOLS: Record<string, { sym: string; color: string }> = {
   tripleCombine: { sym: "三合", color: "#3498DB" },
 };
 
+const QI_LABELS: Record<string, string> = { primary: "主气", secondary: "中气", tertiary: "余气" };
+
 export default function BaziChart({
   pillars, naYin, hiddenStems, fortuneStages = [],
   dayMasterElement, dayMasterYinYang, elementCounts, zodiac,
   tenGods, tenGodElements, selfSitting,
-  pillarRelations, dayPillarGrade, elementStrength, pattern,
+  pillarRelations, dayPillarGrade, elementStrength, pattern, shenshaByPillar,
 }: BaziChartProps) {
   const { currentTheme } = useTheme();
   const c = currentTheme.colors;
@@ -61,230 +65,274 @@ export default function BaziChart({
   const dmScore = elementStrength?.dayMasterStrength?.score ?? 0;
   const dmIsStrong = elementStrength?.dayMasterStrength?.isStrong;
 
+  const TABLE_HEAD_BG = "#8B6F47";
+  const TABLE_ROW_ALT = "#FDFAF5";
+  const TABLE_BORDER = "#E8DEC9";
+
   return (
-    <div className="space-y-5">
-      {/* ===== ① Day Master Hero Card ===== */}
-      <div className="rounded-lg p-5 text-center" style={{ background: c.surface, border: `1px solid ${c.primary}14` }}>
-        {/* Seal stamp badge */}
-        <div className="flex justify-center mb-3">
-          <span style={{
-            display: "inline-block",
-            background: "#C0392B",
-            color: "#FFF",
-            fontSize: 12,
-            fontWeight: 700,
-            padding: "3px 10px",
-            transform: "rotate(-3deg)",
-            letterSpacing: 3,
-          }}>日 主</span>
-        </div>
+    <div className="space-y-4" style={{ color: c.text }}>
+      {/* ===== 1. Day Master & Element Summary Card ===== */}
+      <div className="rounded-lg p-4" style={{ background: c.surface, border: `1px solid ${TABLE_BORDER}` }}>
+        <div className="flex items-start gap-4 flex-wrap">
+          {/* Day Master large display */}
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: 36, fontWeight: 700, color: ELEMENT_COLORS[dayMasterElement] || c.text }}>
+              {pillars.day.stem}
+            </span>
+            <div>
+              <div className="text-xs" style={{ color: c.primary }}>日主</div>
+              <div className="text-sm font-semibold" style={{ color: c.text }}>{dayMasterYinYang} {dayMasterElement} · {zodiac}</div>
+            </div>
+          </div>
 
-        {/* Day Master large character */}
-        <div style={{ fontSize: 56, fontWeight: 700, lineHeight: 1.1, color: ELEMENT_COLORS[dayMasterElement] || c.text }}>
-          {pillars.day.stem}{ELEMENT_LABELS[dayMasterElement] || ""}
-        </div>
-
-        {/* Subtitle */}
-        <div className="mt-2" style={{ fontSize: 17, color: c.textMuted }}>
-          {dayMasterYinYang} {dayMasterElement} · {zodiac}
-        </div>
-
-        {/* Element distribution thin bar */}
-        <div className="mt-4 flex items-center gap-2">
-          <span className="text-xs font-semibold" style={{ color: c.textMuted, whiteSpace: "nowrap" }}>五行</span>
-          <div className="flex-1 h-2.5 rounded-full overflow-hidden flex" style={{ background: `${c.primary}0F` }}>
+          {/* Element distribution */}
+          <div className="flex items-center gap-3 ml-auto">
             {ELEMENT_KEYS.map(el => {
               const pct = totalEl > 0 ? ((elementCounts?.[el] || 0) / totalEl) * 100 : 0;
-              if (pct === 0) return null;
               return (
-                <div key={el} style={{
-                  width: `${pct}%`, height: "100%", background: ELEMENT_COLORS[el],
-                  transition: "width 0.5s ease",
-                }} />
+                <div key={el} className="text-center">
+                  <div className="text-xs font-semibold" style={{ color: ELEMENT_COLORS[el] }}>{ELEMENT_LABELS[el]}</div>
+                  <div className="text-xs" style={{ color: c.textMuted }}>{pct.toFixed(0)}%</div>
+                </div>
               );
             })}
           </div>
         </div>
-        {/* Element percentages */}
-        <div className="flex justify-center gap-3 mt-1.5">
-          {ELEMENT_KEYS.map(el => {
-            const pct = totalEl > 0 ? ((elementCounts?.[el] || 0) / totalEl) * 100 : 0;
+      </div>
+
+      {/* ===== 2. Four Pillars Table ===== */}
+      <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${TABLE_BORDER}` }}>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse" style={{ minWidth: 600 }}>
+            {/* Header row */}
+            <thead>
+              <tr style={{ background: TABLE_HEAD_BG }}>
+                {pillarKeys.map((key, pi) => (
+                  <th key={key} className="px-3 py-2.5 text-center text-sm font-bold"
+                    style={{
+                      color: "#FFF",
+                      background: key === "day" ? "#6B4E2E" : TABLE_HEAD_BG,
+                      borderRight: pi < 3 ? `1px solid rgba(255,255,255,0.15)` : "none",
+                    }}>
+                    {pillarLabels[pi]}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {/* Row 1: Heavenly Stems + Ten Gods */}
+              <tr>
+                {pillarKeys.map((key, pi) => {
+                  const p = pillars[key];
+                  const isDay = key === "day";
+                  return (
+                    <td key={key} className="px-2 py-2 text-center align-middle"
+                      style={{
+                        background: isDay ? "#FDF8F0" : TABLE_ROW_ALT,
+                        borderRight: pi < 3 ? `1px solid ${TABLE_BORDER}` : "none",
+                      }}>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: ELEMENT_COLORS[p.stemElement] || c.text, lineHeight: 1.2 }}>
+                        {p.stem}
+                      </div>
+                      {tenGods && (
+                        <div style={{ fontSize: 13, color: tenGodElements ? ELEMENT_COLORS[tenGodElements[pi]] || c.textMuted : c.textMuted, lineHeight: 1.3 }}>
+                          {tenGods[pi]}
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+
+              {/* Row 2: Earthly Branches + Hidden Stems */}
+              <tr>
+                {pillarKeys.map((key, pi) => {
+                  const p = pillars[key];
+                  const hs = hiddenStems[pi] || [];
+                  const isDay = key === "day";
+                  return (
+                    <td key={key} className="px-2 py-2 text-center align-middle"
+                      style={{
+                        borderRight: pi < 3 ? `1px solid ${TABLE_BORDER}` : "none",
+                      }}>
+                      <div style={{ fontSize: 20, fontWeight: 600, color: ELEMENT_COLORS[p.branchElement] || c.text, lineHeight: 1.2 }}>
+                        {p.branch}
+                      </div>
+                      {hs.length > 0 && (
+                        <div className="flex flex-col items-center mt-0.5" style={{ gap: 0 }}>
+                          {hs.map((h, j) => (
+                            <span key={j} style={{ fontSize: 12, color: ELEMENT_COLORS[h.element] || c.textMuted, lineHeight: 1.4 }}>
+                              {h.stem}{h.qi !== "primary" ? <span style={{ fontSize: 10 }}>{QI_LABELS[h.qi]}</span> : ""}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+
+              {/* Row 3: Na Yin */}
+              <tr>
+                {pillarKeys.map((key, pi) => (
+                  <td key={key} className="px-2 py-1.5 text-center text-xs" style={{
+                    color: c.textMuted,
+                    background: TABLE_ROW_ALT,
+                    borderRight: pi < 3 ? `1px solid ${TABLE_BORDER}` : "none",
+                  }}>
+                    {naYin[pi]}
+                  </td>
+                ))}
+              </tr>
+
+              {/* Row 4: Fortune Stages (星运) */}
+              {hasFortune && (
+                <tr>
+                  {pillarKeys.map((key, pi) => {
+                    const fs = fortuneStages[pi];
+                    const info = FORTUNE_STAGE_INFO[fs];
+                    return (
+                      <td key={key} className="px-2 py-1.5 text-center text-xs" style={{
+                        color: info?.quality === "auspicious" ? "#5CB85C" : info?.quality === "sinister" ? "#D9534F" : c.textMuted,
+                        borderRight: pi < 3 ? `1px solid ${TABLE_BORDER}` : "none",
+                      }}>
+                        {fs}{info ? <span style={{ fontSize: 10, marginLeft: 2 }}>({info.en})</span> : ""}
+                      </td>
+                    );
+                  })}
+                </tr>
+              )}
+
+              {/* Row 5: Self Sitting (自坐十二运) */}
+              {hasSelfSitting && (
+                <tr>
+                  {pillarKeys.map((key, pi) => {
+                    const ss = selfSitting![pi];
+                    const info = FORTUNE_STAGE_INFO[ss];
+                    return (
+                      <td key={key} className="px-2 py-1.5 text-center text-xs" style={{
+                        color: info?.quality === "auspicious" ? "#5CB85C" : info?.quality === "sinister" ? "#D9534F" : c.textMuted,
+                        background: TABLE_ROW_ALT,
+                        borderRight: pi < 3 ? `1px solid ${TABLE_BORDER}` : "none",
+                      }}>
+                        自坐{ss}
+                      </td>
+                    );
+                  })}
+                </tr>
+              )}
+
+              {/* Row 6: Kong Wang (空亡) */}
+              <tr>
+                {pillarKeys.map((key, pi) => {
+                  const p = pillars[key];
+                  const kw = getKongWang(p.stemIndex, p.branchIndex);
+                  return (
+                    <td key={key} className="px-2 py-1.5 text-center text-xs" style={{
+                      color: "#C0392B",
+                      borderRight: pi < 3 ? `1px solid ${TABLE_BORDER}` : "none",
+                    }}>
+                      空{kw}
+                    </td>
+                  );
+                })}
+              </tr>
+
+              {/* Row 7: Shen Sha tags */}
+              {shenshaByPillar && shenshaByPillar.some(ss => ss.length > 0) && (
+                <tr>
+                  {pillarKeys.map((key, pi) => {
+                    const stars = shenshaByPillar[pi] || [];
+                    return (
+                      <td key={key} className="px-2 py-1.5 text-center" style={{
+                        background: TABLE_ROW_ALT,
+                        borderRight: pi < 3 ? `1px solid ${TABLE_BORDER}` : "none",
+                      }}>
+                        {stars.length > 0 ? (
+                          <div className="flex flex-wrap justify-center gap-1">
+                            {stars.map((s) => {
+                              const sc = s.type === "auspicious" ? "#5CB85C" : s.type === "sinister" ? "#D9534F" : "#888";
+                              return (
+                                <span key={s.name} className="text-xs px-1.5 py-0.5 rounded" style={{
+                                  fontSize: 11,
+                                  background: `${sc}14`,
+                                  color: sc,
+                                  border: `1px solid ${sc}28`,
+                                }}>{s.name}</span>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <span className="text-xs" style={{ color: c.textMuted }}>—</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ===== 3. Pillar Relations Bar ===== */}
+      {pillarRelations && pillarRelations.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {pillarRelations.map((rel, idx) => {
+            const info = RELATION_SYMBOLS[rel.type];
+            if (!info) return null;
+            const labelMap: Record<string, string> = { Year: "年", Month: "月", Day: "日", Hour: "时" };
             return (
-              <span key={el} className="text-xs font-semibold" style={{ color: ELEMENT_COLORS[el] }}>
-                {ELEMENT_LABELS[el]}{pct.toFixed(0)}%
+              <span key={idx} className="text-xs font-semibold px-2 py-1 rounded"
+                style={{ background: `${info.color}14`, color: info.color, border: `1px solid ${info.color}28` }}>
+                {rel.pillars.map((p: string) => labelMap[p] || p).join("")}{info.sym}
               </span>
             );
           })}
         </div>
-      </div>
+      )}
 
-      {/* ===== ② Four Pillars Horizontal Scroll ===== */}
-      <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}14` }}>
-        {/* Section title */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-          <span className="text-base font-bold" style={{ color: c.text }}>四柱</span>
-        </div>
-
-        {/* Four pillar cards in a row */}
-        <div className="flex gap-1.5">
-          {pillarKeys.map((key, pi) => {
-            const p = pillars[key];
-            const isDay = key === "day";
-            const stemEl = ELEMENT_COLORS[p.stemElement] || c.text;
-            const branchEl = ELEMENT_COLORS[p.branchElement] || c.text;
-            const tgEl = tenGodElements ? (ELEMENT_COLORS[tenGodElements[pi]] || c.text) : c.text;
-            const hs = hiddenStems[pi] || [];
-
-            return (
-              <div key={key} className="flex-1 flex flex-col items-center gap-1" style={{
-                padding: "8px 4px 6px",
-                borderRadius: 8,
-                background: isDay ? `${c.primary}0C` : "transparent",
-                border: isDay ? `1.5px solid ${c.primary}40` : `1px solid ${c.primary}0C`,
-                boxShadow: isDay ? `0 0 12px ${c.primary}18` : "none",
-                minWidth: 0,
-              }}>
-                {/* Pillar label */}
-                <span className="text-xs font-semibold mb-0.5" style={{ color: c.primary, opacity: 0.7 }}>
-                  {pillarLabels[pi]}
-                </span>
-
-                {/* Stem */}
-                <span style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.2, color: stemEl }}>
-                  {p.stem}
-                </span>
-
-                {/* Branch */}
-                <span style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.3, color: branchEl }}>
-                  {p.branch}
-                </span>
-
-                {/* Ten God */}
-                {tenGods && (
-                  <span style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.3, color: tgEl }}>
-                    {tenGods[pi]}
-                  </span>
-                )}
-
-                {/* Hidden stems */}
-                {hs.length > 0 && (
-                  <span style={{ fontSize: 13, lineHeight: 1.4, color: c.textMuted }}>
-                    {hs.map((h, j) => (
-                      <span key={j} style={{ color: ELEMENT_COLORS[h.element] || c.textMuted }}>
-                        {h.stem}{j < hs.length - 1 ? " " : ""}
-                      </span>
-                    ))}
-                  </span>
-                )}
-
-                {/* Na Yin */}
-                <span className="text-xs" style={{ fontSize: 13, color: c.textMuted, lineHeight: 1.4 }}>
-                  {naYin[pi]}
-                </span>
-
-                {/* Fortune stage (optional) */}
-                {hasFortune && (
-                  <span style={{ fontSize: 13, color: c.text, lineHeight: 1.4 }}>
-                    {fortuneStages[pi]}
-                  </span>
-                )}
-
-                {/* Self-sitting (optional) */}
-                {hasSelfSitting && (
-                  <span style={{ fontSize: 13, color: c.text, lineHeight: 1.4 }}>
-                    {selfSitting![pi]}
-                  </span>
-                )}
-
-                {/* Kong Wang */}
-                <span style={{ fontSize: 13, color: "#C0392B", lineHeight: 1.4 }}>
-                  空{getKongWang(p.stemIndex, p.branchIndex)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Pillar relations between cards */}
-        {pillarRelations && pillarRelations.length > 0 && (
-          <div className="flex justify-center gap-1 mt-2">
-            {pillarRelations.map((rel, idx) => {
-              const info = RELATION_SYMBOLS[rel.type];
-              if (!info) return null;
-              return (
-                <span key={idx} className="text-xs font-semibold px-1.5 py-0.5 rounded"
-                  style={{ background: `${info.color}18`, color: info.color, border: `1px solid ${info.color}28` }}>
-                  {rel.pillars.map(p => ({ Year: "年", Month: "月", Day: "日", Hour: "时" })[p] || p).join("")}{info.sym}
-                </span>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* ===== ③ Three Key Metrics Row ===== */}
+      {/* ===== 4. Three Key Metrics ===== */}
       <div className="flex gap-2">
-        {/* Day Pillar Grade */}
-        <div className="flex-1 rounded-lg p-3 text-center" style={{ background: c.surface, border: `1px solid ${c.primary}10` }}>
-          <div className="text-sm font-bold mb-1" style={{ color: c.textMuted }}>日柱等级</div>
+        <div className="flex-1 rounded-lg p-3 text-center" style={{ background: c.surface, border: `1px solid ${TABLE_BORDER}` }}>
+          <div className="text-xs font-semibold mb-1" style={{ color: c.textMuted }}>日柱等级</div>
           {dayPillarGrade ? (
             <>
-              <div style={{ fontSize: 18, color: c.accent, lineHeight: 1.2 }}>
+              <div style={{ fontSize: 16, color: "#F0AD4E", lineHeight: 1.2 }}>
                 {"★".repeat(dayPillarGrade.stars)}{"☆".repeat(5 - dayPillarGrade.stars)}
               </div>
-              <div className="text-base font-semibold mt-0.5" style={{ color: c.text }}>{dayPillarGrade.grade}</div>
+              <div className="text-sm font-semibold mt-0.5" style={{ color: c.text }}>{dayPillarGrade.grade}</div>
             </>
-          ) : (
-            <span className="text-sm" style={{ color: c.textMuted }}>—</span>
-          )}
+          ) : (<span className="text-xs" style={{ color: c.textMuted }}>—</span>)}
         </div>
 
-        {/* Day Master Strength */}
-        <div className="flex-1 rounded-lg p-3 text-center" style={{ background: c.surface, border: `1px solid ${c.primary}10` }}>
-          <div className="text-sm font-bold mb-1" style={{ color: c.textMuted }}>身强身弱</div>
+        <div className="flex-1 rounded-lg p-3 text-center" style={{ background: c.surface, border: `1px solid ${TABLE_BORDER}` }}>
+          <div className="text-xs font-semibold mb-1" style={{ color: c.textMuted }}>身强身弱</div>
           {elementStrength ? (
             <>
-              <div className="text-base font-semibold" style={{ fontSize: 15, color: c.text }}>
-                {dmScore}
-              </div>
+              <div className="text-sm font-semibold" style={{ color: c.text }}>{dmScore}</div>
               <div className="h-1.5 rounded-full mt-1 mx-2" style={{ background: `${c.primary}14` }}>
-                <div className="h-full rounded-full" style={{
-                  width: `${dmScore}%`,
-                  background: dmScore >= 55 ? `linear-gradient(90deg, ${c.primary}, ${c.accent})` : `linear-gradient(90deg, ${c.primary}60, ${c.primary})`,
-                  transition: "width 0.5s ease",
-                }} />
+                <div className="h-full rounded-full" style={{ width: `${dmScore}%`, background: dmScore >= 55 ? `linear-gradient(90deg, ${c.primary}, ${c.accent})` : `linear-gradient(90deg, ${c.primary}60, ${c.primary})` }} />
               </div>
-              <div className="text-base font-semibold mt-0.5" style={{ color: dmIsStrong ? "#E74C3C" : "#3498DB" }}>
+              <div className="text-sm font-semibold mt-0.5" style={{ color: dmIsStrong ? "#D9534F" : "#428BCA" }}>
                 {dmIsStrong ? "身强" : "身弱"}
               </div>
             </>
-          ) : (
-            <span className="text-sm" style={{ color: c.textMuted }}>—</span>
-          )}
+          ) : (<span className="text-xs" style={{ color: c.textMuted }}>—</span>)}
         </div>
 
-        {/* Chart Pattern */}
-        <div className="flex-1 rounded-lg p-3 text-center" style={{ background: c.surface, border: `1px solid ${c.primary}10` }}>
-          <div className="text-sm font-bold mb-1" style={{ color: c.textMuted }}>格局</div>
+        <div className="flex-1 rounded-lg p-3 text-center" style={{ background: c.surface, border: `1px solid ${TABLE_BORDER}` }}>
+          <div className="text-xs font-semibold mb-1" style={{ color: c.textMuted }}>格局</div>
           {pattern ? (
             <>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded mb-1"
-                style={{
-                  fontSize: 13,
-                  background: pattern.category === "standard" ? "#3498DB18" : pattern.category === "jianLu" ? "#2ECC7118" : "#E74C3C18",
-                  color: pattern.category === "standard" ? "#3498DB" : pattern.category === "jianLu" ? "#2ECC71" : "#E74C3C",
-                  border: `1px solid ${pattern.category === "standard" ? "#3498DB22" : pattern.category === "jianLu" ? "#2ECC7122" : "#E74C3C22"}`,
-                }}>
-                {pattern.name}
-              </span>
-              <div className="text-xs mt-1" style={{ fontSize: 13, color: c.textMuted, lineHeight: 1.3 }}>
-                {pattern.description.slice(0, 20)}
-              </div>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded mb-1 inline-block" style={{
+                background: pattern.category === "standard" ? "#428BCA18" : pattern.category === "jianLu" ? "#5CB85C18" : "#D9534F18",
+                color: pattern.category === "standard" ? "#428BCA" : pattern.category === "jianLu" ? "#5CB85C" : "#D9534F",
+                border: `1px solid ${pattern.category === "standard" ? "#428BCA22" : pattern.category === "jianLu" ? "#5CB85C22" : "#D9534F22"}`,
+              }}>{pattern.name}</span>
+              <div className="text-xs mt-1" style={{ color: c.textMuted }}>{pattern.description.slice(0, 20)}</div>
             </>
-          ) : (
-            <span className="text-sm" style={{ color: c.textMuted }}>—</span>
-          )}
+          ) : (<span className="text-xs" style={{ color: c.textMuted }}>—</span>)}
         </div>
       </div>
     </div>

@@ -4,8 +4,11 @@ import { useState, useEffect } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import BaziChart from "@/components/features/BaziChart";
-import { getAllTenGods, getNaYin, getHiddenStems, getFortuneStage, getAllFortuneStages } from "@/lib/bazi";
+import BaziChart, { ELEMENT_COLORS } from "@/components/features/BaziChart";
+import ElementBars from "@/components/features/bazi/ElementBars";
+import DayPillarProfile from "@/components/features/bazi/DayPillarProfile";
+import PillarRelations from "@/components/features/bazi/PillarRelations";
+import { getAllTenGods, getNaYin, getHiddenStems, getFortuneStage, getAllFortuneStages, getDayPillarProfile } from "@/lib/bazi";
 import type { BaZiResult, BaZiPillar } from "@/lib/bazi";
 import type { PatternResult, ElementStrengthResult, ShenShaResult, TiaoHouResult, DayPillarGradeResult, PillarRelation } from "@/lib/bazi-engine";
 import Link from "next/link";
@@ -66,9 +69,7 @@ const HOUR_OPTIONS = [
   { v: 11, label: "亥时 21:00-23:00", en: "Hai 21:00-23:00" },
 ];
 
-const ELEMENT_COLORS: Record<string, string> = {
-  Wood: "#4CAF50", Fire: "#FF5722", Earth: "#FFC107", Metal: "#B0B0B0", Water: "#42A5F5",
-};
+
 
 export default function BaziClient() {
   const { currentTheme, setTheme } = useTheme();
@@ -76,7 +77,7 @@ export default function BaziClient() {
   const { isSignedIn } = useAuth();
   const { locale, t } = useLocale();
 
-  // Activate BaZi theme
+  // Activate light BaZi theme on mount
   useEffect(() => {
     setTheme("bazi");
     return () => setTheme("meditation");
@@ -150,6 +151,49 @@ export default function BaziClient() {
     });
     return { tenGods, tenGodElements, naYin, hiddenStems, fortuneStages, selfSitting, shenshaByPillar };
   })();
+
+  // Derived data for modules
+  const dayPillarProfile = baziData ? getDayPillarProfile(baziData.day.stemIndex, baziData.day.branchIndex) : null;
+
+  const elementBarItems = (() => {
+    const order = ["木","火","土","金","水"];
+    const zhToEn: Record<string, string> = { "木": "Wood", "火": "Fire", "土": "Earth", "金": "Metal", "水": "Water" };
+    const colors: Record<string, string> = { "木": "#5CB85C", "火": "#D9534F", "土": "#8B5A2B", "金": "#F0AD4E", "水": "#428BCA" };
+    if (!baziData) return [];
+    return order.map(zh => ({
+      label: zh,
+      value: baziData.elementCounts[zhToEn[zh] as keyof typeof baziData.elementCounts] || 0,
+      color: colors[zh],
+    }));
+  })();
+
+  const tenGodBarItems = (() => {
+    if (!chartData?.tenGods || !chartData?.tenGodElements) return [];
+    const counts: Record<string, number> = {};
+    chartData.tenGods.forEach((tg, i) => {
+      const short = tg.split(" ")[0]; // take Chinese name only
+      counts[short] = (counts[short] || 0) + 1;
+    });
+    // Ten god + element mapping
+    const tgWithEl = chartData.tenGods.map((tg, i) => ({
+      label: tg.split(" ")[0],
+      element: chartData.tenGodElements![i],
+    }));
+    // Deduplicate by label, summing
+    const merged: Record<string, { count: number; element: string }> = {};
+    tgWithEl.forEach(tg => {
+      if (!merged[tg.label]) merged[tg.label] = { count: 0, element: tg.element };
+      merged[tg.label].count += 1;
+    });
+    return Object.entries(merged).map(([label, info]) => ({
+      label,
+      value: info.count,
+      color: ELEMENT_COLORS[info.element] || "#888",
+    }));
+  })();
+
+  const dmIsStrong = pd?.elementStrength?.dayMasterStrength?.isStrong ?? false;
+  const zodiacName = baziData?.day.zodiac?.split(" ")[0] || "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -264,10 +308,10 @@ export default function BaziClient() {
             onClick={() => setFormExpanded(true)}
           >
             {userName && <span className="text-xs font-semibold" style={{ color: c.text }}>{userName}</span>}
-            <span className="text-[10px]" style={{ color: c.textMuted }}>{formatDate(birthDate)}</span>
-            <span className="text-[10px] font-semibold" style={{ color: c.primary }}>{(HOUR_OPTIONS.find((h) => h.v === birthHour)?.[locale.startsWith("zh") ? "label" : "en"] || "").split(" ")[0]}</span>
-            <span className="text-[10px]" style={{ color: c.textMuted }}>{gender === "male" ? t.bazi.male : t.bazi.female}</span>
-            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full" style={{ background: `${c.primary}14`, color: c.primary }}>{t.bazi.submit}</span>
+            <span className="text-xs" style={{ color: c.textMuted }}>{formatDate(birthDate)}</span>
+            <span className="text-xs font-semibold" style={{ color: c.primary }}>{(HOUR_OPTIONS.find((h) => h.v === birthHour)?.[locale.startsWith("zh") ? "label" : "en"] || "").split(" ")[0]}</span>
+            <span className="text-xs" style={{ color: c.textMuted }}>{gender === "male" ? t.bazi.male : t.bazi.female}</span>
+            <span className="ml-auto text-xs px-2 py-0.5 rounded-full" style={{ background: `${c.primary}14`, color: c.primary }}>{t.bazi.submit}</span>
           </div>
         ) : (
           <div className="relative rounded-xl p-4 mb-6 animate-fade-in" style={{ background: c.surface, border: `1px solid ${c.primary}0F` }}>
@@ -275,7 +319,7 @@ export default function BaziClient() {
               {/* Row 1: Name + Gender */}
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="block text-[10px] font-semibold tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>{t.bazi.name}</label>
+                  <label className="block text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>{t.bazi.name}</label>
                   <input
                     type="text" value={userName} onChange={(e) => setUserName(e.target.value)}
                     placeholder={t.bazi.namePlaceholder}
@@ -284,7 +328,7 @@ export default function BaziClient() {
                   />
                 </div>
                 <div className="flex-shrink-0">
-                  <label className="block text-[10px] font-semibold tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>{t.bazi.gender}</label>
+                  <label className="block text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>{t.bazi.gender}</label>
                   <div className="flex gap-1.5">
                     {(["male", "female"] as const).map((g) => (
                       <button key={g} type="button" onClick={() => setGender(g)}
@@ -300,7 +344,7 @@ export default function BaziClient() {
               {/* Row 2: Date + Hour */}
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="flex items-center gap-1 text-[10px] font-semibold tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>
+                  <label className="flex items-center gap-1 text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>
                     <Calendar size={11} />{t.bazi.birthDate}
                   </label>
                   <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required
@@ -308,7 +352,7 @@ export default function BaziClient() {
                     style={{ background: `${c.primary}06`, color: c.text, borderColor: `${c.primary}14` }} />
                 </div>
                 <div className="flex-1">
-                  <label className="flex items-center gap-1 text-[10px] font-semibold tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>
+                  <label className="flex items-center gap-1 text-xs font-semibold tracking-wider uppercase mb-1" style={{ color: c.textMuted }}>
                     <Clock size={11} />{t.bazi.birthHour}
                   </label>
                   <select value={birthHour} onChange={(e) => setBirthHour(Number(e.target.value))}
@@ -320,7 +364,7 @@ export default function BaziClient() {
                   </select>
                 </div>
               </div>
-              <p className="text-[10px]" style={{ color: c.textMuted }}>{t.bazi.birthHourHint}</p>
+              <p className="text-xs" style={{ color: c.textMuted }}>{t.bazi.birthHourHint}</p>
 
               {/* Submit */}
               <button type="submit" disabled={loading || !birthDate}
@@ -351,7 +395,7 @@ export default function BaziClient() {
         {/* Results */}
         {baziData && (
           <div className="space-y-4 animate-fade-in">
-            {/* BaZi Chart */}
+            {/* ===== 1. Four Pillars Table ===== */}
             {chartData && (
               <BaziChart
                 pillars={baziData}
@@ -369,114 +413,170 @@ export default function BaziClient() {
                 dayPillarGrade={pd?.dayPillarGrade}
                 elementStrength={pd?.elementStrength}
                 pattern={pd?.pattern}
+                shenshaByPillar={chartData.shenshaByPillar}
               />
             )}
 
-            {/* Overview */}
-            {reading?.overview && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.overview || "概述"}</span>
-              </div>
-              <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
-                <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>
-                  {"📌 "}{reading.overview.slice(0, 200)}{reading.overview.length > 200 ? "…" : ""}
-                </p>
-              </div>
-            </div>)}
+            {/* ===== 2. Pattern Module ===== */}
+            {pd?.pattern && (
+              <Section title="格局">
+                <div className="text-center p-3">
+                  <span className="text-lg font-bold" style={{ color: c.text }}>{pd.pattern.name}</span>
+                  <span className="text-xs px-2 py-0.5 rounded ml-2" style={{
+                    background: pd.pattern.category === "standard" ? "#428BCA14" : pd.pattern.category === "jianLu" ? "#5CB85C14" : "#D9534F14",
+                    color: pd.pattern.category === "standard" ? "#428BCA" : pd.pattern.category === "jianLu" ? "#5CB85C" : "#D9534F",
+                  }}>{pd.pattern.category === "standard" ? "标准格" : pd.pattern.category === "jianLu" ? "建禄格" : "月刃格"}</span>
+                </div>
+                <div className="mt-2 p-3 rounded flex items-start gap-2" style={{ background: "#FDF8EE", borderLeft: "3px solid #D9534F" }}>
+                  <span className="text-xs shrink-0">🔴</span>
+                  <p className="text-sm leading-relaxed" style={{ color: "#666" }}>{pd.pattern.description}</p>
+                </div>
+              </Section>
+            )}
 
+            {/* ===== 3. Five Elements Module ===== */}
+            <ElementBars
+              title="五行"
+              items={elementBarItems}
+              description={typeof reading?.elementAnalysis === "string" ? reading.elementAnalysis : (reading?.elementAnalysis as any)?.balance}
+            />
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.shenShaTab}</span>
-              </div>
-                {pd?.shensha && pd.shensha.length > 0 ? (
-                  <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
-                    <div className="space-y-2">
-                      {(["Year", "Month", "Day", "Hour"]).map((loc) => {
-                        const stars = (pd.shensha || []).filter((s: ShenShaResult) => s.locations.includes(loc));
-                        if (stars.length === 0) return null;
-                        const locLabel = { Year: t.bazi.yearPillar, Month: t.bazi.monthPillar, Day: t.bazi.dayPillar, Hour: t.bazi.hourPillar }[loc];
-                        return (
-                          <div key={loc}>
-                            <div className="text-[10px] font-semibold mb-1" style={{ color: c.textMuted }}>{locLabel}</div>
-                            <div className="flex flex-wrap gap-1.5">
-                              {stars.map((s) => (
-                                <div key={s.name} className="text-[10px] px-2 py-1 rounded flex items-center gap-1"
-                                  style={{ background: s.type === "auspicious" ? "#2ECC7118" : s.type === "sinister" ? "#E74C3C18" : "#FFC10718", color: s.type === "auspicious" ? "#2ECC71" : s.type === "sinister" ? "#E74C3C" : "#FFC107" }}>
-                                  {s.type === "auspicious" ? t.bazi.auspicious : s.type === "sinister" ? t.bazi.sinister : t.bazi.neutral} {s.name}
-                                </div>
-                              ))}
-                            </div>
-                            {stars.map((s) => (
-                              <p key={s.name} className="text-[10px] mt-0.5" style={{ color: c.textMuted }}>{s.description}</p>
-                            ))}
-                          </div>
-                        );
-                      })}
+            {/* ===== 4. Ten Gods Module ===== */}
+            {tenGodBarItems.length > 0 && (
+              <ElementBars
+                title="十神"
+                items={tenGodBarItems}
+                description="十神分布反映命主与外界的关系模式。正印偏印为贵人学业，正官七杀为事业权威，正财偏财为财富资源，比肩劫财为兄弟朋友，食神伤官为才华创意。"
+              />
+            )}
+
+            {/* ===== 5. Shensha Module ===== */}
+            {pd?.shensha && pd.shensha.length > 0 && (
+              <Section title="神煞">
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const categories: Record<string, ShenShaResult[]> = {};
+                    pd.shensha.forEach((s: ShenShaResult) => {
+                      const cat = (s as any).category || s.type;
+                      if (!categories[cat]) categories[cat] = [];
+                      categories[cat].push(s);
+                    });
+                    return Object.entries(categories).map(([cat, stars]) => (
+                      <div key={cat} className="w-full">
+                        <div className="text-xs font-semibold mb-1.5" style={{ color: "#888" }}>{cat}</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {stars.map((s: ShenShaResult) => (
+                            <span key={s.name} className="text-xs px-2 py-1 rounded-full"
+                              style={{
+                                background: s.type === "auspicious" ? "#5CB85C10" : s.type === "sinister" ? "#D9534F10" : "#88888810",
+                                color: s.type === "auspicious" ? "#5CB85C" : s.type === "sinister" ? "#D9534F" : "#888888",
+                                border: `1px solid ${s.type === "auspicious" ? "#5CB85C22" : s.type === "sinister" ? "#D9534F22" : "#88888822"}`,
+                              }}>
+                              {s.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </Section>
+            )}
+
+            {/* ===== 6. Body Strength + Useful God + TiaoHou ===== */}
+            <Section title="身强身弱 · 喜用神 · 调候">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {pd?.elementStrength && (
+                  <div className="rounded p-3 text-center" style={{ background: "#FBF8F2" }}>
+                    <div className="text-xs font-semibold mb-1" style={{ color: "#888" }}>身强身弱</div>
+                    <div className="text-lg font-bold" style={{ color: dmIsStrong ? "#D9534F" : "#428BCA" }}>
+                      {dmIsStrong ? "身强" : "身弱"}
                     </div>
+                    <div className="text-xs" style={{ color: "#888" }}>{pd.elementStrength.dayMasterStrength.description}</div>
                   </div>
-                ) : (
-                  <p className="text-[11px] text-center py-4" style={{ color: c.textMuted }}>—</p>
                 )}
-            </div>
-
-            {/* Useful God + Tiao Hou merged row */}
-            {(pd?.elementStrength?.usefulGod || pd?.tiaoHou) && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-base font-bold" style={{ color: c.text }}>{t.bazi.usefulGodTab} · {t.bazi.tiaoHou}</span>
-              </div>
-              <div className="flex gap-2">
-                {pd.elementStrength?.usefulGod && (
-                  <div className="flex-1 rounded-lg p-3" style={{ background: `${c.primary}06`, border: `1px solid ${c.primary}0E` }}>
-                    <div className="text-sm font-bold mb-1" style={{ color: c.textMuted }}>{t.bazi.usefulGodTab}</div>
-                    <span className="text-base font-bold" style={{ color: elColor(pd.elementStrength.usefulGod.element) }}>{elLabel(pd.elementStrength.usefulGod.element)}</span>
-                    <p className="text-sm leading-relaxed mt-1" style={{ color: c.text }}>{pd.elementStrength.usefulGod.reason}</p>
+                {pd?.elementStrength?.usefulGod && (
+                  <div className="rounded p-3 text-center" style={{ background: "#5CB85C08", border: "1px solid #5CB85C18" }}>
+                    <div className="text-xs font-semibold mb-1" style={{ color: "#5CB85C" }}>喜用神</div>
+                    <div className="text-lg font-bold" style={{ color: elColor(pd.elementStrength.usefulGod.element) }}>{elLabel(pd.elementStrength.usefulGod.element)}</div>
+                    <div className="text-xs mt-1" style={{ color: "#888" }}>{pd.elementStrength.usefulGod.reason.slice(0, 40)}</div>
                   </div>
                 )}
                 {pd?.tiaoHou && pd.tiaoHou.stems.length > 0 && (
-                  <div className="flex-1 rounded-lg p-3" style={{ background: `${c.primary}06`, border: `1px solid ${c.primary}0E` }}>
-                    <div className="text-sm font-bold mb-1" style={{ color: c.textMuted }}>{t.bazi.tiaoHou}</div>
-                    <div className="flex flex-wrap gap-1.5 mb-1.5">
-                      {pd.tiaoHou.stems.map((s) => (
-                        <span key={s} className="text-base font-bold px-2 py-0.5 rounded" style={{ color: c.primary, background: `${c.primary}14`, border: `1px solid ${c.primary}2A` }}>{s}</span>
+                  <div className="rounded p-3 text-center" style={{ background: "#D9534F08", border: "1px solid #D9534F18" }}>
+                    <div className="text-xs font-semibold mb-1" style={{ color: "#D9534F" }}>调候用神</div>
+                    <div className="flex justify-center gap-1.5 flex-wrap">
+                      {pd.tiaoHou.stems.map((s: string) => (
+                        <span key={s} className="text-sm font-bold px-2 py-0.5 rounded" style={{ color: "#D9534F", background: "#D9534F10" }}>{s}</span>
                       ))}
                     </div>
-                    <p className="text-sm leading-relaxed" style={{ color: c.text }}>{pd.tiaoHou.reason}</p>
+                    <div className="text-xs mt-1" style={{ color: "#888" }}>{pd.tiaoHou.reason.slice(0, 40)}</div>
                   </div>
                 )}
               </div>
-            </div>)}
+            </Section>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-base font-bold" style={{ color: c.text }}>大运</span>
-              </div>
-                {pd?.daYun && (
-                  <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
-                    <p className="text-[11px]" style={{ color: c.textMuted }}>{t.bazi.wantFull}</p>
+            {/* ===== 7. Day Pillar Profile ===== */}
+            {dayPillarProfile && pd?.dayPillarGrade && (
+              <DayPillarProfile grade={pd.dayPillarGrade} profile={dayPillarProfile} />
+            )}
+
+            {/* ===== 8. Pillar Relations Diagram ===== */}
+            {pd?.pillarRelations && pd.pillarRelations.length > 0 && (
+              <PillarRelations relations={pd.pillarRelations} />
+            )}
+
+            {/* ===== 9. Yin Yang Module ===== */}
+            <Section title="阴阳">
+              <div className="rounded-lg p-4" style={{ background: "#FFFFFF", border: "1px solid #E8DEC9" }}>
+                <div className="flex items-center gap-4">
+                  <svg width="64" height="64" viewBox="0 0 64 64">
+                    <circle cx="32" cy="32" r="30" fill="none" stroke="#5D4E37" strokeWidth="1.5" />
+                    <path d="M32 2 A30 30 0 0 1 32 62 A15 15 0 0 0 32 32 A15 15 0 0 1 32 2Z" fill="#333" />
+                    <circle cx="32" cy="17" r="4" fill="#FFF" />
+                    <circle cx="32" cy="47" r="4" fill="#333" />
+                  </svg>
+                  <div>
+                    <div className="text-sm font-semibold" style={{ color: "#5D4E37" }}>
+                      日主{baziData.dayMasterYinYang === "阳" ? "阳" : "阴"}性
+                    </div>
+                    <p className="text-xs leading-relaxed mt-1" style={{ color: "#666" }}>
+                      {baziData.dayMasterYinYang === "阳"
+                        ? "阳干外向主动，如烈日当空，积极进取，善于开创。"
+                        : "阴干内敛柔韧，如月华如水，细腻敏感，善于守成。"}
+                    </p>
                   </div>
-                )}
-            </div>
+                </div>
+              </div>
+            </Section>
+
+            {/* ===== 10. Zodiac Module ===== */}
+            <Section title="生肖">
+              <div className="rounded-lg p-4 text-center" style={{ background: "#FFFFFF", border: "1px solid #E8DEC9" }}>
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full text-2xl font-bold"
+                  style={{ background: "#FBF8F2", color: "#5D4E37", border: "2px solid #C4A040" }}>
+                  {zodiacName}
+                </div>
+                <p className="text-xs leading-relaxed mt-3" style={{ color: "#666" }}>
+                  生肖{zodiacName}，{baziData.dayMasterYinYang === "阳" ? "性格刚健，行事果决" : "性格柔顺，心思细腻"}。
+                  与四柱地支形成三合六合则为吉，相冲相害则需留意。
+                </p>
+              </div>
+            </Section>
 
             {/* AI Preview — available for free users */}
             {reading?.preview && !reading?.overview && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.aiReading}</span>
+                <span className="text-sm font-bold" style={{ color: c.textMuted }}>{t.bazi.aiReading}</span>
               </div>
                 <div className="rounded-lg p-3" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}0F` }}>
                     <div className="flex items-center gap-2 mb-2">
                       <Sparkles size={12} style={{ color: c.primary }} />
-                      <span className="text-[10px] font-bold" style={{ color: c.primary }}>{t.bazi.aiReading}</span>
+                      <span className="text-xs font-bold" style={{ color: c.primary }}>{t.bazi.aiReading}</span>
                     </div>
-                    <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{reading.preview}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: c.text }}>{reading.preview}</p>
                   </div>
             </div>)}
 
@@ -485,14 +585,14 @@ export default function BaziClient() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.aiReading}</span>
+                <span className="text-sm font-bold" style={{ color: c.textMuted }}>{t.bazi.aiReading}</span>
               </div>
                 <div className="rounded-lg p-3" style={{ background: `${c.primary}08`, border: `1px solid ${c.primary}0F` }}>
                     <div className="flex items-center gap-2 mb-2">
                       <Sparkles size={12} style={{ color: c.primary }} />
-                      <span className="text-[10px] font-bold" style={{ color: c.primary }}>{t.bazi.aiReading}</span>
+                      <span className="text-xs font-bold" style={{ color: c.primary }}>{t.bazi.aiReading}</span>
                     </div>
-                    <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{reading.overview}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: c.text }}>{reading.overview}</p>
                   </div>
             </div>)}
 
@@ -500,7 +600,7 @@ export default function BaziClient() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>人生四维</span>
+                <span className="text-sm font-bold" style={{ color: c.textMuted }}>人生四维</span>
               </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {Object.entries(reading.lifeAspects).map(([k, v]) => {
@@ -512,8 +612,8 @@ export default function BaziClient() {
                       };
                       return (
                         <div key={k} className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08` }}>
-                          <div className="text-[10px] font-semibold mb-1" style={{ color: c.primary }}>{sectionLabels[k] || k}</div>
-                          <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{v}</p>
+                          <div className="text-xs font-semibold mb-1" style={{ color: c.primary }}>{sectionLabels[k] || k}</div>
+                          <p className="text-sm leading-relaxed" style={{ color: c.text }}>{v}</p>
                         </div>
                       );
                     })}
@@ -525,10 +625,10 @@ export default function BaziClient() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.dayMaster}</span>
+                <span className="text-sm font-bold" style={{ color: c.textMuted }}>{t.bazi.dayMaster}</span>
               </div>
                 <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08`}}>
-                  <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>{reading.dayMaster}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: c.text }}>{reading.dayMaster}</p>
                 </div>
             </div>
             )}
@@ -537,10 +637,10 @@ export default function BaziClient() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-1 h-4 rounded-full" style={{ background: c.primary }} />
-                <span className="text-xs font-bold tracking-wider" style={{ color: c.textMuted }}>{t.bazi.elementAnalysis}</span>
+                <span className="text-sm font-bold" style={{ color: c.textMuted }}>{t.bazi.elementAnalysis}</span>
               </div>
                 <div className="rounded-lg p-3" style={{ background: c.surface, border: `1px solid ${c.primary}08`}}>
-                  <p className="text-[11px] leading-relaxed" style={{ color: c.text }}>
+                  <p className="text-sm leading-relaxed" style={{ color: c.text }}>
                     {typeof reading.elementAnalysis === "string" ? reading.elementAnalysis : (reading.elementAnalysis).balance || (reading.elementAnalysis).dominant || (reading.elementAnalysis).lacking}
                   </p>
                 </div>
@@ -549,13 +649,13 @@ export default function BaziClient() {
 
             {reading?.affirmation && (
               <div className="rounded-lg p-3 text-center" style={{ background: `linear-gradient(135deg, ${c.primary}10, ${c.primary}04)`, border: `1px solid ${c.primary}0F`}}>
-                <p className="text-[11px] font-serif italic" style={{ color: c.primary }}>&ldquo;{reading.affirmation}&rdquo;</p>
+                <p className="text-sm font-serif italic" style={{ color: c.primary }}>&ldquo;{reading.affirmation}&rdquo;</p>
               </div>
             )}
 
             {/* Report tabs */}
             <div className="space-y-4">
-              <div className="text-xs font-bold tracking-wider uppercase" style={{ color: c.textMuted }}>{t.bazi.inDepthReports}</div>
+              <div className="text-sm font-bold uppercase" style={{ color: c.textMuted }}>{t.bazi.inDepthReports}</div>
               <div className="flex rounded-lg overflow-hidden" style={{ border: `1px solid ${c.primary}0F` }}>
                 {(["annual", "personality", "deep"] as const).map((key, idx) => {
                   const info = reportLabels[key];
@@ -603,7 +703,7 @@ export default function BaziClient() {
                         <h3 className="text-sm font-bold" style={{ color: c.text }}>{reportLabels[selectedReport].title}</h3>
                         <span className="text-xs font-bold" style={{ color: c.primary }}>${reportLabels[selectedReport].price.toFixed(2)}</span>
                       </div>
-                      <p className="text-[11px]" style={{ color: c.textMuted }}>{reportLabels[selectedReport].desc}</p>
+                      <p className="text-sm" style={{ color: c.textMuted }}>{reportLabels[selectedReport].desc}</p>
                       <button onClick={fetchReportWithPoints} disabled={redeemingPoints}
                         className="w-full py-3 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2"
                         style={{ background: `linear-gradient(135deg, ${c.primary}22, ${c.primary}0D)`, border: `1px solid ${c.primary}44`, color: c.primary }}>
@@ -611,7 +711,7 @@ export default function BaziClient() {
                         {t.bazi.unlockWithPoints}
                       </button>
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 h-px" style={{ background: c.primary + "18" }} /><span className="text-[10px] uppercase tracking-wider" style={{ color: c.textMuted }}>{t.bazi.or}</span>
+                        <div className="flex-1 h-px" style={{ background: c.primary + "18" }} /><span className="text-xs uppercase tracking-wider" style={{ color: c.textMuted }}>{t.bazi.or}</span>
                         <div className="flex-1 h-px" style={{ background: c.primary + "18" }} />
                       </div>
                       <PayPalButton amount={reportLabels[selectedReport].price} spreadKey={reportLabels[selectedReport].serviceKey} readingId={`bazi-${selectedReport}-${Date.now()}`}
@@ -640,5 +740,18 @@ export default function BaziClient() {
         )}
       </div>
     </main>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-bold" style={{ color: "#5D4E37" }}>{title}</span>
+        <div className="w-4 h-4 rounded-full border flex items-center justify-center text-xs font-bold cursor-help"
+          style={{ borderColor: "#C4A040", color: "#C4A040" }}>i</div>
+      </div>
+      {children}
+    </div>
   );
 }
