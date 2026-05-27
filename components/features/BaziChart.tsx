@@ -65,9 +65,9 @@ export default function BaziChart({
   const dmScore = elementStrength?.dayMasterStrength?.score ?? 0;
   const dmIsStrong = elementStrength?.dayMasterStrength?.isStrong;
 
-  const TABLE_HEAD_BG = "#8B6F47";
+  const TABLE_HEAD_BG = "#3A2F26";
   const TABLE_ROW_ALT = "#FDFAF5";
-  const TABLE_BORDER = "#E8DEC9";
+  const TABLE_BORDER = "#F0EBE3";
 
   return (
     <div className="space-y-4" style={{ color: c.text }}>
@@ -111,7 +111,7 @@ export default function BaziChart({
                   <th key={key} className="px-3 py-2.5 text-center text-sm font-bold"
                     style={{
                       color: "#FFF",
-                      background: key === "day" ? "#6B4E2E" : TABLE_HEAD_BG,
+                      background: key === "day" ? "#4A3F36" : TABLE_HEAD_BG,
                       borderRight: pi < 3 ? `1px solid rgba(255,255,255,0.15)` : "none",
                     }}>
                     {pillarLabels[pi]}

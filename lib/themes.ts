@@ -12,6 +12,7 @@ export interface ThemeConfig {
     text: string;
     textMuted: string;
     accent: string;
+    border?: string;
   };
   glow: string;
   gradientHero: string;
@@ -99,16 +100,17 @@ export const themes: Record<string, ThemeConfig> = {
     desc: "Unlock the secrets written in your birth chart by the stars.",
     emoji: "🔮",
     colors: {
-      primary: "#5D4E37",
+      primary: "#3A2F26",
       secondary: "#8B7355",
-      bg: "#F9F8F6",
+      bg: "#FAF7F2",
       surface: "#FFFFFF",
       text: "#333333",
-      textMuted: "#999999",
-      accent: "#A0522D",
+      textMuted: "#888888",
+      accent: "#F0AD4E",
+      border: "#F0EBE3",
     },
-    glow: "rgba(93, 78, 55, 0.15)",
-    gradientHero: "linear-gradient(180deg, #F9F8F6 0%, #F0EDE6 50%, #F9F8F6 100%)",
+    glow: "rgba(58, 47, 38, 0.12)",
+    gradientHero: "linear-gradient(180deg, #FAF7F2 0%, #F2EDE4 50%, #FAF7F2 100%)",
     font: "'Noto Serif SC'",
     fontFallback: "Georgia, serif",
     fontHeading: "'Noto Serif SC'",

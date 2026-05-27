@@ -300,18 +300,72 @@ export default function BaziClient() {
           <h1 className="text-2xl md:text-3xl font-bold font-serif" style={{ color: c.text }}>{t.bazi.title} | BaZi Natal Chart</h1>
         </div>
 
-        {/* Form / Summary Bar */}
+        {/* Navigation Tabs */}
+        {baziData && (
+          <div className="flex items-center justify-center gap-6 mb-8 animate-fade-in" style={{ height: 48 }}>
+            {["咨询AI", "基本信息", "大运流年", "2026年度报告", "个性报告", "深度报告"].map((tab, i) => {
+              const isActive = i === 1;
+              return (
+                <button key={tab} type="button"
+                  className="text-sm font-medium transition-colors relative pb-2"
+                  style={{
+                    color: isActive ? "#3A2F26" : "#888888",
+                    borderBottom: isActive ? "2px solid #3A2F26" : "2px solid transparent",
+                  }}
+                  onMouseEnter={(e) => { if (!isActive) (e.target as HTMLElement).style.color = "#3A2F26"; }}
+                  onMouseLeave={(e) => { if (!isActive) (e.target as HTMLElement).style.color = "#888888"; }}
+                >
+                  {tab}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* User Info Card (collapsed form) */}
         {result && !formExpanded ? (
           <div
-            className="flex flex-wrap items-center gap-2 px-4 py-2 mb-6 rounded-lg animate-fade-in cursor-pointer"
-            style={{ background: c.surface, border: `1px solid ${c.primary}0F` }}
+            className="flex items-stretch gap-6 px-6 py-5 mb-8 rounded-lg animate-fade-in cursor-pointer"
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid #F0EBE3",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+            }}
             onClick={() => setFormExpanded(true)}
           >
-            {userName && <span className="text-xs font-semibold" style={{ color: c.text }}>{userName}</span>}
-            <span className="text-xs" style={{ color: c.textMuted }}>{formatDate(birthDate)}</span>
-            <span className="text-xs font-semibold" style={{ color: c.primary }}>{(HOUR_OPTIONS.find((h) => h.v === birthHour)?.[locale.startsWith("zh") ? "label" : "en"] || "").split(" ")[0]}</span>
-            <span className="text-xs" style={{ color: c.textMuted }}>{gender === "male" ? t.bazi.male : t.bazi.female}</span>
-            <span className="ml-auto text-xs px-2 py-0.5 rounded-full" style={{ background: `${c.primary}14`, color: c.primary }}>{t.bazi.submit}</span>
+            {/* Left: Avatar + Name + Tag */}
+            <div className="flex flex-col items-center gap-2 shrink-0" style={{ minWidth: 100 }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold"
+                style={{ background: "#FBF8F2", color: "#3A2F26", border: "2px solid #F0EBE3" }}>
+                {(userName || "命")[0]}
+              </div>
+              <span className="text-lg font-bold" style={{ color: "#3A2F26" }}>{userName || "天命人"}</span>
+              <span className="text-xs px-3 py-1 rounded-full" style={{ background: "#F5F0E8", color: "#888888" }}>
+                一键获取命理指令
+              </span>
+            </div>
+
+            {/* Center: Birth Info */}
+            <div className="flex-1 flex flex-col justify-center gap-1.5 text-sm" style={{ color: "#333333" }}>
+              <div><span className="text-xs" style={{ color: "#888888" }}>性别:</span> {gender === "male" ? "男" : "女"}</div>
+              <div><span className="text-xs" style={{ color: "#888888" }}>出生地点:</span> 未知</div>
+              <div><span className="text-xs" style={{ color: "#888888" }}>公历:</span> {formatDate(birthDate)} {(HOUR_OPTIONS.find((h) => h.v === birthHour)?.label || "").split(" ")[0]?.replace("时", ":00:00")}</div>
+              <div><span className="text-xs" style={{ color: "#888888" }}>农历:</span> {baziData?.year.stem}{baziData?.year.branch}年{(baziData?.month.stem || "")}{(baziData?.month.branch || "")}月{(baziData?.day.stem || "")}{(baziData?.day.branch || "")}日</div>
+              <div><span className="text-xs" style={{ color: "#888888" }}>真太阳时(公历):</span> {formatDate(birthDate)} {(HOUR_OPTIONS.find((h) => h.v === birthHour)?.label || "").split(" ")[0]?.replace("时", ":00:00")}</div>
+            </div>
+
+            {/* Right: Action Icons */}
+            <div className="flex flex-col justify-center gap-3 shrink-0">
+              {(["收藏", "下载", "分享"] as const).map((action) => (
+                <button key={action} type="button" className="w-9 h-9 rounded-full flex items-center justify-center text-xs transition-all"
+                  style={{ background: "#F5F0E8", color: "#888888" }}
+                  onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "#3A2F26"; }}
+                  onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "#888888"; }}
+                >
+                  {action === "收藏" ? "☆" : action === "下载" ? "⬇" : "↗"}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="relative rounded-xl p-4 mb-6 animate-fade-in" style={{ background: c.surface, border: `1px solid ${c.primary}0F` }}>
@@ -420,17 +474,23 @@ export default function BaziClient() {
             {/* ===== 2. Pattern Module ===== */}
             {pd?.pattern && (
               <Section title="格局">
-                <div className="text-center p-3">
-                  <span className="text-lg font-bold" style={{ color: c.text }}>{pd.pattern.name}</span>
-                  <span className="text-xs px-2 py-0.5 rounded ml-2" style={{
-                    background: pd.pattern.category === "standard" ? "#428BCA14" : pd.pattern.category === "jianLu" ? "#5CB85C14" : "#D9534F14",
-                    color: pd.pattern.category === "standard" ? "#428BCA" : pd.pattern.category === "jianLu" ? "#5CB85C" : "#D9534F",
-                  }}>{pd.pattern.category === "standard" ? "标准格" : pd.pattern.category === "jianLu" ? "建禄格" : "月刃格"}</span>
+                <div className="text-center">
+                  <span className="text-lg font-bold" style={{ color: "#333333" }}>{pd.pattern.name}</span>
+                  <span className="text-xs px-2 py-0.5 rounded ml-2 font-semibold" style={{
+                    background: "#E8F5E9",
+                    color: "#2E7D32",
+                    border: "1px solid #C8E6C9",
+                  }}>【格局优秀】</span>
+                  <div className="text-xs mt-1" style={{ color: "#888888" }}>
+                    {pd.pattern.category === "standard" ? "标准格" : pd.pattern.category === "jianLu" ? "禄用官杀" : "月刃用杀"}
+                  </div>
                 </div>
-                <div className="mt-2 p-3 rounded flex items-start gap-2" style={{ background: "#FDF8EE", borderLeft: "3px solid #D9534F" }}>
-                  <span className="text-xs shrink-0">🔴</span>
-                  <p className="text-sm leading-relaxed" style={{ color: "#666" }}>{pd.pattern.description}</p>
+                <div className="mt-3 p-3 rounded flex items-start gap-2" style={{ background: "#FFF8E1", borderLeft: "4px solid #F0AD4E" }}>
+                  <span className="text-xs shrink-0 mt-0.5" style={{ color: "#F0AD4E" }}>💡</span>
+                  <p className="text-sm leading-relaxed" style={{ color: "#5D4037" }}>{pd.pattern.description}</p>
                 </div>
+                {/* Talent tags */}
+                <AskAIButton />
               </Section>
             )}
 
@@ -480,6 +540,7 @@ export default function BaziClient() {
                     ));
                   })()}
                 </div>
+                <AskAIButton />
               </Section>
             )}
 
@@ -514,6 +575,7 @@ export default function BaziClient() {
                   </div>
                 )}
               </div>
+              <AskAIButton />
             </Section>
 
             {/* ===== 7. Day Pillar Profile ===== */}
@@ -528,40 +590,40 @@ export default function BaziClient() {
 
             {/* ===== 9. Yin Yang Module ===== */}
             <Section title="阴阳">
-              <div className="rounded-lg p-4" style={{ background: "#FFFFFF", border: "1px solid #E8DEC9" }}>
-                <div className="flex items-center gap-4">
-                  <svg width="64" height="64" viewBox="0 0 64 64">
-                    <circle cx="32" cy="32" r="30" fill="none" stroke="#5D4E37" strokeWidth="1.5" />
-                    <path d="M32 2 A30 30 0 0 1 32 62 A15 15 0 0 0 32 32 A15 15 0 0 1 32 2Z" fill="#333" />
-                    <circle cx="32" cy="17" r="4" fill="#FFF" />
-                    <circle cx="32" cy="47" r="4" fill="#333" />
-                  </svg>
-                  <div>
-                    <div className="text-sm font-semibold" style={{ color: "#5D4E37" }}>
-                      日主{baziData.dayMasterYinYang === "阳" ? "阳" : "阴"}性
-                    </div>
-                    <p className="text-xs leading-relaxed mt-1" style={{ color: "#666" }}>
-                      {baziData.dayMasterYinYang === "阳"
-                        ? "阳干外向主动，如烈日当空，积极进取，善于开创。"
-                        : "阴干内敛柔韧，如月华如水，细腻敏感，善于守成。"}
-                    </p>
+              <div className="flex items-center gap-4">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="30" fill="none" stroke="#3A2F26" strokeWidth="1.5" />
+                  <path d="M32 2 A30 30 0 0 1 32 62 A15 15 0 0 0 32 32 A15 15 0 0 1 32 2Z" fill="#3A2F26" />
+                  <circle cx="32" cy="17" r="4" fill="#FFFFFF" />
+                  <circle cx="32" cy="47" r="4" fill="#3A2F26" />
+                </svg>
+                <div>
+                  <div className="text-sm font-semibold" style={{ color: "#3A2F26" }}>
+                    日主{baziData.dayMasterYinYang === "阳" ? "阳" : "阴"}性
                   </div>
+                  <p className="text-xs leading-relaxed mt-1" style={{ color: "#666666" }}>
+                    {baziData.dayMasterYinYang === "阳"
+                      ? "阳干外向主动，如烈日当空，积极进取，善于开创。"
+                      : "阴干内敛柔韧，如月华如水，细腻敏感，善于守成。"}
+                  </p>
                 </div>
               </div>
+              <AskAIButton />
             </Section>
 
             {/* ===== 10. Zodiac Module ===== */}
             <Section title="生肖">
-              <div className="rounded-lg p-4 text-center" style={{ background: "#FFFFFF", border: "1px solid #E8DEC9" }}>
+              <div className="text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full text-2xl font-bold"
-                  style={{ background: "#FBF8F2", color: "#5D4E37", border: "2px solid #C4A040" }}>
+                  style={{ background: "#FBF8F2", color: "#3A2F26", border: "2px solid #C4A040" }}>
                   {zodiacName}
                 </div>
-                <p className="text-xs leading-relaxed mt-3" style={{ color: "#666" }}>
+                <p className="text-xs leading-relaxed mt-3" style={{ color: "#666666" }}>
                   生肖{zodiacName}，{baziData.dayMasterYinYang === "阳" ? "性格刚健，行事果决" : "性格柔顺，心思细腻"}。
                   与四柱地支形成三合六合则为吉，相冲相害则需留意。
                 </p>
               </div>
+              <AskAIButton />
             </Section>
 
             {/* AI Preview — available for free users */}
@@ -745,13 +807,47 @@ export default function BaziClient() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3" style={{ marginBottom: 32 }}>
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold" style={{ color: "#5D4E37" }}>{title}</span>
-        <div className="w-4 h-4 rounded-full border flex items-center justify-center text-xs font-bold cursor-help"
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-5 rounded-full" style={{ background: "#F0AD4E" }} />
+          <span className="text-base font-bold" style={{ color: "#3A2F26" }}>{title}</span>
+        </div>
+        <div className="w-5 h-5 rounded-full border flex items-center justify-center text-xs font-bold cursor-help"
           style={{ borderColor: "#C4A040", color: "#C4A040" }}>i</div>
       </div>
-      {children}
+      <div className="rounded-lg p-5" style={{
+        background: "#FFFFFF",
+        border: "1px solid #F0EBE3",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function AskAIButton({ onClick }: { onClick?: () => void }) {
+  return (
+    <div className="flex justify-end mt-4">
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg transition-all"
+        style={{
+          background: "#F0AD4E",
+          color: "#FFFFFF",
+          border: "none",
+          cursor: "pointer",
+        }}
+        onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#E09E3E"; }}
+        onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#F0AD4E"; }}
+      >
+        问参天AI
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 6h8M6 2l4 4-4 4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
     </div>
   );
 }
